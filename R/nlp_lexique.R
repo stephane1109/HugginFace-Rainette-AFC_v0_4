@@ -35,14 +35,30 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
     )
   }
 
+  lire_csv_point_virgule <- function() {
+    read.csv(
+      fichier,
+      sep = ";",
+      header = TRUE,
+      stringsAsFactors = FALSE,
+      fileEncoding = "UTF-8",
+      check.names = FALSE
+    )
+  }
+
   lexique <- tryCatch(lire_tsv(), error = function(e) NULL)
   if (is.null(lexique) || ncol(lexique) <= 1) {
     lexique <- tryCatch(lire_csv(), error = function(e) NULL)
+  }
+  if (is.null(lexique) || ncol(lexique) <= 1) {
+    lexique <- tryCatch(lire_csv_point_virgule(), error = function(e) NULL)
   }
 
   if (is.null(lexique) || nrow(lexique) == 0) {
     stop("Lexique (fr) invalide : fichier vide ou illisible.")
   }
+
+  names(lexique) <- trimws(sub("^\ufeff", "", names(lexique)))
 
   colonnes_attendues <- c("ortho", "Lexique4__Lemme", "Lexique4__Cgram")
   manquantes <- setdiff(colonnes_attendues, names(lexique))
