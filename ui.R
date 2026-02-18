@@ -79,6 +79,10 @@ ui <- fluidPage(
         inline = FALSE
       ),
       tags$small("Le mode 'Lexique (fr)' utilise le fichier OpenLexicon.csv (colonnes ortho, Lexique4__Lemme, Lexique4__Cgram)."),
+      conditionalPanel(
+        condition = "input.source_dictionnaire == 'lexique_fr'",
+        checkboxInput("lexique_utiliser_lemmes", "Lemmatisation (Lexique fr)", value = TRUE)
+      ),
       uiOutput("ui_spacy_langue_detection"),
 
       radioButtons(
