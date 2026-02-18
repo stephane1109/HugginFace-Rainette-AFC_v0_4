@@ -70,15 +70,15 @@ ui <- fluidPage(
       numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
       numericInput("max_p", "max_p (p-value)", value = 0.05, min = 0, max = 1, step = 0.01),
 
-      tags$div(class = "sidebar-section-title", "Dictionnaire spaCy"),
+      tags$div(class = "sidebar-section-title", "Dictionnaire"),
       radioButtons(
-        "spacy_langue",
-        "Langue du corpus",
-        choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
-        selected = "fr",
+        "source_dictionnaire",
+        "Source de lemmatisation",
+        choices = c("spaCy" = "spacy", "Lexique (fr)" = "lexique_fr"),
+        selected = "spacy",
         inline = FALSE
       ),
-      tags$small("Ce choix est utilisé pour le prétraitement spaCy, les stopwords et le NER."),
+      tags$small("Le mode 'Lexique (fr)' utilise le fichier OpenLexicon.csv (colonnes ortho, Lexique4__Lemme, Lexique4__Cgram)."),
       uiOutput("ui_spacy_langue_detection"),
 
       radioButtons(
@@ -121,7 +121,10 @@ ui <- fluidPage(
           options = list(plugins = list("remove_button"))
         )
       ),
-      checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
+      conditionalPanel(
+        condition = "input.source_dictionnaire == 'spacy'",
+        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE)
+      ),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
