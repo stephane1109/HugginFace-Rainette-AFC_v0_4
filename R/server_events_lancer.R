@@ -129,18 +129,22 @@ register_events_lancer <- function(input, output, session, rv) {
           if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
 
           utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)
-          utiliser_lexique <- identical(source_dictionnaire, "lexique_fr")
+          source_lexique <- identical(source_dictionnaire, "lexique_fr")
+          utiliser_lemmes_lexique <- source_lexique && isTRUE(input$lexique_utiliser_lemmes)
           config_spacy <- configurer_langue_spacy("fr")
           utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes_spacy
 
-          if (isTRUE(utiliser_lexique)) {
+          if (isTRUE(utiliser_lemmes_lexique)) {
             lexique_fr <- charger_lexique_fr("OpenLexicon.csv")
             ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
+          } else if (isTRUE(source_lexique)) {
+            lexique_fr <- NULL
+            ajouter_log(rv, "Lexique (fr) sélectionné sans lemmatisation : conservation des formes d'origine.")
           } else {
             lexique_fr <- NULL
           }
 
-          if (isTRUE(utiliser_lexique) && !isTRUE(filtrage_morpho)) {
+          if (isTRUE(utiliser_lemmes_lexique) && !isTRUE(filtrage_morpho)) {
 
             ajouter_log(rv, "Lexique (fr) sans filtrage morphosyntaxique : lemmatisation directe forme->lemme.")
 
@@ -167,7 +171,7 @@ register_events_lancer <- function(input, output, session, rv) {
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
 
-          } else if (!utiliser_pipeline_spacy && !isTRUE(utiliser_lexique)) {
+          } else if (!utiliser_pipeline_spacy && !isTRUE(utiliser_lemmes_lexique)) {
 
             ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
             tok_base <- tokens(
@@ -200,8 +204,8 @@ register_events_lancer <- function(input, output, session, rv) {
               paste0(
                 "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
                 ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
-                " | lemmes=", ifelse(utiliser_lemmes_spacy && !utiliser_lexique, "1", "0"),
-                ifelse(utiliser_lexique, " | source lemmes=Lexique (fr)", " | source lemmes=spaCy"),
+                " | lemmes=", ifelse((utiliser_lemmes_spacy && !source_lexique) || utiliser_lemmes_lexique, "1", "0"),
+                ifelse(utiliser_lemmes_lexique, " | source lemmes=Lexique (fr)", " | source lemmes=spaCy"),
                 " | stopwords: spaCy"
               )
             )
@@ -213,7 +217,7 @@ register_events_lancer <- function(input, output, session, rv) {
               ids = ids_corpus,
               textes = unname(textes_chd),
               pos_a_conserver = pos_a_conserver,
-              utiliser_lemmes = utiliser_lemmes_spacy && !utiliser_lexique,
+              utiliser_lemmes = utiliser_lemmes_spacy && !source_lexique,
               lower_input = isTRUE(input$forcer_minuscules_avant),
               modele_spacy = config_spacy$modele,
               rv = rv
@@ -223,7 +227,7 @@ register_events_lancer <- function(input, output, session, rv) {
             names(textes_spacy) <- ids_corpus
             rv$spacy_tokens_df <- sp$tokens_df
 
-            if (isTRUE(utiliser_lexique)) {
+            if (isTRUE(utiliser_lemmes_lexique)) {
               lex <- lemmatiser_tokens_spacy_avec_lexique(
                 tokens_df = sp$tokens_df,
                 lexique = lexique_fr,
@@ -247,7 +251,7 @@ register_events_lancer <- function(input, output, session, rv) {
               retirer_stopwords = isTRUE(input$retirer_stopwords),
               langue_spacy = "fr",
               rv = rv,
-              libelle = ifelse(utiliser_lexique, "Lexique (fr) + POS spaCy", "spaCy")
+              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + POS spaCy", "spaCy")
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
