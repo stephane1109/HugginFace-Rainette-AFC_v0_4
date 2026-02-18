@@ -44,7 +44,11 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
   en_tete <- lignes[[1]]
   nb_tabs <- lengths(regmatches(en_tete, gregexpr("\t", en_tete, perl = TRUE)))
   nb_virgules <- lengths(regmatches(en_tete, gregexpr(",", en_tete, perl = TRUE)))
-  sep <- if (isTRUE(nb_tabs >= nb_virgules)) "\t" else ","
+  nb_points_virgules <- lengths(regmatches(en_tete, gregexpr(";", en_tete, perl = TRUE)))
+
+  scores_sep <- c("\t" = nb_tabs, "," = nb_virgules, ";" = nb_points_virgules)
+  sep <- names(scores_sep)[which.max(scores_sep)]
+  if (is.na(sep) || !nzchar(sep)) sep <- "\t"
 
   lexique <- tryCatch(
     parser_lexique(lignes, sep = sep),
@@ -57,9 +61,38 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
     stop("Lexique (fr) invalide : fichier vide ou illisible.")
   }
 
+
+  nettoyer_nom_colonne <- function(x) {
+    x <- as.character(x)
+    x <- gsub("^\ufeff", "", x, perl = TRUE)
+    x <- gsub("^ï»¿", "", x, perl = TRUE)
+    x <- gsub("\u00a0", " ", x, perl = TRUE)
+    x <- trimws(x)
+    x
+  }
+
+  noms_bruts <- names(lexique)
+  noms_nettoyes <- vapply(noms_bruts, nettoyer_nom_colonne, FUN.VALUE = character(1))
+  names(lexique) <- noms_nettoyes
+
   colonnes_attendues <- c("ortho", "Lexique4__Lemme", "Lexique4__Cgram")
-  manquantes <- setdiff(colonnes_attendues, names(lexique))
-  if (length(manquantes) > 0) {
+
+  normaliser_cle <- function(x) {
+    x <- nettoyer_nom_colonne(x)
+    tolower(gsub("[^a-z0-9]", "", x, perl = TRUE))
+  }
+
+  map_attendu <- c(
+    ortho = "ortho",
+    lexique4lemme = "Lexique4__Lemme",
+    lexique4cgram = "Lexique4__Cgram"
+  )
+
+  cles_disponibles <- vapply(names(lexique), normaliser_cle, FUN.VALUE = character(1))
+  idx_match <- match(names(map_attendu), cles_disponibles)
+
+  if (any(is.na(idx_match))) {
+    manquantes <- unname(map_attendu[is.na(idx_match)])
     stop(
       paste0(
         "Lexique (fr) mal configuré : colonnes manquantes [",
@@ -70,6 +103,9 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
       )
     )
   }
+
+  noms_cibles <- unname(map_attendu)
+  names(lexique)[idx_match] <- noms_cibles
 
   lexique$ortho <- tolower(trimws(as.character(lexique$ortho)))
   lexique$Lexique4__Lemme <- tolower(trimws(as.character(lexique$Lexique4__Lemme)))
