@@ -119,17 +119,55 @@ register_events_lancer <- function(input, output, session, rv) {
           )
           names(textes_chd) <- ids_corpus
 
-          verifier_coherence_dictionnaire_langue(textes_chd, input$spacy_langue, rv = rv)
+          verifier_coherence_dictionnaire_langue(textes_chd, "fr", rv = rv)
 
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
 
           filtrage_morpho <- isTRUE(input$filtrage_morpho)
-          utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
-          config_spacy <- configurer_langue_spacy(input$spacy_langue)
-          utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes
+          source_dictionnaire <- as.character(input$source_dictionnaire)
+          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
 
-          if (!utiliser_pipeline_spacy) {
+          utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)
+          utiliser_lexique <- identical(source_dictionnaire, "lexique_fr")
+          config_spacy <- configurer_langue_spacy("fr")
+          utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes_spacy
+
+          if (isTRUE(utiliser_lexique)) {
+            lexique_fr <- charger_lexique_fr("OpenLexicon.csv")
+            ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
+          } else {
+            lexique_fr <- NULL
+          }
+
+          if (isTRUE(utiliser_lexique) && !isTRUE(filtrage_morpho)) {
+
+            ajouter_log(rv, "Lexique (fr) sans filtrage morphosyntaxique : lemmatisation directe forme->lemme.")
+
+            textes_lexique <- lemmatiser_textes_lexique(
+              textes = textes_chd,
+              lexique = lexique_fr,
+              rv = rv
+            )
+
+            tok_base <- tokens(
+              textes_lexique,
+              remove_punct = isTRUE(input$supprimer_ponctuation),
+              remove_numbers = isTRUE(input$supprimer_chiffres)
+            )
+
+            res_dfm <- construire_dfm_avec_fallback_stopwords(
+              tok_base = tok_base,
+              min_docfreq = input$min_docfreq,
+              retirer_stopwords = isTRUE(input$retirer_stopwords),
+              langue_spacy = "fr",
+              rv = rv,
+              libelle = "Lexique (fr)"
+            )
+            tok <- res_dfm$tok
+            dfm_obj <- res_dfm$dfm
+
+          } else if (!utiliser_pipeline_spacy && !isTRUE(utiliser_lexique)) {
 
             ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
             tok_base <- tokens(
@@ -142,7 +180,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = input$spacy_langue,
+              langue_spacy = "fr",
               rv = rv,
               libelle = "Standard"
             )
@@ -162,7 +200,8 @@ register_events_lancer <- function(input, output, session, rv) {
               paste0(
                 "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
                 ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
-                " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
+                " | lemmes=", ifelse(utiliser_lemmes_spacy && !utiliser_lexique, "1", "0"),
+                ifelse(utiliser_lexique, " | source lemmes=Lexique (fr)", " | source lemmes=spaCy"),
                 " | stopwords: spaCy"
               )
             )
@@ -174,7 +213,7 @@ register_events_lancer <- function(input, output, session, rv) {
               ids = ids_corpus,
               textes = unname(textes_chd),
               pos_a_conserver = pos_a_conserver,
-              utiliser_lemmes = utiliser_lemmes,
+              utiliser_lemmes = utiliser_lemmes_spacy && !utiliser_lexique,
               lower_input = isTRUE(input$forcer_minuscules_avant),
               modele_spacy = config_spacy$modele,
               rv = rv
@@ -183,6 +222,17 @@ register_events_lancer <- function(input, output, session, rv) {
             textes_spacy <- sp$textes
             names(textes_spacy) <- ids_corpus
             rv$spacy_tokens_df <- sp$tokens_df
+
+            if (isTRUE(utiliser_lexique)) {
+              lex <- lemmatiser_tokens_spacy_avec_lexique(
+                tokens_df = sp$tokens_df,
+                lexique = lexique_fr,
+                rv = rv
+              )
+              textes_spacy <- lex$textes[ids_corpus]
+              textes_spacy[is.na(textes_spacy)] <- ""
+              rv$spacy_tokens_df <- lex$tokens_df
+            }
 
             avancer(0.40, "spaCy : tokens + DFM")
             tok_base <- tokens(
@@ -195,9 +245,9 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = input$spacy_langue,
+              langue_spacy = "fr",
               rv = rv,
-              libelle = "spaCy"
+              libelle = ifelse(utiliser_lexique, "Lexique (fr) + POS spaCy", "spaCy")
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
@@ -296,7 +346,7 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "NER (si activé)..."
 
           if (isTRUE(input$activer_ner)) {
-            config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
+            config_spacy_ner <- configurer_langue_spacy("fr")
             ids_ner <- docnames(filtered_corpus_ok)
             textes_ner <- as.character(filtered_corpus_ok)
             rv$ner_nb_segments <- length(textes_ner)
