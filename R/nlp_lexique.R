@@ -217,7 +217,7 @@ lemmatiser_tokens_spacy_avec_lexique <- function(tokens_df, lexique, rv = NULL) 
     ajouter_log(
       rv,
       paste0(
-        "Lexique (fr) + POS spaCy : ",
+        "Lexique (fr) : ",
         sum(sans_lemme),
         " token(s) sans entrée lexicale (conservés en forme de surface)."
       )

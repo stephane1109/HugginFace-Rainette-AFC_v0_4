@@ -104,7 +104,15 @@ register_events_lancer <- function(input, output, session, rv) {
           corpus <- split_segments(corpus, segment_size = segment_size)
           ajouter_log(rv, paste0("Nombre de segments après découpage : ", ndoc(corpus)))
 
-          ids_corpus <- docnames(corpus)
+          ids_corpus <- as.character(docnames(corpus))
+          ids_uniques <- make.unique(ids_corpus, sep = "_dup")
+          if (any(ids_uniques != ids_corpus)) {
+            n_dups <- sum(duplicated(ids_corpus))
+            docnames(corpus) <- ids_uniques
+            ids_corpus <- ids_uniques
+            ajouter_log(rv, paste0("Docnames dupliqués détectés après segmentation : ", n_dups, ". Renommage automatique via make.unique()."))
+          }
+
           textes_orig <- as.character(corpus)
 
           avancer(0.18, "Préparation texte (nettoyage / minuscules)")
