@@ -104,7 +104,15 @@ register_events_lancer <- function(input, output, session, rv) {
           corpus <- split_segments(corpus, segment_size = segment_size)
           ajouter_log(rv, paste0("Nombre de segments après découpage : ", ndoc(corpus)))
 
-          ids_corpus <- docnames(corpus)
+          ids_corpus <- as.character(docnames(corpus))
+          ids_uniques <- make.unique(ids_corpus, sep = "_dup")
+          if (any(ids_uniques != ids_corpus)) {
+            n_dups <- sum(duplicated(ids_corpus))
+            docnames(corpus) <- ids_uniques
+            ids_corpus <- ids_uniques
+            ajouter_log(rv, paste0("Docnames dupliqués détectés après segmentation : ", n_dups, ". Renommage automatique via make.unique()."))
+          }
+
           textes_orig <- as.character(corpus)
 
           avancer(0.18, "Préparation texte (nettoyage / minuscules)")
@@ -194,16 +202,35 @@ register_events_lancer <- function(input, output, session, rv) {
           } else {
 
             pos_a_conserver <- NULL
+            cgram_lexique_a_conserver <- NULL
+            pos_spacy_pipeline <- pos_a_conserver
+
             if (isTRUE(filtrage_morpho)) {
-              pos_a_conserver <- input$pos_spacy_a_conserver
-              if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
+              if (isTRUE(source_lexique)) {
+                cgram_lexique_a_conserver <- input$pos_lexique_a_conserver
+                if (is.null(cgram_lexique_a_conserver) || length(cgram_lexique_a_conserver) == 0) {
+                  cgram_lexique_a_conserver <- c("NOM", "ADJ", "VER")
+                }
+                pos_spacy_pipeline <- c(
+                  "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN",
+                  "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"
+                )
+              } else {
+                pos_a_conserver <- input$pos_spacy_a_conserver
+                if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
+                pos_spacy_pipeline <- pos_a_conserver
+              }
             }
 
             ajouter_log(
               rv,
               paste0(
-                "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
-                ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
+                "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage morpho=", ifelse(filtrage_morpho, "1", "0"),
+                ifelse(
+                  filtrage_morpho && isTRUE(source_lexique),
+                  paste0(" (OpenLexicon Cgram: ", paste(cgram_lexique_a_conserver, collapse = ", "), ")"),
+                  ifelse(filtrage_morpho, paste0(" (spaCy POS: ", paste(pos_a_conserver, collapse = ", "), ")"), "")
+                ),
                 " | lemmes=", ifelse((utiliser_lemmes_spacy && !source_lexique) || utiliser_lemmes_lexique, "1", "0"),
                 ifelse(utiliser_lemmes_lexique, " | source lemmes=Lexique (fr)", " | source lemmes=spaCy"),
                 " | stopwords: spaCy"
@@ -216,7 +243,7 @@ register_events_lancer <- function(input, output, session, rv) {
             sp <- executer_spacy_filtrage(
               ids = ids_corpus,
               textes = unname(textes_chd),
-              pos_a_conserver = pos_a_conserver,
+              pos_a_conserver = pos_spacy_pipeline,
               utiliser_lemmes = utiliser_lemmes_spacy && !source_lexique,
               lower_input = isTRUE(input$forcer_minuscules_avant),
               modele_spacy = config_spacy$modele,
@@ -227,9 +254,26 @@ register_events_lancer <- function(input, output, session, rv) {
             names(textes_spacy) <- ids_corpus
             rv$spacy_tokens_df <- sp$tokens_df
 
+            if (isTRUE(source_lexique) && isTRUE(filtrage_morpho)) {
+              tokens_lex <- filtrer_tokens_lexique_par_cgram(
+                tokens_df = rv$spacy_tokens_df,
+                lexique = lexique_fr,
+                cgram_a_conserver = cgram_lexique_a_conserver,
+                rv = rv
+              )
+              rv$spacy_tokens_df <- tokens_lex
+
+              textes_spacy <- setNames(rep("", length(ids_corpus)), ids_corpus)
+              if (!is.null(tokens_lex) && nrow(tokens_lex) > 0) {
+                agg_formes <- split(tokens_lex$token, tokens_lex$doc_id)
+                textes_formes <- vapply(agg_formes, function(v) paste(v, collapse = " "), FUN.VALUE = character(1))
+                textes_spacy[names(textes_formes)] <- textes_formes
+              }
+            }
+
             if (isTRUE(utiliser_lemmes_lexique)) {
               lex <- lemmatiser_tokens_spacy_avec_lexique(
-                tokens_df = sp$tokens_df,
+                tokens_df = rv$spacy_tokens_df,
                 lexique = lexique_fr,
                 rv = rv
               )
@@ -251,15 +295,39 @@ register_events_lancer <- function(input, output, session, rv) {
               retirer_stopwords = isTRUE(input$retirer_stopwords),
               langue_spacy = "fr",
               rv = rv,
-              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + POS spaCy", "spaCy")
+              libelle = ifelse(
+                utiliser_lemmes_lexique,
+                "Lexique (fr) + filtrage morpho",
+                ifelse(isTRUE(source_lexique) && isTRUE(filtrage_morpho), "OpenLexicon (Cgram)", "spaCy")
+              )
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
           }
 
-          included_segments <- docnames(dfm_obj)
+          if (anyDuplicated(docnames(dfm_obj)) > 0) {
+            dups_dfm <- sum(duplicated(as.character(docnames(dfm_obj))))
+            docnames(dfm_obj) <- make.unique(as.character(docnames(dfm_obj)), sep = "_dup")
+            ajouter_log(rv, paste0("DFM : docnames dupliqués détectés (", dups_dfm, "). Renommage automatique."))
+          }
+
+          included_segments <- as.character(docnames(dfm_obj))
+          included_segments <- included_segments[!is.na(included_segments) & nzchar(included_segments)]
+          included_segments <- unique(included_segments)
+
           filtered_corpus <- corpus[included_segments]
+          if (anyDuplicated(docnames(filtered_corpus)) > 0) {
+            dups_corpus <- sum(duplicated(as.character(docnames(filtered_corpus))))
+            docnames(filtered_corpus) <- make.unique(as.character(docnames(filtered_corpus)), sep = "_dup")
+            ajouter_log(rv, paste0("Corpus filtré : docnames dupliqués détectés (", dups_corpus, "). Renommage automatique."))
+          }
+
           tok <- tok[included_segments]
+          if (anyDuplicated(docnames(tok)) > 0) {
+            dups_tok <- sum(duplicated(as.character(docnames(tok))))
+            docnames(tok) <- make.unique(as.character(docnames(tok)), sep = "_dup")
+            ajouter_log(rv, paste0("Tokens : docnames dupliqués détectés (", dups_tok, "). Renommage automatique."))
+          }
 
           dfm_obj <- assurer_docvars_dfm_minimal(dfm_obj, filtered_corpus)
 
