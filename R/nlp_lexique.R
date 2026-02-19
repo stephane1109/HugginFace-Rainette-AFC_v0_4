@@ -122,6 +122,62 @@ lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
   textes_lem
 }
 
+mapper_pos_spacy_vers_lexique <- function(pos_spacy) {
+  pos <- toupper(trimws(as.character(pos_spacy)))
+
+  map <- list(
+    ADJ = c("ADJ", "ADJ:NUM", "ADJ:POS", "ADJ:IND", "ADJ:INT", "ADJ:DEM"),
+    ADP = c("PRE"),
+    ADV = c("ADV"),
+    AUX = c("AUX", "VER"),
+    CCONJ = c("CON"),
+    DET = c("ART:DEF", "ART:IND", "ADJ:POS", "ADJ:DEM", "ADJ:IND", "ADJ:INT"),
+    INTJ = c("ONO"),
+    NOUN = c("NOM"),
+    NUM = c("ADJ:NUM"),
+    PRON = c("PRO:PER", "PRO:POS", "PRO:DEM", "PRO:IND", "PRO:REL", "PRO:INT"),
+    PROPN = c("NOM"),
+    SCONJ = c("CON"),
+    VERB = c("VER", "AUX")
+  )
+
+  out <- lapply(pos, function(tag) {
+    candidats <- map[[tag]]
+    if (is.null(candidats) || length(candidats) == 0) return(tag)
+    unique(candidats)
+  })
+
+  names(out) <- pos
+  out
+}
+
+filtrer_tokens_lexique_par_cgram <- function(tokens_df, lexique, cgram_a_conserver, rv = NULL) {
+  if (is.null(tokens_df) || nrow(tokens_df) == 0) return(tokens_df)
+
+  cgram_keep <- unique(toupper(trimws(as.character(cgram_a_conserver))))
+  cgram_keep <- cgram_keep[nzchar(cgram_keep)]
+  if (length(cgram_keep) == 0) return(tokens_df)
+
+  formes_keep <- unique(lexique$ortho[lexique$Lexique4__Cgram %in% cgram_keep])
+  formes_keep <- formes_keep[nzchar(formes_keep)]
+
+  tok <- tokens_df
+  tok$token <- tolower(trimws(as.character(tok$token)))
+  garder <- tok$token %in% formes_keep
+
+  if (!is.null(rv)) {
+    ajouter_log(
+      rv,
+      paste0(
+        "Lexique (fr) : filtrage Cgram [", paste(cgram_keep, collapse = ", "),
+        "] => ", sum(garder), "/", nrow(tok), " token(s) conservé(s)."
+      )
+    )
+  }
+
+  tok[garder, , drop = FALSE]
+}
+
 lemmatiser_tokens_spacy_avec_lexique <- function(tokens_df, lexique, rv = NULL) {
   if (is.null(tokens_df) || nrow(tokens_df) == 0) {
     return(list(textes = setNames(character(0), character(0)), tokens_df = tokens_df, n_sans_lemme = 0L))
@@ -139,8 +195,15 @@ lemmatiser_tokens_spacy_avec_lexique <- function(tokens_df, lexique, rv = NULL) 
     function(x) unique(x)[1]
   )
 
-  cle_tok <- paste(df_tok$token, df_tok$pos, sep = "\t")
-  lem <- unname(map_cle_lemme[cle_tok])
+  pos_mappes <- mapper_pos_spacy_vers_lexique(df_tok$pos)
+  lem <- vapply(seq_len(nrow(df_tok)), function(i) {
+    candidats <- pos_mappes[[i]]
+    cles <- paste(df_tok$token[i], candidats, sep = "\t")
+    trouves <- unname(map_cle_lemme[cles])
+    trouves <- trouves[!is.na(trouves) & nzchar(trouves)]
+    if (length(trouves) == 0) return(NA_character_)
+    trouves[1]
+  }, FUN.VALUE = character(1))
 
   sans_lemme <- is.na(lem) | !nzchar(lem)
   lem[sans_lemme] <- df_tok$token[sans_lemme]
