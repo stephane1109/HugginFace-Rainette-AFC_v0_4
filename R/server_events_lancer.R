@@ -305,9 +305,29 @@ register_events_lancer <- function(input, output, session, rv) {
             dfm_obj <- res_dfm$dfm
           }
 
-          included_segments <- docnames(dfm_obj)
+          if (anyDuplicated(docnames(dfm_obj)) > 0) {
+            dups_dfm <- sum(duplicated(as.character(docnames(dfm_obj))))
+            docnames(dfm_obj) <- make.unique(as.character(docnames(dfm_obj)), sep = "_dup")
+            ajouter_log(rv, paste0("DFM : docnames dupliqués détectés (", dups_dfm, "). Renommage automatique."))
+          }
+
+          included_segments <- as.character(docnames(dfm_obj))
+          included_segments <- included_segments[!is.na(included_segments) & nzchar(included_segments)]
+          included_segments <- unique(included_segments)
+
           filtered_corpus <- corpus[included_segments]
+          if (anyDuplicated(docnames(filtered_corpus)) > 0) {
+            dups_corpus <- sum(duplicated(as.character(docnames(filtered_corpus))))
+            docnames(filtered_corpus) <- make.unique(as.character(docnames(filtered_corpus)), sep = "_dup")
+            ajouter_log(rv, paste0("Corpus filtré : docnames dupliqués détectés (", dups_corpus, "). Renommage automatique."))
+          }
+
           tok <- tok[included_segments]
+          if (anyDuplicated(docnames(tok)) > 0) {
+            dups_tok <- sum(duplicated(as.character(docnames(tok))))
+            docnames(tok) <- make.unique(as.character(docnames(tok)), sep = "_dup")
+            ajouter_log(rv, paste0("Tokens : docnames dupliqués détectés (", dups_tok, "). Renommage automatique."))
+          }
 
           dfm_obj <- assurer_docvars_dfm_minimal(dfm_obj, filtered_corpus)
 
