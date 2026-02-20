@@ -150,6 +150,10 @@ server <- function(input, output, session) {
   })
 
   output$ui_spacy_langue_detection <- renderUI({
+    if (identical(input$source_dictionnaire, "lexique_fr")) {
+      return(NULL)
+    }
+
     if (is.null(rv$filtered_corpus)) {
       return(tags$p("Détection langue : charge et lance une analyse pour afficher une estimation."))
     }

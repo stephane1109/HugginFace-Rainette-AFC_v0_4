@@ -119,7 +119,8 @@ ui <- fluidPage(
       checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
-      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
+      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique", value = FALSE),
+      tags$small("Le filtrage morphosyntaxique s'applique à spaCy ou lexique_fr selon la source sélectionnée."),
       conditionalPanel(
         condition = "input.filtrage_morpho == true",
         conditionalPanel(
