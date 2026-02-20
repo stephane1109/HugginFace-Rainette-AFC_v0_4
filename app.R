@@ -160,7 +160,7 @@ server <- function(input, output, session) {
     }
 
     cfg_est <- configurer_langue_spacy(est$code)
-    cfg_sel <- configurer_langue_spacy("fr")
+    cfg_sel <- configurer_langue_spacy(if (identical(input$source_dictionnaire, "lexique_fr")) "fr" else input$spacy_langue)
     src_dic <- if (identical(input$source_dictionnaire, "lexique_fr")) "Lexique (fr)" else "spaCy"
 
     msg <- paste0(
@@ -173,13 +173,13 @@ server <- function(input, output, session) {
     if (!identical(cfg_est$code, cfg_sel$code)) {
       return(tags$div(
         style = "border:1px solid #f5c2c7;background:#f8d7da;color:#842029;padding:10px;border-radius:4px;",
-        tags$p(style = "margin:0;", paste0(msg, " Dictionnaire actif : ", src_dic, " (langue FR)."))
+        tags$p(style = "margin:0;", paste0(msg, " Dictionnaire actif : ", src_dic, " (langue ", toupper(cfg_sel$code), ")."))
       ))
     }
 
     tags$div(
       style = "border:1px solid #badbcc;background:#d1e7dd;color:#0f5132;padding:10px;border-radius:4px;",
-      tags$p(style = "margin:0;", paste0(msg, " Dictionnaire actif : ", src_dic, " (langue FR)."))
+      tags$p(style = "margin:0;", paste0(msg, " Dictionnaire actif : ", src_dic, " (langue ", toupper(cfg_sel$code), ")."))
     )
   })
 

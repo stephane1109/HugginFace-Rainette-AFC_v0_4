@@ -78,7 +78,16 @@ ui <- fluidPage(
         selected = "spacy",
         inline = FALSE
       ),
-      tags$small("Le mode 'Lexique (fr)' utilise le fichier OpenLexicon.csv (colonnes ortho, Lexique4__Lemme, Lexique4__Cgram)."),
+      tags$small("Le mode 'Lexique (fr)' utilise lexique_fr.csv au format : c_mot, c_lemme, c_morpho."),
+      conditionalPanel(
+        condition = "input.source_dictionnaire == 'spacy'",
+        selectInput(
+          "spacy_langue",
+          "Langue spaCy",
+          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+          selected = "fr"
+        )
+      ),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'lexique_fr'",
         checkboxInput("lexique_utiliser_lemmes", "Lemmatisation (Lexique fr)", value = TRUE)
@@ -113,16 +122,33 @@ ui <- fluidPage(
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
       conditionalPanel(
         condition = "input.filtrage_morpho == true",
-        selectizeInput(
-          "pos_spacy_a_conserver",
-          "POS à conserver (spaCy)",
-          choices = c(
-            "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN",
-            "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"
-          ),
-          selected = c("NOUN", "VERB"),
-          multiple = TRUE,
-          options = list(plugins = list("remove_button"))
+        conditionalPanel(
+          condition = "input.source_dictionnaire == 'spacy'",
+          selectizeInput(
+            "pos_spacy_a_conserver",
+            "POS à conserver (spaCy)",
+            choices = c(
+              "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN",
+              "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"
+            ),
+            selected = c("NOUN", "VERB"),
+            multiple = TRUE,
+            options = list(plugins = list("remove_button"))
+          )
+        ),
+        conditionalPanel(
+          condition = "input.source_dictionnaire == 'lexique_fr'",
+          selectizeInput(
+            "pos_lexique_a_conserver",
+            "POS à conserver (lexique_fr)",
+            choices = c(
+              "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN",
+              "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"
+            ),
+            selected = c("NOUN", "VERB", "ADJ"),
+            multiple = TRUE,
+            options = list(plugins = list("remove_button"))
+          )
         )
       ),
       conditionalPanel(
