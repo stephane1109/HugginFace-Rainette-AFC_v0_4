@@ -23,17 +23,32 @@
 - **VERB** : verbe
 - **X** : autre / catégorie inconnue
 
+### Filtrage morphosyntaxique spécifique lexique_fr
+
+Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`Lexique4__Cgram` en format lexique_fr, ou `c_morpho` en format IRaMuTeQ), et non les POS Universal spaCy.
+
+- Catégories usuelles : `NOM`, `VER`, `AUX`, `ADJ`, `ADV`, `PRE`, `CON`.
+- Catégories fines disponibles : `PRO:*`, `ADJ:*`, `ART:*`, `ONO`.
+- Valeur de départ recommandée : `NOM`, `VER`, `ADJ`.
+
+Flux technique (mode Lexique):
+1. tokenisation locale (quanteda),
+2. filtrage des tokens par présence dans lexique_fr avec les `Cgram` sélectionnés,
+3. lemmatisation (si activée) directement via lexique_fr (forme -> lemme).
+
+> Le filtrage morphosyntaxique lexique_fr est donc indépendant de spaCy.
 
 ### Paramétrage côté interface (Shiny)
 
 Dans l’interface, la section **Paramétrages SpaCy** permet :
 
-- d’activer le **filtrage morphosyntaxique (spaCy)**,
-- de sélectionner les POS à conserver parmi la liste Universal POS,
+- d’activer le **filtrage morphosyntaxique**,
+- de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
+- de sélectionner les catégories **lexique_fr (Lexique4__Cgram)** quand la source est **Lexique (fr)**,
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.
 
 ### Conseils pratiques
 
-- Pour une analyse thématique : commencer par `NOUN,VERB,ADJ`.
-- Pour préserver les noms d’organisations/personnes : ajouter `PROPN`.
-- Pour éviter le bruit grammatical : exclure en général `DET`, `PRON`, `CCONJ`, `SCONJ`, `PART`.
+- Pour une analyse thématique : commencer par `NOUN,VERB,ADJ` (spaCy) ou `NOM,VER,ADJ` (lexique_fr).
+- Pour préserver les noms d’organisations/personnes : ajouter `PROPN` (spaCy) ou conserver `NOM` (lexique_fr).
+- Pour éviter le bruit grammatical : exclure en général `DET`, `PRON`, `CCONJ`, `SCONJ`, `PART` (spaCy), ou éviter `ART:*`, `PRO:*`, `CON` (lexique_fr) si l’objectif est thématique.
