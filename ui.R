@@ -80,6 +80,15 @@ ui <- fluidPage(
       ),
       tags$small("Le mode 'Lexique (fr)' utilise lexique_fr.csv, au format lexique_fr (ortho, Lexique4__Lemme, Lexique4__Cgram) ou IRaMuTeQ (c_mot, c_lemme, c_morpho)."),
       conditionalPanel(
+        condition = "input.source_dictionnaire == 'spacy'",
+        selectInput(
+          "spacy_langue",
+          "Langue spaCy",
+          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+          selected = "fr"
+        )
+      ),
+      conditionalPanel(
         condition = "input.source_dictionnaire == 'lexique_fr'",
         checkboxInput("lexique_utiliser_lemmes", "Lemmatisation (Lexique fr)", value = TRUE)
       ),

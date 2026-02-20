@@ -43,6 +43,7 @@ Flux technique (mode Lexique):
 Dans l’interface, la section **Paramétrages SpaCy** permet :
 
 - d’activer le **filtrage morphosyntaxique**,
+- de choisir la langue spaCy (`fr`, `en`, `es`) quand la source est **spaCy**,
 - de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
 - de sélectionner les catégories **lexique_fr (Lexique4__Cgram)** quand la source est **Lexique (fr)**,
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.

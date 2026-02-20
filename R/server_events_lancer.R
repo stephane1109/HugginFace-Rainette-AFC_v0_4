@@ -135,7 +135,7 @@ register_events_lancer <- function(input, output, session, rv) {
           )
           names(textes_chd) <- ids_corpus
 
-          verifier_coherence_dictionnaire_langue(textes_chd, "fr", rv = rv)
+          verifier_coherence_dictionnaire_langue(textes_chd, if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "fr" else as.character(input$spacy_langue), rv = rv)
 
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
@@ -147,7 +147,9 @@ register_events_lancer <- function(input, output, session, rv) {
           utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)
           source_lexique <- identical(source_dictionnaire, "lexique_fr")
           utiliser_lemmes_lexique <- source_lexique && isTRUE(input$lexique_utiliser_lemmes)
-          config_spacy <- configurer_langue_spacy("fr")
+          langue_spacy_sel <- if (isTRUE(source_lexique)) "fr" else as.character(input$spacy_langue)
+          config_spacy <- configurer_langue_spacy(langue_spacy_sel)
+          langue_reference <- if (isTRUE(source_lexique)) "fr" else config_spacy$code
           utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes_spacy
 
           if (isTRUE(utiliser_lemmes_lexique)) {
@@ -180,7 +182,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = "Lexique (fr)"
             )
@@ -200,7 +202,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = "Standard"
             )
@@ -249,7 +251,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + filtrage Cgram", "lexique_fr (Cgram)")
             )
@@ -306,7 +308,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr)", "spaCy")
             )
@@ -427,7 +429,7 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "NER (si activé)..."
 
           if (isTRUE(input$activer_ner)) {
-            config_spacy_ner <- configurer_langue_spacy("fr")
+            config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
             ids_ner <- docnames(filtered_corpus_ok)
             textes_ner <- as.character(filtered_corpus_ok)
             rv$ner_nb_segments <- length(textes_ner)
