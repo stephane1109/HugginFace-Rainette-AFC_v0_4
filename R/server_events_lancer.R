@@ -211,16 +211,22 @@ register_events_lancer <- function(input, output, session, rv) {
 
           } else if (isTRUE(source_lexique) && isTRUE(filtrage_morpho)) {
 
-            cgram_lexique_a_conserver <- input$pos_lexique_a_conserver
-            if (is.null(cgram_lexique_a_conserver) || length(cgram_lexique_a_conserver) == 0) {
+            pos_lexique_a_conserver <- input$pos_lexique_a_conserver
+            if (is.null(pos_lexique_a_conserver) || length(pos_lexique_a_conserver) == 0) {
+              pos_lexique_a_conserver <- c("NOUN", "ADJ", "VERB")
+            }
+
+            cgram_lexique_a_conserver <- mapper_pos_universels_vers_cgram_lexique(pos_lexique_a_conserver)
+            if (length(cgram_lexique_a_conserver) == 0) {
               cgram_lexique_a_conserver <- c("NOM", "ADJ", "VER")
             }
 
             ajouter_log(
               rv,
               paste0(
-                "lexique_fr | filtrage morpho=1 (Cgram: ",
-                paste(cgram_lexique_a_conserver, collapse = ", "),
+                "lexique_fr | filtrage morpho=1 (POS: ",
+                paste(pos_lexique_a_conserver, collapse = ", "),
+                " ; c_morpho: ", paste(cgram_lexique_a_conserver, collapse = ", "),
                 ") | lemmes=", ifelse(utiliser_lemmes_lexique, "1", "0"),
                 " | stopwords: spaCy"
               )
@@ -253,7 +259,7 @@ register_events_lancer <- function(input, output, session, rv) {
               retirer_stopwords = isTRUE(input$retirer_stopwords),
               langue_spacy = langue_reference,
               rv = rv,
-              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + filtrage Cgram", "lexique_fr (Cgram)")
+              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + filtrage c_morpho", "lexique_fr (c_morpho)")
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm

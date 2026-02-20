@@ -25,7 +25,7 @@
 
 ### Filtrage morphosyntaxique spécifique lexique_fr
 
-Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`Lexique4__Cgram` en format lexique_fr, ou `c_morpho` en format IRaMuTeQ), et non les POS Universal spaCy.
+Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS Universal spaCy.
 
 - Catégories usuelles : `NOM`, `VER`, `AUX`, `ADJ`, `ADV`, `PRE`, `CON`.
 - Catégories fines disponibles : `PRO:*`, `ADJ:*`, `ART:*`, `ONO`.
@@ -33,7 +33,7 @@ Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtr
 
 Flux technique (mode Lexique):
 1. tokenisation locale (quanteda),
-2. filtrage des tokens par présence dans lexique_fr avec les `Cgram` sélectionnés,
+2. filtrage des tokens par présence dans lexique_fr avec les catégories `c_morpho` sélectionnées,
 3. lemmatisation (si activée) directement via lexique_fr (forme -> lemme).
 
 > Le filtrage morphosyntaxique lexique_fr est donc indépendant de spaCy.
@@ -45,7 +45,7 @@ Dans l’interface, la section **Paramétrages SpaCy** permet :
 - d’activer le **filtrage morphosyntaxique**,
 - de choisir la langue spaCy (`fr`, `en`, `es`) quand la source est **spaCy**,
 - de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
-- de sélectionner les catégories **lexique_fr (Lexique4__Cgram)** quand la source est **Lexique (fr)**,
+- de sélectionner les **POS** à conserver quand la source est **Lexique (fr)** (mappés en interne vers les catégories `c_morpho`),
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.
 
 ### Conseils pratiques

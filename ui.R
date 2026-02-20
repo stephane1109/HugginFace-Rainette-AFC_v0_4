@@ -78,7 +78,7 @@ ui <- fluidPage(
         selected = "spacy",
         inline = FALSE
       ),
-      tags$small("Le mode 'Lexique (fr)' utilise lexique_fr.csv, au format lexique_fr (ortho, Lexique4__Lemme, Lexique4__Cgram) ou IRaMuTeQ (c_mot, c_lemme, c_morpho)."),
+      tags$small("Le mode 'Lexique (fr)' utilise lexique_fr.csv au format : c_mot, c_lemme, c_morpho."),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
         selectInput(
@@ -140,14 +140,12 @@ ui <- fluidPage(
           condition = "input.source_dictionnaire == 'lexique_fr'",
           selectizeInput(
             "pos_lexique_a_conserver",
-            "Catégories lexique_fr (Lexique4__Cgram)",
+            "POS à conserver (lexique_fr)",
             choices = c(
-              "NOM", "VER", "AUX", "ADJ", "ADV", "PRE", "CON", "ONO",
-              "ADJ:NUM", "ADJ:POS", "ADJ:IND", "ADJ:INT", "ADJ:DEM",
-              "PRO:PER", "PRO:POS", "PRO:DEM", "PRO:IND", "PRO:REL", "PRO:INT",
-              "ART:DEF", "ART:IND"
+              "ADJ", "ADP", "ADV", "AUX", "CCONJ", "DET", "INTJ", "NOUN",
+              "NUM", "PART", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM", "VERB", "X"
             ),
-            selected = c("NOM", "VER", "ADJ"),
+            selected = c("NOUN", "VERB", "ADJ"),
             multiple = TRUE,
             options = list(plugins = list("remove_button"))
           )

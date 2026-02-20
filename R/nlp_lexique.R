@@ -1,6 +1,5 @@
 # Module NLP - lemmatisation via lexique externe (lexique_fr.csv)
-# Ce module charge un lexique 3 colonnes soit au format lexique_fr
-# (ortho, Lexique4__Lemme, Lexique4__Cgram), soit au format IRaMuTeQ
+# Ce module charge un lexique 3 colonnes au format canonique
 # (c_mot, c_lemme, c_morpho).
 # et applique une lemmatisation explicite sans fallback silencieux vers spaCy.
 
@@ -62,40 +61,26 @@ charger_lexique_fr <- function(chemin = "lexique_fr.csv") {
 
   names(lexique) <- trimws(sub("^\ufeff", "", names(lexique)))
 
-  # Compatibilité IRaMuTeQ : c_mot, c_lemme, c_morpho
-  noms_orig <- names(lexique)
-  noms_low <- tolower(noms_orig)
-  idx_mot <- match("c_mot", noms_low)
-  idx_lemme <- match("c_lemme", noms_low)
-  idx_morpho <- match("c_morpho", noms_low)
-  if (all(!is.na(c(idx_mot, idx_lemme, idx_morpho)))) {
-    names(lexique)[idx_mot] <- "ortho"
-    names(lexique)[idx_lemme] <- "Lexique4__Lemme"
-    names(lexique)[idx_morpho] <- "Lexique4__Cgram"
-  }
-
-  colonnes_attendues <- c("ortho", "Lexique4__Lemme", "Lexique4__Cgram")
+  colonnes_attendues <- c("c_mot", "c_lemme", "c_morpho")
   manquantes <- setdiff(colonnes_attendues, names(lexique))
   if (length(manquantes) > 0) {
     stop(
       paste0(
         "Lexique (fr) mal configuré : colonnes manquantes [",
         paste(manquantes, collapse = ", "),
-        "]. Formats acceptés : ",
-        "lexique_fr (ortho, Lexique4__Lemme, Lexique4__Cgram) ou ",
-        "IRaMuTeQ (c_mot, c_lemme, c_morpho)."
+        "]. Format attendu : c_mot, c_lemme, c_morpho."
       )
     )
   }
 
-  lexique$ortho <- tolower(trimws(as.character(lexique$ortho)))
-  lexique$Lexique4__Lemme <- tolower(trimws(as.character(lexique$Lexique4__Lemme)))
-  lexique$Lexique4__Cgram <- toupper(trimws(as.character(lexique$Lexique4__Cgram)))
+  lexique$c_mot <- tolower(trimws(as.character(lexique$c_mot)))
+  lexique$c_lemme <- tolower(trimws(as.character(lexique$c_lemme)))
+  lexique$c_morpho <- toupper(trimws(as.character(lexique$c_morpho)))
 
   lexique <- lexique[
-    nzchar(lexique$ortho) &
-      nzchar(lexique$Lexique4__Lemme) &
-      nzchar(lexique$Lexique4__Cgram),
+    nzchar(lexique$c_mot) &
+      nzchar(lexique$c_lemme) &
+      nzchar(lexique$c_morpho),
     ,
     drop = FALSE
   ]
@@ -115,8 +100,8 @@ lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
   )
 
   map_forme_lemme <- tapply(
-    lexique$Lexique4__Lemme,
-    lexique$ortho,
+    lexique$c_lemme,
+    lexique$c_mot,
     function(x) unique(x)[1]
   )
 
@@ -136,12 +121,43 @@ lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
   textes_lem
 }
 
+
+
+mapper_pos_universels_vers_cgram_lexique <- function(pos_a_conserver) {
+  pos <- unique(toupper(trimws(as.character(pos_a_conserver))))
+  pos <- pos[nzchar(pos)]
+  if (length(pos) == 0) return(character(0))
+
+  map <- list(
+    ADJ = c("ADJ", "ADJ:NUM", "ADJ:POS", "ADJ:IND", "ADJ:INT", "ADJ:DEM"),
+    ADP = c("PRE"),
+    ADV = c("ADV"),
+    AUX = c("AUX"),
+    CCONJ = c("CON"),
+    DET = c("ART:DEF", "ART:IND", "ADJ:POS", "ADJ:DEM", "ADJ:IND", "ADJ:INT"),
+    INTJ = c("ONO"),
+    NOUN = c("NOM"),
+    NUM = c("ADJ:NUM"),
+    PRON = c("PRO:PER", "PRO:POS", "PRO:DEM", "PRO:IND", "PRO:REL", "PRO:INT"),
+    PROPN = c("NOM"),
+    SCONJ = c("CON"),
+    VERB = c("VER", "AUX")
+  )
+
+  out <- unlist(lapply(pos, function(tag) {
+    candidats <- map[[tag]]
+    if (is.null(candidats)) character(0) else candidats
+  }), use.names = FALSE)
+
+  unique(out)
+}
+
 filtrer_textes_lexique_par_cgram <- function(textes, lexique, cgram_a_conserver, rv = NULL) {
   cgram_keep <- unique(toupper(trimws(as.character(cgram_a_conserver))))
   cgram_keep <- cgram_keep[nzchar(cgram_keep)]
   if (length(cgram_keep) == 0) return(textes)
 
-  formes_keep <- unique(lexique$ortho[lexique$Lexique4__Cgram %in% cgram_keep])
+  formes_keep <- unique(lexique$c_mot[lexique$c_morpho %in% cgram_keep])
   formes_keep <- formes_keep[nzchar(formes_keep)]
 
   tok <- quanteda::tokens(
@@ -167,7 +183,7 @@ filtrer_textes_lexique_par_cgram <- function(textes, lexique, cgram_a_conserver,
     ajouter_log(
       rv,
       paste0(
-        "Lexique (fr) : filtrage Cgram [", paste(cgram_keep, collapse = ", "),
+        "Lexique (fr) : filtrage c_morpho [", paste(cgram_keep, collapse = ", "),
         "] => ", total_conserves, "/", total_tokens, " token(s) conservé(s)."
       )
     )
