@@ -31,6 +31,20 @@ Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtr
 - Catégories fines disponibles : `PRO:*`, `ADJ:*`, `ART:*`, `ONO`.
 - Valeur de départ recommandée : `NOM`, `VER`, `ADJ`.
 
+| Forme | Exemple |
+|---|---|
+| `NOM` | `maison`, `analyse` |
+| `VER` | `manger`, `observe` |
+| `AUX` | `être`, `avoir` |
+| `ADJ` | `grand`, `important` |
+| `ADV` | `rapidement`, `souvent` |
+| `PRE` | `dans`, `avec` |
+| `CON` | `et`, `mais` |
+| `PRO:*` | `je`, `nous`, `celui-ci` |
+| `ADJ:*` | `possessif` (`mon`), `démonstratif` (`ce`) |
+| `ART:*` | `le`, `un`, `des` |
+| `ONO` | `bam`, `ouf` |
+
 Flux technique (mode Lexique):
 1. tokenisation locale (quanteda),
 2. filtrage des tokens par présence dans lexique_fr avec les catégories `c_morpho` sélectionnées,
