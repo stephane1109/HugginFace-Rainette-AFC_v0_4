@@ -104,7 +104,23 @@ register_events_lancer <- function(input, output, session, rv) {
           corpus <- split_segments(corpus, segment_size = segment_size)
           ajouter_log(rv, paste0("Nombre de segments après découpage : ", ndoc(corpus)))
 
-          ids_corpus <- docnames(corpus)
+          ids_orig <- as.character(docnames(corpus))
+          ids_corpus <- ids_orig
+          invalides <- is.na(ids_corpus) | !nzchar(trimws(ids_corpus))
+          if (any(invalides)) {
+            ids_corpus[invalides] <- paste0("doc_", which(invalides))
+          }
+
+          ids_uniques <- make.unique(ids_corpus, sep = "_dup")
+          modif_ids <- any(ids_uniques != ids_orig)
+          if (isTRUE(modif_ids)) {
+            n_problemes <- sum(invalides) + sum(duplicated(ids_corpus))
+            ajouter_log(rv, paste0("Docnames invalides/dupliqués détectés après segmentation : ", n_problemes, ". Renommage automatique via make.unique()."))
+          }
+
+          docnames(corpus) <- ids_uniques
+          ids_corpus <- as.character(docnames(corpus))
+
           textes_orig <- as.character(corpus)
 
           avancer(0.18, "Préparation texte (nettoyage / minuscules)")
@@ -119,7 +135,7 @@ register_events_lancer <- function(input, output, session, rv) {
           )
           names(textes_chd) <- ids_corpus
 
-          verifier_coherence_dictionnaire_langue(textes_chd, "fr", rv = rv)
+          verifier_coherence_dictionnaire_langue(textes_chd, if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "fr" else as.character(input$spacy_langue), rv = rv)
 
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
@@ -131,11 +147,13 @@ register_events_lancer <- function(input, output, session, rv) {
           utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)
           source_lexique <- identical(source_dictionnaire, "lexique_fr")
           utiliser_lemmes_lexique <- source_lexique && isTRUE(input$lexique_utiliser_lemmes)
-          config_spacy <- configurer_langue_spacy("fr")
+          langue_spacy_sel <- if (isTRUE(source_lexique)) "fr" else as.character(input$spacy_langue)
+          config_spacy <- configurer_langue_spacy(langue_spacy_sel)
+          langue_reference <- if (isTRUE(source_lexique)) "fr" else config_spacy$code
           utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes_spacy
 
           if (isTRUE(utiliser_lemmes_lexique)) {
-            lexique_fr <- charger_lexique_fr("OpenLexicon.csv")
+            lexique_fr <- charger_lexique_fr("lexique_fr.csv")
             ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
           } else if (isTRUE(source_lexique)) {
             lexique_fr <- NULL
@@ -164,7 +182,7 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = "Lexique (fr)"
             )
@@ -184,9 +202,58 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
               libelle = "Standard"
+            )
+            tok <- res_dfm$tok
+            dfm_obj <- res_dfm$dfm
+
+          } else if (isTRUE(source_lexique) && isTRUE(filtrage_morpho)) {
+
+            cgram_lexique_a_conserver <- input$pos_lexique_a_conserver
+            if (is.null(cgram_lexique_a_conserver) || length(cgram_lexique_a_conserver) == 0) {
+              cgram_lexique_a_conserver <- c("NOM", "ADJ", "VER")
+            }
+
+            ajouter_log(
+              rv,
+              paste0(
+                "lexique_fr | filtrage morpho=1 (Cgram: ",
+                paste(cgram_lexique_a_conserver, collapse = ", "),
+                ") | lemmes=", ifelse(utiliser_lemmes_lexique, "1", "0"),
+                " | stopwords: spaCy"
+              )
+            )
+
+            textes_lexique <- filtrer_textes_lexique_par_cgram(
+              textes = textes_chd,
+              lexique = lexique_fr,
+              cgram_a_conserver = cgram_lexique_a_conserver,
+              rv = rv
+            )
+
+            if (isTRUE(utiliser_lemmes_lexique)) {
+              textes_lexique <- lemmatiser_textes_lexique(
+                textes = textes_lexique,
+                lexique = lexique_fr,
+                rv = rv
+              )
+            }
+
+            tok_base <- tokens(
+              textes_lexique,
+              remove_punct = isTRUE(input$supprimer_ponctuation),
+              remove_numbers = isTRUE(input$supprimer_chiffres)
+            )
+
+            res_dfm <- construire_dfm_avec_fallback_stopwords(
+              tok_base = tok_base,
+              min_docfreq = input$min_docfreq,
+              retirer_stopwords = isTRUE(input$retirer_stopwords),
+              langue_spacy = langue_reference,
+              rv = rv,
+              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + filtrage Cgram", "lexique_fr (Cgram)")
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
@@ -194,18 +261,21 @@ register_events_lancer <- function(input, output, session, rv) {
           } else {
 
             pos_a_conserver <- NULL
+            pos_spacy_pipeline <- pos_a_conserver
+
             if (isTRUE(filtrage_morpho)) {
               pos_a_conserver <- input$pos_spacy_a_conserver
               if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
+              pos_spacy_pipeline <- pos_a_conserver
             }
 
             ajouter_log(
               rv,
               paste0(
-                "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
-                ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
-                " | lemmes=", ifelse((utiliser_lemmes_spacy && !source_lexique) || utiliser_lemmes_lexique, "1", "0"),
-                ifelse(utiliser_lemmes_lexique, " | source lemmes=Lexique (fr)", " | source lemmes=spaCy"),
+                "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage morpho=", ifelse(filtrage_morpho, "1", "0"),
+                ifelse(filtrage_morpho, paste0(" (spaCy POS: ", paste(pos_a_conserver, collapse = ", "), ")"), ""),
+                " | lemmes=", ifelse(utiliser_lemmes_spacy && !source_lexique, "1", "0"),
+                " | source lemmes=spaCy",
                 " | stopwords: spaCy"
               )
             )
@@ -216,7 +286,7 @@ register_events_lancer <- function(input, output, session, rv) {
             sp <- executer_spacy_filtrage(
               ids = ids_corpus,
               textes = unname(textes_chd),
-              pos_a_conserver = pos_a_conserver,
+              pos_a_conserver = pos_spacy_pipeline,
               utiliser_lemmes = utiliser_lemmes_spacy && !source_lexique,
               lower_input = isTRUE(input$forcer_minuscules_avant),
               modele_spacy = config_spacy$modele,
@@ -226,17 +296,6 @@ register_events_lancer <- function(input, output, session, rv) {
             textes_spacy <- sp$textes
             names(textes_spacy) <- ids_corpus
             rv$spacy_tokens_df <- sp$tokens_df
-
-            if (isTRUE(utiliser_lemmes_lexique)) {
-              lex <- lemmatiser_tokens_spacy_avec_lexique(
-                tokens_df = sp$tokens_df,
-                lexique = lexique_fr,
-                rv = rv
-              )
-              textes_spacy <- lex$textes[ids_corpus]
-              textes_spacy[is.na(textes_spacy)] <- ""
-              rv$spacy_tokens_df <- lex$tokens_df
-            }
 
             avancer(0.40, "spaCy : tokens + DFM")
             tok_base <- tokens(
@@ -249,17 +308,37 @@ register_events_lancer <- function(input, output, session, rv) {
               tok_base = tok_base,
               min_docfreq = input$min_docfreq,
               retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = "fr",
+              langue_spacy = langue_reference,
               rv = rv,
-              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + POS spaCy", "spaCy")
+              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr)", "spaCy")
             )
             tok <- res_dfm$tok
             dfm_obj <- res_dfm$dfm
           }
 
-          included_segments <- docnames(dfm_obj)
+          if (anyDuplicated(docnames(dfm_obj)) > 0) {
+            dups_dfm <- sum(duplicated(as.character(docnames(dfm_obj))))
+            docnames(dfm_obj) <- make.unique(as.character(docnames(dfm_obj)), sep = "_dup")
+            ajouter_log(rv, paste0("DFM : docnames dupliqués détectés (", dups_dfm, "). Renommage automatique."))
+          }
+
+          included_segments <- as.character(docnames(dfm_obj))
+          included_segments <- included_segments[!is.na(included_segments) & nzchar(included_segments)]
+          included_segments <- unique(included_segments)
+
           filtered_corpus <- corpus[included_segments]
+          if (anyDuplicated(docnames(filtered_corpus)) > 0) {
+            dups_corpus <- sum(duplicated(as.character(docnames(filtered_corpus))))
+            docnames(filtered_corpus) <- make.unique(as.character(docnames(filtered_corpus)), sep = "_dup")
+            ajouter_log(rv, paste0("Corpus filtré : docnames dupliqués détectés (", dups_corpus, "). Renommage automatique."))
+          }
+
           tok <- tok[included_segments]
+          if (anyDuplicated(docnames(tok)) > 0) {
+            dups_tok <- sum(duplicated(as.character(docnames(tok))))
+            docnames(tok) <- make.unique(as.character(docnames(tok)), sep = "_dup")
+            ajouter_log(rv, paste0("Tokens : docnames dupliqués détectés (", dups_tok, "). Renommage automatique."))
+          }
 
           dfm_obj <- assurer_docvars_dfm_minimal(dfm_obj, filtered_corpus)
 
@@ -350,7 +429,7 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "NER (si activé)..."
 
           if (isTRUE(input$activer_ner)) {
-            config_spacy_ner <- configurer_langue_spacy("fr")
+            config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
             ids_ner <- docnames(filtered_corpus_ok)
             textes_ner <- as.character(filtered_corpus_ok)
             rv$ner_nb_segments <- length(textes_ner)
