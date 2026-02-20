@@ -123,35 +123,6 @@ lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
 
 
 
-mapper_pos_universels_vers_cgram_lexique <- function(pos_a_conserver) {
-  pos <- unique(toupper(trimws(as.character(pos_a_conserver))))
-  pos <- pos[nzchar(pos)]
-  if (length(pos) == 0) return(character(0))
-
-  map <- list(
-    ADJ = c("ADJ", "ADJ:NUM", "ADJ:POS", "ADJ:IND", "ADJ:INT", "ADJ:DEM"),
-    ADP = c("PRE"),
-    ADV = c("ADV"),
-    AUX = c("AUX"),
-    CCONJ = c("CON"),
-    DET = c("ART:DEF", "ART:IND", "ADJ:POS", "ADJ:DEM", "ADJ:IND", "ADJ:INT"),
-    INTJ = c("ONO"),
-    NOUN = c("NOM"),
-    NUM = c("ADJ:NUM"),
-    PRON = c("PRO:PER", "PRO:POS", "PRO:DEM", "PRO:IND", "PRO:REL", "PRO:INT"),
-    PROPN = c("NOM"),
-    SCONJ = c("CON"),
-    VERB = c("VER", "AUX")
-  )
-
-  out <- unlist(lapply(pos, function(tag) {
-    candidats <- map[[tag]]
-    if (is.null(candidats)) character(0) else candidats
-  }), use.names = FALSE)
-
-  unique(out)
-}
-
 filtrer_textes_lexique_par_cgram <- function(textes, lexique, cgram_a_conserver, rv = NULL) {
   cgram_keep <- unique(toupper(trimws(as.character(cgram_a_conserver))))
   cgram_keep <- cgram_keep[nzchar(cgram_keep)]

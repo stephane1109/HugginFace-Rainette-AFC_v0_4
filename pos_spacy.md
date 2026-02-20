@@ -45,7 +45,7 @@ Dans l’interface, la section **Paramétrages SpaCy** permet :
 - d’activer le **filtrage morphosyntaxique**,
 - de choisir la langue spaCy (`fr`, `en`, `es`) quand la source est **spaCy**,
 - de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
-- de sélectionner les **POS** à conserver quand la source est **Lexique (fr)** (mappés en interne vers les catégories `c_morpho`),
+- de sélectionner directement les catégories `c_morpho` à conserver quand la source est **Lexique (fr)**,
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.
 
 ### Conseils pratiques

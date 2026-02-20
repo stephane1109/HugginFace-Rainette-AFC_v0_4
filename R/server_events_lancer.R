@@ -211,22 +211,17 @@ register_events_lancer <- function(input, output, session, rv) {
 
           } else if (isTRUE(source_lexique) && isTRUE(filtrage_morpho)) {
 
-            pos_lexique_a_conserver <- input$pos_lexique_a_conserver
-            if (is.null(pos_lexique_a_conserver) || length(pos_lexique_a_conserver) == 0) {
-              pos_lexique_a_conserver <- c("NOUN", "ADJ", "VERB")
-            }
-
-            cgram_lexique_a_conserver <- mapper_pos_universels_vers_cgram_lexique(pos_lexique_a_conserver)
-            if (length(cgram_lexique_a_conserver) == 0) {
+            cgram_lexique_a_conserver <- toupper(trimws(as.character(input$pos_lexique_a_conserver)))
+            cgram_lexique_a_conserver <- unique(cgram_lexique_a_conserver[nzchar(cgram_lexique_a_conserver)])
+            if (is.null(cgram_lexique_a_conserver) || length(cgram_lexique_a_conserver) == 0) {
               cgram_lexique_a_conserver <- c("NOM", "ADJ", "VER")
             }
 
             ajouter_log(
               rv,
               paste0(
-                "lexique_fr | filtrage morpho=1 (POS: ",
-                paste(pos_lexique_a_conserver, collapse = ", "),
-                " ; c_morpho: ", paste(cgram_lexique_a_conserver, collapse = ", "),
+                "lexique_fr | filtrage morpho=1 (c_morpho: ",
+                paste(cgram_lexique_a_conserver, collapse = ", "),
                 ") | lemmes=", ifelse(utiliser_lemmes_lexique, "1", "0"),
                 " | stopwords: spaCy"
               )
