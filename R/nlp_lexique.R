@@ -1,14 +1,16 @@
-# Module NLP - lemmatisation via lexique externe (OpenLexicon.csv)
-# Ce module charge un lexique 3 colonnes (ortho, Lexique4__Lemme, Lexique4__Cgram)
+# Module NLP - lemmatisation via lexique externe (lexique_fr.csv)
+# Ce module charge un lexique 3 colonnes soit au format lexique_fr
+# (ortho, Lexique4__Lemme, Lexique4__Cgram), soit au format IRaMuTeQ
+# (c_mot, c_lemme, c_morpho).
 # et applique une lemmatisation explicite sans fallback silencieux vers spaCy.
 
-charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
+charger_lexique_fr <- function(chemin = "lexique_fr.csv") {
   fichier <- tryCatch(normalizePath(chemin, mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(fichier) || !file.exists(fichier)) {
     stop(
       paste0(
         "Lexique (fr) introuvable : fichier '", chemin,
-        "' absent. Ajoute OpenLexicon.csv à la racine du projet."
+        "' absent. Ajoute lexique_fr.csv à la racine du projet (format lexique_fr ou IRaMuTeQ)."
       )
     )
   }
@@ -60,6 +62,18 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
 
   names(lexique) <- trimws(sub("^\ufeff", "", names(lexique)))
 
+  # Compatibilité IRaMuTeQ : c_mot, c_lemme, c_morpho
+  noms_orig <- names(lexique)
+  noms_low <- tolower(noms_orig)
+  idx_mot <- match("c_mot", noms_low)
+  idx_lemme <- match("c_lemme", noms_low)
+  idx_morpho <- match("c_morpho", noms_low)
+  if (all(!is.na(c(idx_mot, idx_lemme, idx_morpho)))) {
+    names(lexique)[idx_mot] <- "ortho"
+    names(lexique)[idx_lemme] <- "Lexique4__Lemme"
+    names(lexique)[idx_morpho] <- "Lexique4__Cgram"
+  }
+
   colonnes_attendues <- c("ortho", "Lexique4__Lemme", "Lexique4__Cgram")
   manquantes <- setdiff(colonnes_attendues, names(lexique))
   if (length(manquantes) > 0) {
@@ -67,9 +81,9 @@ charger_lexique_fr <- function(chemin = "OpenLexicon.csv") {
       paste0(
         "Lexique (fr) mal configuré : colonnes manquantes [",
         paste(manquantes, collapse = ", "),
-        "]. Colonnes attendues : ",
-        paste(colonnes_attendues, collapse = ", "),
-        "."
+        "]. Formats acceptés : ",
+        "lexique_fr (ortho, Lexique4__Lemme, Lexique4__Cgram) ou ",
+        "IRaMuTeQ (c_mot, c_lemme, c_morpho)."
       )
     )
   }
@@ -122,107 +136,43 @@ lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
   textes_lem
 }
 
-mapper_pos_spacy_vers_lexique <- function(pos_spacy) {
-  pos <- toupper(trimws(as.character(pos_spacy)))
-
-  map <- list(
-    ADJ = c("ADJ", "ADJ:NUM", "ADJ:POS", "ADJ:IND", "ADJ:INT", "ADJ:DEM"),
-    ADP = c("PRE"),
-    ADV = c("ADV"),
-    AUX = c("AUX", "VER"),
-    CCONJ = c("CON"),
-    DET = c("ART:DEF", "ART:IND", "ADJ:POS", "ADJ:DEM", "ADJ:IND", "ADJ:INT"),
-    INTJ = c("ONO"),
-    NOUN = c("NOM"),
-    NUM = c("ADJ:NUM"),
-    PRON = c("PRO:PER", "PRO:POS", "PRO:DEM", "PRO:IND", "PRO:REL", "PRO:INT"),
-    PROPN = c("NOM"),
-    SCONJ = c("CON"),
-    VERB = c("VER", "AUX")
-  )
-
-  out <- lapply(pos, function(tag) {
-    candidats <- map[[tag]]
-    if (is.null(candidats) || length(candidats) == 0) return(tag)
-    unique(candidats)
-  })
-
-  names(out) <- pos
-  out
-}
-
-filtrer_tokens_lexique_par_cgram <- function(tokens_df, lexique, cgram_a_conserver, rv = NULL) {
-  if (is.null(tokens_df) || nrow(tokens_df) == 0) return(tokens_df)
-
+filtrer_textes_lexique_par_cgram <- function(textes, lexique, cgram_a_conserver, rv = NULL) {
   cgram_keep <- unique(toupper(trimws(as.character(cgram_a_conserver))))
   cgram_keep <- cgram_keep[nzchar(cgram_keep)]
-  if (length(cgram_keep) == 0) return(tokens_df)
+  if (length(cgram_keep) == 0) return(textes)
 
   formes_keep <- unique(lexique$ortho[lexique$Lexique4__Cgram %in% cgram_keep])
   formes_keep <- formes_keep[nzchar(formes_keep)]
 
-  tok <- tokens_df
-  tok$token <- tolower(trimws(as.character(tok$token)))
-  garder <- tok$token %in% formes_keep
+  tok <- quanteda::tokens(
+    textes,
+    remove_punct = FALSE,
+    remove_numbers = FALSE
+  )
+
+  liste_tok <- as.list(tok)
+  total_tokens <- 0L
+  total_conserves <- 0L
+
+  textes_filtres <- vapply(liste_tok, function(v) {
+    if (length(v) == 0) return("")
+    v_low <- tolower(trimws(as.character(v)))
+    total_tokens <<- total_tokens + length(v_low)
+    garder <- v_low %in% formes_keep
+    total_conserves <<- total_conserves + sum(garder)
+    paste(v_low[garder], collapse = " ")
+  }, FUN.VALUE = character(1))
 
   if (!is.null(rv)) {
     ajouter_log(
       rv,
       paste0(
         "Lexique (fr) : filtrage Cgram [", paste(cgram_keep, collapse = ", "),
-        "] => ", sum(garder), "/", nrow(tok), " token(s) conservé(s)."
+        "] => ", total_conserves, "/", total_tokens, " token(s) conservé(s)."
       )
     )
   }
 
-  tok[garder, , drop = FALSE]
-}
-
-lemmatiser_tokens_spacy_avec_lexique <- function(tokens_df, lexique, rv = NULL) {
-  if (is.null(tokens_df) || nrow(tokens_df) == 0) {
-    return(list(textes = setNames(character(0), character(0)), tokens_df = tokens_df, n_sans_lemme = 0L))
-  }
-
-  df_tok <- tokens_df
-  df_tok$doc_id <- as.character(df_tok$doc_id)
-  df_tok$token <- tolower(trimws(as.character(df_tok$token)))
-  df_tok$pos <- toupper(trimws(as.character(df_tok$pos)))
-
-  cle_lex <- paste(lexique$ortho, lexique$Lexique4__Cgram, sep = "\t")
-  map_cle_lemme <- tapply(
-    lexique$Lexique4__Lemme,
-    cle_lex,
-    function(x) unique(x)[1]
-  )
-
-  pos_mappes <- mapper_pos_spacy_vers_lexique(df_tok$pos)
-  lem <- vapply(seq_len(nrow(df_tok)), function(i) {
-    candidats <- pos_mappes[[i]]
-    cles <- paste(df_tok$token[i], candidats, sep = "\t")
-    trouves <- unname(map_cle_lemme[cles])
-    trouves <- trouves[!is.na(trouves) & nzchar(trouves)]
-    if (length(trouves) == 0) return(NA_character_)
-    trouves[1]
-  }, FUN.VALUE = character(1))
-
-  sans_lemme <- is.na(lem) | !nzchar(lem)
-  lem[sans_lemme] <- df_tok$token[sans_lemme]
-
-  df_tok$lemma_lexique <- lem
-
-  agg <- split(df_tok$lemma_lexique, df_tok$doc_id)
-  textes <- vapply(agg, function(v) paste(v, collapse = " "), FUN.VALUE = character(1))
-
-  if (!is.null(rv)) {
-    ajouter_log(
-      rv,
-      paste0(
-        "Lexique (fr) : ",
-        sum(sans_lemme),
-        " token(s) sans entrée lexicale (conservés en forme de surface)."
-      )
-    )
-  }
-
-  list(textes = textes, tokens_df = df_tok, n_sans_lemme = as.integer(sum(sans_lemme)))
+  names(textes_filtres) <- names(textes)
+  textes_filtres
 }
