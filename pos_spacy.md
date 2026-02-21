@@ -28,32 +28,33 @@
 
 Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS de spaCy.
 
-- **NOM** : maison, analyse
-- **NOM_SUP** : alentours
-- **VER** : mange, observe
-- **VER_SUP** : croie
-- **AUX** : a, est
-- **ADJ** : grand, important
-- **ADJ_SUP** : bis
-- **ADJ_DEM** : cet, ces
-- **ADJ_IND** : aucun
-- **ADJ_INT** : quel
-- **ADJ_NUM** : deux, cent
-- **ADJ_POS** : mon, leurs
-- **ADV** : a_priori, a_capella
-- **ADV_SUP** : afin
-- **PRE** : dans, avec
-- **CON** : et, mais
-- **ART_DEF** : le, la, au
-- **ART_IND** : un, des
-- **PRO_DEM** : ceci, celui_ci
-- **PRO_IND** : autre
-- **PRO_PER** : je, nous
-- **PRO_POS** : mien
-- **PRO_REL** : auquel, qui
-- **ONO** : ah, badabam
+- **NOM** : nom commun
+- **NOM_SUP** : nom
+- **VER** : verbe
+- **VER_SUP** : verbe
+- **AUX** : auxiliaire
+- **ADJ** : adjectif
+- **ADJ_SUP** : adjectif
+- **ADJ_DEM** : adjectif démonstratif
+- **ADJ_IND** : adjectif indéfini
+- **ADJ_INT** : adjectif interrogatif
+- **ADJ_NUM** : adjectif numéral
+- **ADJ_POS** : adjectif possessif
+- **ADV** : adverbe
+- **ADV_SUP** : adverbe
+- **PRE** : préposition
+- **CON** : conjonction
+- **ART_DEF** : article défini
+- **ART_IND** : article indéfini
+- **PRO_DEM** : pronom démonstratif
+- **PRO_IND** : pronom indéfini
+- **PRO_PER** : pronom personnel
+- **PRO_POS** : pronom possessif
+- **PRO_REL** : pronom relatif
+- **ONO** : onomatopée
 
-Flux technique (mode Lexique):
+
+Flux technique (mode "Lexique_fr"):
 1. tokenisation locale (quanteda),
 2. filtrage des tokens par présence dans lexique_fr avec les catégories `c_morpho` sélectionnées,
 3. lemmatisation (si activée) directement via lexique_fr (forme -> lemme).
