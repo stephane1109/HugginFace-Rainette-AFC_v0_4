@@ -20,6 +20,36 @@ echapper_regex <- function(x) {
   gsub("([\\^\\$\\*\\+\\?\\(\\)\\[\\]\\{\\}\\.\\|\\\\\\-])", "\\\\\\1", x)
 }
 
+normaliser_id_classe <- function(x) {
+  x_chr <- as.character(x)
+  x_chr <- trimws(x_chr)
+
+  x_num <- suppressWarnings(as.numeric(x_chr))
+  need_extract <- is.na(x_num) & nzchar(x_chr)
+
+  if (any(need_extract)) {
+    extrait <- sub("^.*?(\\d+).*$", "\\1", x_chr[need_extract])
+    extrait[!grepl("\\d", x_chr[need_extract])] <- NA_character_
+    x_num[need_extract] <- suppressWarnings(as.numeric(extrait))
+  }
+
+  x_num
+}
+
+expandir_variantes_termes <- function(termes) {
+  termes <- as.character(termes)
+  termes <- termes[!is.na(termes) & nzchar(termes)]
+  if (length(termes) == 0) return(character(0))
+
+  v <- unique(c(
+    termes,
+    gsub("_", " ", termes, fixed = TRUE),
+    gsub(" ", "_", termes, fixed = TRUE)
+  ))
+
+  v[!is.na(v) & nzchar(v)]
+}
+
 construire_regex_terme_nfd <- function(terme) {
   if (is.na(terme) || !nzchar(terme)) return("")
 
@@ -142,7 +172,32 @@ generer_concordancier_html <- function(
     if (!is.null(avancer)) avancer(0.75 + (i / n_classes) * 0.08, paste0("HTML : classe ", cl))
     writeLines(paste0("<h2>Classe ", cl, "</h2>"), con)
 
-    termes_cl <- subset(res_stats_df, Classe == as.numeric(cl) & p <= max_p)$Terme
+    cl_num <- normaliser_id_classe(cl)
+
+    classes_stats <- normaliser_id_classe(res_stats_df$Classe)
+    idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
+
+    df_cl <- res_stats_df[idx_cl, , drop = FALSE]
+
+    p_col <- if ("p" %in% names(df_cl)) "p" else if ("p_value" %in% names(df_cl)) "p_value" else NULL
+    idx_p <- rep(TRUE, nrow(df_cl))
+    if (!is.null(p_col)) idx_p <- !is.na(df_cl[[p_col]]) & df_cl[[p_col]] <= max_p
+
+    idx_pos <- rep(TRUE, nrow(df_cl))
+    if ("chi2" %in% names(df_cl)) {
+      idx_pos <- !is.na(df_cl$chi2) & df_cl$chi2 > 0
+    } else if ("lr" %in% names(df_cl)) {
+      idx_pos <- !is.na(df_cl$lr) & df_cl$lr > 0
+    }
+
+    termes_cl <- df_cl$Terme[idx_p & idx_pos]
+    if (length(termes_cl) == 0) {
+      termes_cl <- df_cl$Terme[idx_p]
+    }
+    if (length(termes_cl) == 0) {
+      termes_cl <- df_cl$Terme
+    }
+
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
@@ -152,6 +207,17 @@ generer_concordancier_html <- function(
     if (length(ids_cl) == 0) {
       writeLines("<p><em>Aucun segment.</em></p>", con)
       next
+    }
+
+    # Important : le filtrage doit se faire sur les textes d'indexation (lemmatisés / normalisés)
+    # pour rester cohérent avec les termes issus des stats Rainette.
+    textes_filtrage <- unname(segments)
+    if (!is.null(textes_indexation) && length(textes_indexation) > 0) {
+      tx <- textes_indexation[ids_cl]
+      ok_tx <- !is.na(tx) & nzchar(tx)
+      if (any(ok_tx)) {
+        textes_filtrage[ok_tx] <- tx[ok_tx]
+      }
     }
 
     tokens_surface <- character(0)
@@ -166,14 +232,14 @@ generer_concordancier_html <- function(
     }
 
     termes_a_surligner <- unique(c(tokens_surface, termes_cl))
-    termes_a_surligner <- termes_a_surligner[!is.na(termes_a_surligner) & nzchar(termes_a_surligner)]
+    termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
-    keep <- detecter_segments_contenant_termes_unicode(unname(segments), termes_a_surligner)
+    keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
     segments_keep <- segments[keep]
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(segments_keep) == 0 || length(termes_a_surligner) == 0) {
+    if (length(termes_a_surligner) == 0 || length(segments_keep) == 0) {
       writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
       next
     }
@@ -186,6 +252,22 @@ generer_concordancier_html <- function(
       "<span class='highlight'>",
       "</span>"
     )
+
+    # Si les termes sont surtout visibles dans l'espace d'indexation (lemmes),
+    # le surlignage peut être vide sur le texte brut. Fallback d'affichage :
+    # surligner la version indexée pour conserver un concordancier lisible.
+    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
+    if (!has_hl) {
+      textes_keep_idx <- textes_filtrage[keep]
+      segments_hl_idx <- surligner_vecteur_html_unicode(
+        unname(textes_keep_idx),
+        motifs,
+        "<span class='highlight'>",
+        "</span>"
+      )
+      has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
+      if (has_hl_idx) segments_hl <- segments_hl_idx
+    }
 
     for (seg in segments_hl) writeLines(paste0("<p>", seg, "</p>"), con)
   }
