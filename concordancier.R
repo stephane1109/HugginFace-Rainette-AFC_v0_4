@@ -257,6 +257,22 @@ generer_concordancier_html <- function(
       "</span>"
     )
 
+    # Si les termes sont surtout visibles dans l'espace d'indexation (lemmes),
+    # le surlignage peut être vide sur le texte brut. Fallback d'affichage :
+    # surligner la version indexée pour conserver un concordancier lisible.
+    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
+    if (!has_hl) {
+      textes_keep_idx <- textes_filtrage[keep]
+      segments_hl_idx <- surligner_vecteur_html_unicode(
+        unname(textes_keep_idx),
+        motifs,
+        "<span class='highlight'>",
+        "</span>"
+      )
+      has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
+      if (has_hl_idx) segments_hl <- segments_hl_idx
+    }
+
     for (seg in segments_hl) writeLines(paste0("<p>", seg, "</p>"), con)
   }
 
