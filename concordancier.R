@@ -177,10 +177,25 @@ generer_concordancier_html <- function(
     classes_stats <- normaliser_id_classe(res_stats_df$Classe)
     idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
 
-    termes_cl <- res_stats_df$Terme[idx_cl & !is.na(res_stats_df$p) & res_stats_df$p <= max_p]
+    df_cl <- res_stats_df[idx_cl, , drop = FALSE]
 
+    p_col <- if ("p" %in% names(df_cl)) "p" else if ("p_value" %in% names(df_cl)) "p_value" else NULL
+    idx_p <- rep(TRUE, nrow(df_cl))
+    if (!is.null(p_col)) idx_p <- !is.na(df_cl[[p_col]]) & df_cl[[p_col]] <= max_p
+
+    idx_pos <- rep(TRUE, nrow(df_cl))
+    if ("chi2" %in% names(df_cl)) {
+      idx_pos <- !is.na(df_cl$chi2) & df_cl$chi2 > 0
+    } else if ("lr" %in% names(df_cl)) {
+      idx_pos <- !is.na(df_cl$lr) & df_cl$lr > 0
+    }
+
+    termes_cl <- df_cl$Terme[idx_p & idx_pos]
     if (length(termes_cl) == 0) {
-      termes_cl <- res_stats_df$Terme[idx_cl]
+      termes_cl <- df_cl$Terme[idx_p]
+    }
+    if (length(termes_cl) == 0) {
+      termes_cl <- df_cl$Terme
     }
 
     termes_cl <- unique(termes_cl)
@@ -220,22 +235,12 @@ generer_concordancier_html <- function(
     termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
-
-    mode_degrade <- FALSE
-    if (length(segments) > 0 && length(termes_a_surligner) > 0 && !any(keep)) {
-      # Fallback robuste : on évite un concordancier vide quand les termes stats
-      # n'apparaissent pas littéralement (variantes lexicales, encodage, etc.).
-      keep <- rep(TRUE, length(segments))
-      mode_degrade <- TRUE
-    }
-
     segments_keep <- segments[keep]
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(termes_a_surligner) == 0) {
-      writeLines("<p><em>Aucun terme significatif exploitable pour cette classe avec les paramètres courants.</em></p>", con)
-      for (seg in unname(segments_keep)) writeLines(paste0("<p>", seg, "</p>"), con)
+    if (length(termes_a_surligner) == 0 || length(segments_keep) == 0) {
+      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
       next
     }
 
