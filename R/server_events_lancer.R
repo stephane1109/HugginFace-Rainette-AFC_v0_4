@@ -514,8 +514,10 @@ register_events_lancer <- function(input, output, session, rv) {
             labels_stats <- as.character(seq_along(res_stats_list))
           }
 
+          tailles_stats <- vapply(res_stats_list, nrow, integer(1))
+
           res_stats_df <- bind_rows(res_stats_list) %>%
-            mutate(ClusterID = rep(labels_stats, lengths(res_stats_list))) %>%
+            mutate(ClusterID = rep(labels_stats, times = tailles_stats)) %>%
             rename(Terme = feature, Classe = ClusterID) %>%
             mutate(
               Classe_brut = as.character(Classe),
