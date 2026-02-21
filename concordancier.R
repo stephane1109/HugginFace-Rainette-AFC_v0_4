@@ -180,6 +180,17 @@ generer_concordancier_html <- function(
       next
     }
 
+    # Important : le filtrage doit se faire sur les textes d'indexation (lemmatisés / normalisés)
+    # pour rester cohérent avec les termes issus des stats Rainette.
+    textes_filtrage <- unname(segments)
+    if (!is.null(textes_indexation) && length(textes_indexation) > 0) {
+      tx <- textes_indexation[ids_cl]
+      ok_tx <- !is.na(tx) & nzchar(tx)
+      if (any(ok_tx)) {
+        textes_filtrage[ok_tx] <- tx[ok_tx]
+      }
+    }
+
     tokens_surface <- character(0)
     if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
       df_tok <- spacy_tokens_df
@@ -194,7 +205,7 @@ generer_concordancier_html <- function(
     termes_a_surligner <- unique(c(tokens_surface, termes_cl))
     termes_a_surligner <- termes_a_surligner[!is.na(termes_a_surligner) & nzchar(termes_a_surligner)]
 
-    keep <- detecter_segments_contenant_termes_unicode(unname(segments), termes_a_surligner)
+    keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
     segments_keep <- segments[keep]
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
