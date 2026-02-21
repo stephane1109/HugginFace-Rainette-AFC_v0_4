@@ -32,11 +32,11 @@ Le dictionnaire **lexique_fr** utilisé ici est celui d’**IRaMuTeQ**, et il se
 
 ![Exemple : clés d'analyse logiciel IRaMuTeQ](cles_analyse_iramuteq.png)
 
-Deux configurations principales sont possibles :
+Deux configurations principales dans l'interface sont possibles :
 1. Si vous **ne cochez pas** le filtrage morphosyntaxique, **tout le corpus** est pris en compte.
 2. Si vous **filtrez** sur des catégories morphosyntaxiques (voir la liste ci-dessous), l’analyse porte sur le **corpus filtré** par les catégories sélectionnées.
 
-Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS de spaCy.
+Noms des catégories de Lexique_fr
 
 - **NOM** : nom commun
 - **NOM_SUP** : nom
