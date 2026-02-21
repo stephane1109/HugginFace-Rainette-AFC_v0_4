@@ -45,6 +45,7 @@ if (file.exists("help.md")) {
 source("nettoyage.R", encoding = "UTF-8", local = TRUE)
 source("concordancier.R", encoding = "UTF-8", local = TRUE)
 source("afc.R", encoding = "UTF-8", local = TRUE)
+source("stats.R", encoding = "UTF-8", local = TRUE)
 source("ui.R", encoding = "UTF-8", local = TRUE)
 
 source("R/utils_general.R", encoding = "UTF-8", local = TRUE)
@@ -108,7 +109,8 @@ server <- function(input, output, session) {
     afc_plot_termes = NULL,
     afc_plot_vars = NULL,
 
-    explor_assets = NULL
+    explor_assets = NULL,
+    stats_corpus_df = NULL
   )
 
   register_outputs_status(input, output, session, rv)
@@ -202,6 +204,11 @@ server <- function(input, output, session) {
     nb_seg <- ifelse(is.na(rv$ner_nb_segments), 0, rv$ner_nb_segments)
     tags$p(paste0("NER calculé sur ", nb_seg, " segments. Entités détectées : ", nb_ent, "."))
   })
+
+  output$table_stats_corpus <- renderTable({
+    req(rv$stats_corpus_df)
+    rv$stats_corpus_df
+  }, striped = TRUE, spacing = "s", rownames = FALSE)
 
   output$table_ner_resume <- renderTable({
     req(rv$ner_df)
