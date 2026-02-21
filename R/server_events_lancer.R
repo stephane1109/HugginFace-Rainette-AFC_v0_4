@@ -57,6 +57,8 @@ register_events_lancer <- function(input, output, session, rv) {
       rv$max_n_groups <- NULL
       rv$max_n_groups_chd <- NULL
       rv$explor_assets <- NULL
+      rv$stats_corpus_df <- NULL
+      rv$stats_zipf_df <- NULL
 
       ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
 
@@ -103,6 +105,19 @@ register_events_lancer <- function(input, output, session, rv) {
           segment_size <- input$segment_size
           corpus <- split_segments(corpus, segment_size = segment_size)
           ajouter_log(rv, paste0("Nombre de segments après découpage : ", ndoc(corpus)))
+
+          stats_corpus <- calculer_stats_corpus(
+            chemin_fichier = chemin_fichier,
+            corpus_segments = corpus,
+            nom_corpus = input$fichier_corpus$name
+          )
+          if (is.null(stats_corpus)) {
+            rv$stats_corpus_df <- NULL
+            rv$stats_zipf_df <- NULL
+          } else {
+            rv$stats_corpus_df <- stats_corpus$table
+            rv$stats_zipf_df <- stats_corpus$zipf
+          }
 
           ids_orig <- as.character(docnames(corpus))
           ids_corpus <- ids_orig
