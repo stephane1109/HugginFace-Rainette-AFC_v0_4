@@ -1,8 +1,8 @@
 ### Analyse morphosyntaxique avec spaCy et Lexique (fr)
 
 - Documentation principale : <https://spacy.io/usage>
-- Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
-- 
+- Linguistic Features (POS, morphology) : <a href="https://spacy.io/usage/linguistic-feature/" target="_blank" rel="noopener noreferrer">Lexique POS spaCy</a>
+- <a href="https://openlexicon.fr/" target="_blank" rel="noopener noreferrer">OpenLexicon</a>
 
 ### Traduction FR des POS (spaCy / Universal POS)
 
