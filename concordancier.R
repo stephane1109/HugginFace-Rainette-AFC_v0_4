@@ -20,6 +20,21 @@ echapper_regex <- function(x) {
   gsub("([\\^\\$\\*\\+\\?\\(\\)\\[\\]\\{\\}\\.\\|\\\\\\-])", "\\\\\\1", x)
 }
 
+normaliser_id_classe <- function(x) {
+  x_chr <- as.character(x)
+  x_chr <- trimws(x_chr)
+  x_num <- suppressWarnings(as.numeric(x_chr))
+
+  need_extract <- is.na(x_num) & !is.na(x_chr) & nzchar(x_chr)
+  if (any(need_extract)) {
+    extrait <- sub("^.*?(\\d+).*$", "\\1", x_chr[need_extract])
+    extrait[!grepl("\\d", x_chr[need_extract])] <- NA_character_
+    x_num[need_extract] <- suppressWarnings(as.numeric(extrait))
+  }
+
+  x_num
+}
+
 construire_regex_terme_nfd <- function(terme) {
   if (is.na(terme) || !nzchar(terme)) return("")
 
@@ -142,7 +157,9 @@ generer_concordancier_html <- function(
     if (!is.null(avancer)) avancer(0.75 + (i / n_classes) * 0.08, paste0("HTML : classe ", cl))
     writeLines(paste0("<h2>Classe ", cl, "</h2>"), con)
 
-    termes_cl <- subset(res_stats_df, Classe == as.numeric(cl) & p <= max_p)$Terme
+    cl_num <- normaliser_id_classe(cl)
+    classes_stats <- normaliser_id_classe(res_stats_df$Classe)
+    termes_cl <- res_stats_df$Terme[!is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num & !is.na(res_stats_df$p) & res_stats_df$p <= max_p]
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
