@@ -57,6 +57,7 @@ register_events_lancer <- function(input, output, session, rv) {
       rv$max_n_groups <- NULL
       rv$max_n_groups_chd <- NULL
       rv$explor_assets <- NULL
+      rv$stats_corpus_df <- NULL
 
       ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
 
@@ -103,6 +104,11 @@ register_events_lancer <- function(input, output, session, rv) {
           segment_size <- input$segment_size
           corpus <- split_segments(corpus, segment_size = segment_size)
           ajouter_log(rv, paste0("Nombre de segments après découpage : ", ndoc(corpus)))
+
+          rv$stats_corpus_df <- calculer_stats_corpus(
+            chemin_fichier = chemin_fichier,
+            corpus_segments = corpus
+          )
 
           ids_orig <- as.character(docnames(corpus))
           ids_corpus <- ids_orig
