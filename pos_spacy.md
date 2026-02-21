@@ -26,6 +26,14 @@
 
 ### Filtrage morphosyntaxique spécifique lexique_fr
 
+Le dictionnaire **lexique_fr** utilisé ici est celui d’**IRaMuTeQ**, et il semble lui-même issu d’**OpenLexicon**.
+
+> Contrairement au logiciel IRaMuTeQ (où les niveaux sont généralement interprétés comme `1 = primaire` et `2 = supplémentaire`), le filtrage proposé ici est **binaire** et configurable de plusieurs façons.
+
+Deux configurations principales sont possibles :
+1. Si vous **ne cochez pas** le filtrage morphosyntaxique, **tout le corpus** est pris en compte.
+2. Si vous **filtrez** sur des catégories morphosyntaxiques (voir la liste ci-dessous), l’analyse porte sur le **corpus filtré** par les catégories sélectionnées.
+
 Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS de spaCy.
 
 - **NOM** : nom commun
