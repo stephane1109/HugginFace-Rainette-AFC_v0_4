@@ -4,11 +4,11 @@
 # spaCy et le chargement (caché) des stopwords par langue.
 
 estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
-  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0)))
 
   textes <- as.character(textes)
   textes <- textes[nzchar(trimws(textes))]
-  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0)))
   if (length(textes) > max_segments) textes <- textes[seq_len(max_segments)]
 
   tok <- quanteda::tokens(textes, remove_punct = TRUE, remove_numbers = TRUE)
@@ -17,12 +17,14 @@ estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
   all_tokens <- trimws(all_tokens)
   all_tokens <- all_tokens[nzchar(all_tokens)]
 
-  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0)))
 
   scores <- c(
     fr = mean(all_tokens %in% obtenir_stopwords_spacy("fr", rv = rv)),
     en = mean(all_tokens %in% obtenir_stopwords_spacy("en", rv = rv)),
-    es = mean(all_tokens %in% obtenir_stopwords_spacy("es", rv = rv))
+    es = mean(all_tokens %in% obtenir_stopwords_spacy("es", rv = rv)),
+    it = mean(all_tokens %in% obtenir_stopwords_spacy("it", rv = rv)),
+    de = mean(all_tokens %in% obtenir_stopwords_spacy("de", rv = rv))
   )
 
   langue <- names(scores)[which.max(scores)]
@@ -56,13 +58,15 @@ verifier_coherence_dictionnaire_langue <- function(textes, langue_selectionnee, 
 configurer_langue_spacy <- function(langue) {
   if (is.null(langue) || !nzchar(as.character(langue))) langue <- "fr"
   langue <- trimws(tolower(as.character(langue)))
-  if (!langue %in% c("fr", "en", "es")) langue <- "fr"
+  if (!langue %in% c("fr", "en", "es", "it", "de")) langue <- "fr"
 
   switch(
     langue,
     fr = list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr"),
     en = list(code = "en", libelle = "Anglais", modele = "en_core_web_md", stopwords_module = "en"),
     es = list(code = "es", libelle = "Espagnol", modele = "es_core_news_md", stopwords_module = "es"),
+    it = list(code = "it", libelle = "Italien", modele = "it_core_news_md", stopwords_module = "it"),
+    de = list(code = "de", libelle = "Allemand", modele = "de_core_news_md", stopwords_module = "de"),
     list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr")
   )
 }
