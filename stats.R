@@ -85,7 +85,7 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
         "Nombre de mots dans le corpus",
         "Nombre de segments de texte",
         "Nombre d'Hapax",
-        "Loi de Zpif (Zipf)"
+        "Loi de Zpif"
       ),
       Valeur = c(
         nom_corpus_affiche,
