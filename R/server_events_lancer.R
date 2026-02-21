@@ -23,6 +23,22 @@ register_events_lancer <- function(input, output, session, rv) {
       write.csv(formater_df_csv_6_decimales(df), chemin, row.names = row.names)
     }
 
+    normaliser_id_classe_local <- function(x) {
+      x_chr <- as.character(x)
+      x_chr <- trimws(x_chr)
+
+      x_num <- suppressWarnings(as.numeric(x_chr))
+      need_extract <- is.na(x_num) & !is.na(x_chr) & nzchar(x_chr)
+
+      if (any(need_extract)) {
+        extrait <- sub("^.*?(\\d+).*$", "\\1", x_chr[need_extract])
+        extrait[!grepl("\\d", x_chr[need_extract])] <- NA_character_
+        x_num[need_extract] <- suppressWarnings(as.numeric(extrait))
+      }
+
+      x_num
+    }
+
     observeEvent(input$lancer, {
       rv$logs <- ""
       rv$statut <- "Vérification du fichier..."
@@ -487,10 +503,23 @@ register_events_lancer <- function(input, output, session, rv) {
             max_p = input$max_p
           )
 
-          res_stats_df <- bind_rows(res_stats_list, .id = "ClusterID") %>%
+          labels_stats <- names(res_stats_list)
+          labels_groupes <- as.character(sort(unique(docvars(filtered_corpus_ok)$Classes)))
+
+          if (is.null(labels_stats) || length(labels_stats) != length(res_stats_list) || any(!nzchar(labels_stats))) {
+            labels_stats <- labels_groupes
+          }
+
+          if (length(labels_stats) != length(res_stats_list)) {
+            labels_stats <- as.character(seq_along(res_stats_list))
+          }
+
+          res_stats_df <- bind_rows(res_stats_list) %>%
+            mutate(ClusterID = rep(labels_stats, lengths(res_stats_list))) %>%
             rename(Terme = feature, Classe = ClusterID) %>%
             mutate(
-              Classe = as.numeric(Classe),
+              Classe_brut = as.character(Classe),
+              Classe = normaliser_id_classe_local(Classe),
               p_value_filter = ifelse(p <= input$max_p, paste0("≤ ", input$max_p), paste0("> ", input$max_p))
             ) %>%
             arrange(Classe, desc(chi2))
