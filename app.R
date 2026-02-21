@@ -110,7 +110,8 @@ server <- function(input, output, session) {
     afc_plot_vars = NULL,
 
     explor_assets = NULL,
-    stats_corpus_df = NULL
+    stats_corpus_df = NULL,
+    stats_zipf_df = NULL
   )
 
   register_outputs_status(input, output, session, rv)
@@ -209,6 +210,38 @@ server <- function(input, output, session) {
     req(rv$stats_corpus_df)
     rv$stats_corpus_df
   }, striped = TRUE, spacing = "s", rownames = FALSE)
+
+
+  output$plot_stats_zipf <- renderPlot({
+    req(rv$stats_zipf_df)
+    df <- rv$stats_zipf_df
+    if (is.null(df) || nrow(df) < 2) {
+      plot.new()
+      text(0.5, 0.5, "Données insuffisantes pour tracer la loi de Zipf.", cex = 1.1)
+      return(invisible(NULL))
+    }
+
+    plot(
+      x = df$log_rang,
+      y = df$log_frequence,
+      pch = 16,
+      cex = 0.7,
+      col = "#2C7FB8",
+      xlab = "log(rang)",
+      ylab = "log(fréquence)",
+      main = "Loi de Zpif (Zipf)"
+    )
+    lines(df$log_rang, df$log_pred, col = "#D7301F", lwd = 2)
+    legend(
+      "topright",
+      legend = c("Données", "Régression log-log"),
+      col = c("#2C7FB8", "#D7301F"),
+      pch = c(16, NA),
+      lty = c(NA, 1),
+      lwd = c(NA, 2),
+      bty = "n"
+    )
+  })
 
   output$table_ner_resume <- renderTable({
     req(rv$ner_df)
