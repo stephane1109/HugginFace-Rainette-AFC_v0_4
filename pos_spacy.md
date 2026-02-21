@@ -28,10 +28,6 @@
 
 Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS de spaCy.
 
-- Catégories usuelles : `NOM`, `VER`, `AUX`, `ADJ`, `ADV`, `PRE`, `CON`.
-- Catégories supplémentaires présentes dans `lexique_fr.csv` : `NOM_SUP`, `VER_SUP`, `ADJ_SUP`, `ADV_SUP`, `ADJ_DEM`, `ADJ_IND`, `ADJ_INT`, `ADJ_NUM`, `ADJ_POS`, `ART_DEF`, `ART_IND`, `PRO_DEM`, `PRO_IND`, `PRO_PER`, `PRO_POS`, `PRO_REL`, `ONO`.
-- Valeur de départ recommandée : `NOM`, `VER`, `ADJ`.
-
 - **NOM** : maison, analyse
 - **NOM_SUP** : alentours
 - **VER** : mange, observe
