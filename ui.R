@@ -84,7 +84,7 @@ ui <- fluidPage(
         selectInput(
           "spacy_langue",
           "Langue spaCy",
-          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es", "Italien" = "it", "Allemand" = "de"),
           selected = "fr"
         )
       ),
