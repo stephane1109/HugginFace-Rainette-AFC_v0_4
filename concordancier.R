@@ -171,6 +171,17 @@ generer_concordancier_html <- function(
       next
     }
 
+    # Important : le filtrage doit se faire sur les textes d'indexation (lemmatisés / normalisés)
+    # pour rester cohérent avec les termes issus des stats Rainette.
+    textes_filtrage <- unname(segments)
+    if (!is.null(textes_indexation) && length(textes_indexation) > 0) {
+      tx <- textes_indexation[ids_cl]
+      ok_tx <- !is.na(tx) & nzchar(tx)
+      if (any(ok_tx)) {
+        textes_filtrage[ok_tx] <- tx[ok_tx]
+      }
+    }
+
     tokens_surface <- character(0)
     if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
       df_tok <- spacy_tokens_df
@@ -183,16 +194,20 @@ generer_concordancier_html <- function(
     }
 
     termes_a_surligner <- unique(c(tokens_surface, termes_cl))
-    termes_a_surligner <- termes_a_surligner[!is.na(termes_a_surligner) & nzchar(termes_a_surligner)]
+    termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
-    keep <- detecter_segments_contenant_termes_unicode(unname(segments), termes_a_surligner)
+    keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
     segments_keep <- segments[keep]
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(segments_keep) == 0 || length(termes_a_surligner) == 0) {
+    if (length(termes_a_surligner) == 0 || length(segments_keep) == 0) {
       writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
       next
+    }
+
+    if (mode_degrade) {
+      writeLines("<p><em>Note : aucun terme significatif n'a été retrouvé textuellement ; affichage des segments non filtré.</em></p>", con)
     }
 
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
@@ -203,6 +218,22 @@ generer_concordancier_html <- function(
       "<span class='highlight'>",
       "</span>"
     )
+
+    # Si les termes sont surtout visibles dans l'espace d'indexation (lemmes),
+    # le surlignage peut être vide sur le texte brut. Fallback d'affichage :
+    # surligner la version indexée pour conserver un concordancier lisible.
+    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
+    if (!has_hl) {
+      textes_keep_idx <- textes_filtrage[keep]
+      segments_hl_idx <- surligner_vecteur_html_unicode(
+        unname(textes_keep_idx),
+        motifs,
+        "<span class='highlight'>",
+        "</span>"
+      )
+      has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
+      if (has_hl_idx) segments_hl <- segments_hl_idx
+    }
 
     for (seg in segments_hl) writeLines(paste0("<p>", seg, "</p>"), con)
   }

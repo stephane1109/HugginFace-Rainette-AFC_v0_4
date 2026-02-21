@@ -503,7 +503,19 @@ register_events_lancer <- function(input, output, session, rv) {
             max_p = input$max_p
           )
 
-          res_stats_df <- bind_rows(res_stats_list, .id = "ClusterID") %>%
+          labels_stats <- names(res_stats_list)
+          labels_groupes <- as.character(sort(unique(docvars(filtered_corpus_ok)$Classes)))
+
+          if (is.null(labels_stats) || length(labels_stats) != length(res_stats_list) || any(!nzchar(labels_stats))) {
+            labels_stats <- labels_groupes
+          }
+
+          if (length(labels_stats) != length(res_stats_list)) {
+            labels_stats <- as.character(seq_along(res_stats_list))
+          }
+
+          res_stats_df <- bind_rows(res_stats_list) %>%
+            mutate(ClusterID = rep(labels_stats, lengths(res_stats_list))) %>%
             rename(Terme = feature, Classe = ClusterID) %>%
             mutate(
               Classe_brut = as.character(Classe),
