@@ -1,7 +1,8 @@
-### Analyse morphosyntaxique avec spaCy
+### Analyse morphosyntaxique avec spaCy et Lexique (fr)
 
 - Documentation principale : <https://spacy.io/usage>
 - Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
+- 
 
 ### Traduction FR des POS (spaCy / Universal POS)
 
@@ -25,7 +26,7 @@
 
 ### Filtrage morphosyntaxique spécifique lexique_fr
 
-Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS Universal spaCy.
+Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtrage morphosyntaxique utilise les catégories morphologiques du lexique (`c_morpho`), et non les POS de spaCy.
 
 - Catégories usuelles : `NOM`, `VER`, `AUX`, `ADJ`, `ADV`, `PRE`, `CON`.
 - Catégories supplémentaires présentes dans `lexique_fr.csv` : `NOM_SUP`, `VER_SUP`, `ADJ_SUP`, `ADV_SUP`, `ADJ_DEM`, `ADJ_IND`, `ADJ_INT`, `ADJ_NUM`, `ADJ_POS`, `ART_DEF`, `ART_IND`, `PRO_DEM`, `PRO_IND`, `PRO_PER`, `PRO_POS`, `PRO_REL`, `ONO`.
@@ -63,11 +64,8 @@ Flux technique (mode Lexique):
 
 > Le filtrage morphosyntaxique lexique_fr est donc indépendant de spaCy.
 
-### Paramétrage côté interface (Shiny)
+### Activation de filtrage morphosyntaxique
 
-Dans l’interface, la section **Paramétrages SpaCy** permet :
-
-- d’activer le **filtrage morphosyntaxique**,
 - de choisir la langue spaCy (`fr`, `en`, `es`, `it`, `de`) quand la source est **spaCy**,
 - de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
 - de sélectionner directement les catégories `c_morpho` à conserver quand la source est **Lexique (fr)**,
