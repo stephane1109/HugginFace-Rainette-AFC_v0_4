@@ -31,32 +31,30 @@ Quand la **source de lemmatisation** est réglée sur **Lexique (fr)**, le filtr
 - Catégories supplémentaires présentes dans `lexique_fr.csv` : `NOM_SUP`, `VER_SUP`, `ADJ_SUP`, `ADV_SUP`, `ADJ_DEM`, `ADJ_IND`, `ADJ_INT`, `ADJ_NUM`, `ADJ_POS`, `ART_DEF`, `ART_IND`, `PRO_DEM`, `PRO_IND`, `PRO_PER`, `PRO_POS`, `PRO_REL`, `ONO`.
 - Valeur de départ recommandée : `NOM`, `VER`, `ADJ`.
 
-| Forme (`c_morpho`) | Exemple |
-|---|---|
-| `NOM` | `maison`, `analyse` |
-| `NOM_SUP` | `alentours` |
-| `VER` | `mange`, `observe` |
-| `VER_SUP` | `croie` |
-| `AUX` | `a`, `est` |
-| `ADJ` | `grand`, `important` |
-| `ADJ_SUP` | `bis` |
-| `ADJ_DEM` | `cet`, `ces` |
-| `ADJ_IND` | `aucun` |
-| `ADJ_INT` | `quel` |
-| `ADJ_NUM` | `deux`, `cent` |
-| `ADJ_POS` | `mon`, `leurs` |
-| `ADV` | `a_priori`, `a_capella` |
-| `ADV_SUP` | `afin` |
-| `PRE` | `dans`, `avec` |
-| `CON` | `et`, `mais` |
-| `ART_DEF` | `le`, `la`, `au` |
-| `ART_IND` | `un`, `des` |
-| `PRO_DEM` | `ceci`, `celui_ci` |
-| `PRO_IND` | `autre` |
-| `PRO_PER` | `je`, `nous` |
-| `PRO_POS` | `mien` |
-| `PRO_REL` | `auquel`, `qui` |
-| `ONO` | `ah`, `badabam` |
+- **`NOM`** : `maison`, `analyse`
+- **`NOM_SUP`** : `alentours`
+- **`VER`** : `mange`, `observe`
+- **`VER_SUP`** : `croie`
+- **`AUX`** : `a`, `est`
+- **`ADJ`** : `grand`, `important`
+- **`ADJ_SUP`** : `bis`
+- **`ADJ_DEM`** : `cet`, `ces`
+- **`ADJ_IND`** : `aucun`
+- **`ADJ_INT`** : `quel`
+- **`ADJ_NUM`** : `deux`, `cent`
+- **`ADJ_POS`** : `mon`, `leurs`
+- **`ADV`** : `a_priori`, `a_capella`
+- **`ADV_SUP`** : `afin`
+- **`PRE`** : `dans`, `avec`
+- **`CON`** : `et`, `mais`
+- **`ART_DEF`** : `le`, `la`, `au`
+- **`ART_IND`** : `un`, `des`
+- **`PRO_DEM`** : `ceci`, `celui_ci`
+- **`PRO_IND`** : `autre`
+- **`PRO_PER`** : `je`, `nous`
+- **`PRO_POS`** : `mien`
+- **`PRO_REL`** : `auquel`, `qui`
+- **`ONO`** : `ah`, `badabam`
 
 Flux technique (mode Lexique):
 1. tokenisation locale (quanteda),
@@ -70,7 +68,7 @@ Flux technique (mode Lexique):
 Dans l’interface, la section **Paramétrages SpaCy** permet :
 
 - d’activer le **filtrage morphosyntaxique**,
-- de choisir la langue spaCy (`fr`, `en`, `es`) quand la source est **spaCy**,
+- de choisir la langue spaCy (`fr`, `en`, `es`, `it`, `de`) quand la source est **spaCy**,
 - de sélectionner les POS à conserver parmi la liste Universal POS quand la source est **spaCy**,
 - de sélectionner directement les catégories `c_morpho` à conserver quand la source est **Lexique (fr)**,
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.
