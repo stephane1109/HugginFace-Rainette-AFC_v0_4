@@ -217,21 +217,45 @@ server <- function(input, output, session) {
     df <- rv$stats_zipf_df
     if (is.null(df) || nrow(df) < 2) {
       plot.new()
-      text(0.5, 0.5, "Données insuffisantes pour tracer la loi de Zipf.", cex = 1.1)
+      text(0.5, 0.5, "Données insuffisantes pour tracer la loi de Zpif.", cex = 1.1)
       return(invisible(NULL))
     }
+
+    x_lim <- range(df$log_rang, na.rm = TRUE)
+    y_lim <- range(c(df$log_frequence, df$log_pred), na.rm = TRUE)
 
     plot(
       x = df$log_rang,
       y = df$log_frequence,
       pch = 16,
-      cex = 0.7,
-      col = "#2C7FB8",
+      cex = 0.8,
+      col = grDevices::adjustcolor("#2C7FB8", alpha.f = 0.7),
       xlab = "log(rang)",
       ylab = "log(fréquence)",
-      main = "Loi de Zpif (Zipf)"
+      main = "Loi de Zpif",
+      xlim = x_lim,
+      ylim = y_lim,
+      asp = 1
     )
-    lines(df$log_rang, df$log_pred, col = "#D7301F", lwd = 2)
+    grid(col = "#E6E6E6", lty = "dotted")
+
+    ord <- order(df$log_rang)
+    lines(df$log_rang[ord], df$log_pred[ord], col = "#D7301F", lwd = 2.5)
+
+    fit_zipf <- stats::lm(log_frequence ~ log_rang, data = df)
+    pente <- stats::coef(fit_zipf)[2]
+    r2 <- summary(fit_zipf)$r.squared
+    texte_modele <- sprintf("pente = %.3f | R² = %.3f", pente, r2)
+    usr <- par("usr")
+    text(
+      x = usr[1] + 0.02 * (usr[2] - usr[1]),
+      y = usr[4] - 0.05 * (usr[4] - usr[3]),
+      labels = texte_modele,
+      adj = c(0, 1),
+      col = "#333333",
+      cex = 0.95
+    )
+
     legend(
       "topright",
       legend = c("Données", "Régression log-log"),
