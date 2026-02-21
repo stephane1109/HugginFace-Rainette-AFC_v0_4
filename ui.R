@@ -222,7 +222,10 @@ ui <- fluidPage(
           tags$pre(style = "white-space: pre-wrap;", textOutput("logs")),
           tags$h3("Analyse du corpus (mode debug)"),
           tableOutput("table_stats_corpus"),
-          plotOutput("plot_stats_zipf", height = "360px"),
+          tags$div(
+            style = "width: 360px;",
+            plotOutput("plot_stats_zipf", height = "360px", width = "360px")
+          ),
           tags$h3("Répartition des classes"),
           tableOutput("table_classes")
         ),
