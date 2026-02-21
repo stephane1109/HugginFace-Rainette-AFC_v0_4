@@ -30,6 +30,8 @@ Le dictionnaire **lexique_fr** utilisé ici est celui d’**IRaMuTeQ**, et il se
 
 > Contrairement au logiciel IRaMuTeQ (où les niveaux sont généralement interprétés comme `1 = primaire` et `2 = supplémentaire`), le filtrage proposé ici est **binaire** et configurable de plusieurs façons.
 
+![Clés d'analyse IRaMuTeQ](cles_analyse_iramuteq.png)
+
 Deux configurations principales sont possibles :
 1. Si vous **ne cochez pas** le filtrage morphosyntaxique, **tout le corpus** est pris en compte.
 2. Si vous **filtrez** sur des catégories morphosyntaxiques (voir la liste ci-dessous), l’analyse porte sur le **corpus filtré** par les catégories sélectionnées.
