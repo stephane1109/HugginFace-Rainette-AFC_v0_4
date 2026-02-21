@@ -23,10 +23,9 @@ echapper_regex <- function(x) {
 normaliser_id_classe <- function(x) {
   x_chr <- as.character(x)
   x_chr <- trimws(x_chr)
-
   x_num <- suppressWarnings(as.numeric(x_chr))
-  need_extract <- is.na(x_num) & nzchar(x_chr)
 
+  need_extract <- is.na(x_num) & !is.na(x_chr) & nzchar(x_chr)
   if (any(need_extract)) {
     extrait <- sub("^.*?(\\d+).*$", "\\1", x_chr[need_extract])
     extrait[!grepl("\\d", x_chr[need_extract])] <- NA_character_
@@ -34,20 +33,6 @@ normaliser_id_classe <- function(x) {
   }
 
   x_num
-}
-
-expandir_variantes_termes <- function(termes) {
-  termes <- as.character(termes)
-  termes <- termes[!is.na(termes) & nzchar(termes)]
-  if (length(termes) == 0) return(character(0))
-
-  v <- unique(c(
-    termes,
-    gsub("_", " ", termes, fixed = TRUE),
-    gsub(" ", "_", termes, fixed = TRUE)
-  ))
-
-  v[!is.na(v) & nzchar(v)]
 }
 
 construire_regex_terme_nfd <- function(terme) {
@@ -173,31 +158,8 @@ generer_concordancier_html <- function(
     writeLines(paste0("<h2>Classe ", cl, "</h2>"), con)
 
     cl_num <- normaliser_id_classe(cl)
-
     classes_stats <- normaliser_id_classe(res_stats_df$Classe)
-    idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
-
-    df_cl <- res_stats_df[idx_cl, , drop = FALSE]
-
-    p_col <- if ("p" %in% names(df_cl)) "p" else if ("p_value" %in% names(df_cl)) "p_value" else NULL
-    idx_p <- rep(TRUE, nrow(df_cl))
-    if (!is.null(p_col)) idx_p <- !is.na(df_cl[[p_col]]) & df_cl[[p_col]] <= max_p
-
-    idx_pos <- rep(TRUE, nrow(df_cl))
-    if ("chi2" %in% names(df_cl)) {
-      idx_pos <- !is.na(df_cl$chi2) & df_cl$chi2 > 0
-    } else if ("lr" %in% names(df_cl)) {
-      idx_pos <- !is.na(df_cl$lr) & df_cl$lr > 0
-    }
-
-    termes_cl <- df_cl$Terme[idx_p & idx_pos]
-    if (length(termes_cl) == 0) {
-      termes_cl <- df_cl$Terme[idx_p]
-    }
-    if (length(termes_cl) == 0) {
-      termes_cl <- df_cl$Terme
-    }
-
+    termes_cl <- res_stats_df$Terme[!is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num & !is.na(res_stats_df$p) & res_stats_df$p <= max_p]
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
