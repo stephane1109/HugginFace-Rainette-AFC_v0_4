@@ -36,6 +36,20 @@ normaliser_id_classe <- function(x) {
   x_num
 }
 
+expandir_variantes_termes <- function(termes) {
+  termes <- as.character(termes)
+  termes <- termes[!is.na(termes) & nzchar(termes)]
+  if (length(termes) == 0) return(character(0))
+
+  v <- unique(c(
+    termes,
+    gsub("_", " ", termes, fixed = TRUE),
+    gsub(" ", "_", termes, fixed = TRUE)
+  ))
+
+  v[!is.na(v) & nzchar(v)]
+}
+
 construire_regex_terme_nfd <- function(terme) {
   if (is.na(terme) || !nzchar(terme)) return("")
 
@@ -203,16 +217,30 @@ generer_concordancier_html <- function(
     }
 
     termes_a_surligner <- unique(c(tokens_surface, termes_cl))
-    termes_a_surligner <- termes_a_surligner[!is.na(termes_a_surligner) & nzchar(termes_a_surligner)]
+    termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
+
+    mode_degrade <- FALSE
+    if (length(segments) > 0 && length(termes_a_surligner) > 0 && !any(keep)) {
+      # Fallback robuste : on évite un concordancier vide quand les termes stats
+      # n'apparaissent pas littéralement (variantes lexicales, encodage, etc.).
+      keep <- rep(TRUE, length(segments))
+      mode_degrade <- TRUE
+    }
+
     segments_keep <- segments[keep]
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(segments_keep) == 0 || length(termes_a_surligner) == 0) {
-      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
+    if (length(termes_a_surligner) == 0) {
+      writeLines("<p><em>Aucun terme significatif exploitable pour cette classe avec les paramètres courants.</em></p>", con)
+      for (seg in unname(segments_keep)) writeLines(paste0("<p>", seg, "</p>"), con)
       next
+    }
+
+    if (mode_degrade) {
+      writeLines("<p><em>Note : aucun terme significatif n'a été retrouvé textuellement ; affichage des segments non filtré.</em></p>", con)
     }
 
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
