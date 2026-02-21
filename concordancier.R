@@ -244,6 +244,10 @@ generer_concordancier_html <- function(
       next
     }
 
+    if (mode_degrade) {
+      writeLines("<p><em>Note : aucun terme significatif n'a été retrouvé textuellement ; affichage des segments non filtré.</em></p>", con)
+    }
+
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
 
     segments_hl <- surligner_vecteur_html_unicode(
