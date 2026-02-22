@@ -10,7 +10,7 @@ register_events_lancer <- function(input, output, session, rv) {
       chemin_spacy <- file.path(app_dir, "R", "nlp_spacy.R")
       if (!file.exists(chemin_spacy)) return(list(ok = FALSE, chemin = chemin_spacy, raison = "fichier introuvable"))
 
-      source(chemin_spacy, encoding = "UTF-8", local = TRUE)
+      source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
 
       ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
       ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
