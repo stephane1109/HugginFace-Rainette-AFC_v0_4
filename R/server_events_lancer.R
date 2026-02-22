@@ -3,6 +3,39 @@
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
 
 register_events_lancer <- function(input, output, session, rv) {
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+      candidats <- unique(c(
+        "nettoyage.R",
+        if (!is.null(app_dir) && nzchar(app_dir)) file.path(app_dir, "nettoyage.R") else NA_character_,
+        file.path("/home/user/app", "nettoyage.R")
+      ))
+      candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+
+      for (chemin_nettoyage in candidats) {
+        if (file.exists(chemin_nettoyage)) {
+          source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
+          if (exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+            break
+          }
+        }
+      }
+    }
+
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      appliquer_nettoyage_et_minuscules <- function(textes,
+                                                     activer_nettoyage = FALSE,
+                                                     forcer_minuscules = FALSE,
+                                                     supprimer_chiffres = FALSE,
+                                                     supprimer_apostrophes = FALSE) {
+        ajouter_log(rv, "Avertissement: appliquer_nettoyage_et_minuscules indisponible; nettoyage contourné pour préserver l'exécution.")
+        if (is.null(textes)) return(character(0))
+        x <- as.character(textes)
+        if (isTRUE(forcer_minuscules)) x <- tolower(x)
+        x
+      }
+    }
+
     formater_df_csv_6_decimales <- function(df) {
       if (is.null(df)) return(df)
       df_out <- df

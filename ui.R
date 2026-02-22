@@ -22,8 +22,19 @@ if (!exists("ui_aide_huggingface", mode = "function")) {
 }
 
 if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
-  if (file.exists("nettoyage.R")) {
-    source("nettoyage.R", encoding = "UTF-8", local = TRUE)
+  app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+  candidats <- unique(c(
+    "nettoyage.R",
+    if (!is.null(app_dir) && nzchar(app_dir)) file.path(app_dir, "nettoyage.R") else NA_character_,
+    file.path("/home/user/app", "nettoyage.R")
+  ))
+  candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+
+  for (chemin_nettoyage in candidats) {
+    if (file.exists(chemin_nettoyage)) {
+      source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
+      if (exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) break
+    }
   }
 }
 
