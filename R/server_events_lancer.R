@@ -3,6 +3,20 @@
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
 
 register_events_lancer <- function(input, output, session, rv) {
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      chemin_nettoyage <- "nettoyage.R"
+      if (file.exists(chemin_nettoyage)) {
+        source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
+      }
+    }
+
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      stop(
+        "Fonction introuvable : appliquer_nettoyage_et_minuscules(). ",
+        "Vérifie le chargement de nettoyage.R et le répertoire de travail de l'application."
+      )
+    }
+
     formater_df_csv_6_decimales <- function(df) {
       if (is.null(df)) return(df)
       df_out <- df
