@@ -3,22 +3,37 @@
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
 
 register_events_lancer <- function(input, output, session, rv) {
-    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-      app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
-      candidats <- unique(c(
-        "nettoyage.R",
-        if (!is.null(app_dir) && nzchar(app_dir)) file.path(app_dir, "nettoyage.R") else NA_character_,
-        file.path("/home/user/app", "nettoyage.R")
-      ))
-      candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+    app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+    if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
 
-      for (chemin_nettoyage in candidats) {
-        if (file.exists(chemin_nettoyage)) {
-          source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
-          if (exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-            break
-          }
+    charger_module_spacy <- function() {
+      candidats_spacy <- unique(c(
+        file.path(app_dir, "R", "nlp_spacy.R"),
+        file.path(getwd(), "R", "nlp_spacy.R"),
+        file.path("R", "nlp_spacy.R")
+      ))
+
+      dernier_chemin <- candidats_spacy[[1]]
+      for (chemin_spacy in candidats_spacy) {
+        dernier_chemin <- chemin_spacy
+        if (!file.exists(chemin_spacy)) next
+
+        source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
+
+        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
+        ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
+        if (ok_filtrage && ok_ner) {
+          return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
         }
+      }
+
+      list(ok = FALSE, chemin = dernier_chemin, raison = "fonctions spaCy absentes après source")
+    }
+
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      chemin_nettoyage <- file.path(app_dir, "nettoyage.R")
+      if (file.exists(chemin_nettoyage)) {
+        source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
       }
     }
 
@@ -348,6 +363,13 @@ register_events_lancer <- function(input, output, session, rv) {
             avancer(0.28, "spaCy : exécution Python")
             rv$statut <- "spaCy : prétraitement..."
 
+            if (!exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)) {
+              charge_spacy <- charger_module_spacy()
+              if (!isTRUE(charge_spacy$ok)) {
+                stop(paste0("Module spaCy indisponible pour le dictionnaire spaCy (", charge_spacy$raison, ") : ", charge_spacy$chemin))
+              }
+            }
+
             sp <- executer_spacy_filtrage(
               ids = ids_corpus,
               textes = unname(textes_chd),
@@ -494,6 +516,12 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "NER (si activé)..."
 
           if (isTRUE(input$activer_ner)) {
+            if (!exists("executer_spacy_ner", mode = "function", inherits = TRUE)) {
+              charge_spacy <- charger_module_spacy()
+              if (!isTRUE(charge_spacy$ok)) {
+                stop(paste0("Module spaCy indisponible pour le NER (", charge_spacy$raison, ") : ", charge_spacy$chemin))
+              }
+            }
             config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
             ids_ner <- docnames(filtered_corpus_ok)
             textes_ner <- as.character(filtered_corpus_ok)
@@ -857,7 +885,11 @@ register_events_lancer <- function(input, output, session, rv) {
             rv = rv
           )
 
-          do.call(generer_concordancier_html, args_concordancier)
+          if (identical(source_dictionnaire, "lexique_fr")) {
+            do.call(generer_concordancier_lexique_html, args_concordancier)
+          } else {
+            do.call(generer_concordancier_spacy_html, args_concordancier)
+          }
 
           rv$html_file <- html_file
 
