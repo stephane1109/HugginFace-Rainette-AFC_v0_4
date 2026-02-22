@@ -23,29 +23,17 @@ register_events_lancer <- function(input, output, session, rv) {
     }
 
     if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-      REGEX_CARACTERES_AUTORISES <- "a-zA-Z0-9àÀâÂäÄáÁåÅãéÉèÈêÊëËìÌîÎïÏíÍóÓòÒôÔöÖõÕøØùÙûÛüÜúÚçÇßœŒ’ñÑ\\.:,;!\\?'"
-      REGEX_CARACTERES_A_SUPPRIMER <- paste0("[^", REGEX_CARACTERES_AUTORISES, "]")
-
       appliquer_nettoyage_et_minuscules <- function(textes,
                                                      activer_nettoyage = FALSE,
                                                      forcer_minuscules = FALSE,
                                                      supprimer_chiffres = FALSE,
                                                      supprimer_apostrophes = FALSE) {
-        x <- textes
-        if (is.null(x)) return(character(0))
-
-        x <- gsub("\u00A0", " ", x, fixed = TRUE)
-        if (isTRUE(supprimer_chiffres)) x <- gsub("[0-9]+", " ", x, perl = TRUE)
-        if (isTRUE(supprimer_apostrophes)) x <- gsub("(?i)\\b(?:[cdjlmnst]|qu)['’](?=\\p{L})", "", x, perl = TRUE)
-        if (isTRUE(activer_nettoyage)) x <- gsub(REGEX_CARACTERES_A_SUPPRIMER, " ", x, perl = TRUE)
-
-        x <- gsub("\\s+", " ", x, perl = TRUE)
-        x <- trimws(x)
+        ajouter_log(rv, "Avertissement: appliquer_nettoyage_et_minuscules indisponible; nettoyage contourné pour préserver l'exécution.")
+        if (is.null(textes)) return(character(0))
+        x <- as.character(textes)
         if (isTRUE(forcer_minuscules)) x <- tolower(x)
         x
       }
-
-      ajouter_log(rv, "Avertissement: nettoyage.R introuvable, fallback interne appliqué pour le nettoyage texte.")
     }
 
     formater_df_csv_6_decimales <- function(df) {
