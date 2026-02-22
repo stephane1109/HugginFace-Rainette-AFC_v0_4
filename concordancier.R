@@ -309,6 +309,18 @@ generer_concordancier_html <- function(
       }
     }
 
+    # Garde-fou final : quel que soit le mode (spaCy/lexique),
+    # ne jamais produire 0/N si la classe contient des segments.
+    if (length(segments_keep) == 0 && length(segments) > 0) {
+      segments_keep <- segments
+      if (!is.null(rv)) {
+        ajouter_log(rv, paste0(
+          "Concordancier : garde-fou activé pour la classe ", cl,
+          " (source=", source_dictionnaire, ") : affichage de tous les segments."
+        ))
+      }
+    }
+
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
     if (length(segments_keep) == 0) {
