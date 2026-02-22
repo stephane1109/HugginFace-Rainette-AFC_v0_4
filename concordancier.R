@@ -197,7 +197,16 @@ generer_concordancier_html <- function(
 
     cl_num <- normaliser_id_classe(cl)
     classes_stats <- normaliser_id_classe(res_stats_df$Classe)
-    termes_cl <- res_stats_df$Terme[!is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num & !is.na(res_stats_df$p) & res_stats_df$p <= max_p]
+
+    idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
+    if (!"p_value" %in% names(res_stats_df)) {
+      if (!is.null(rv)) ajouter_log(rv, "Concordancier : colonne p_value absente dans res_stats_df.")
+      writeLines("<p><em>Erreur : colonne p_value absente dans les statistiques.</em></p>", con)
+      next
+    }
+
+    idx_sig <- idx_cl & !is.na(res_stats_df$p_value) & res_stats_df$p_value <= max_p
+    termes_cl <- res_stats_df$Terme[idx_sig]
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
@@ -239,7 +248,12 @@ generer_concordancier_html <- function(
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(termes_a_surligner) == 0 || length(segments_keep) == 0) {
+    if (length(segments_keep) == 0) {
+      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
+      next
+    }
+
+    if (length(termes_a_surligner) == 0) {
       writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
       next
     }

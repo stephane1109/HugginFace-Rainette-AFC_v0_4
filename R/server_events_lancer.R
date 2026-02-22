@@ -520,6 +520,7 @@ register_events_lancer <- function(input, output, session, rv) {
             mutate(ClusterID = rep(labels_stats, times = tailles_stats)) %>%
             rename(Terme = feature, Classe = ClusterID) %>%
             mutate(
+              p_value = p,
               Classe_brut = as.character(Classe),
               Classe = normaliser_id_classe_local(Classe),
               p_value_filter = ifelse(p <= input$max_p, paste0("≤ ", input$max_p), paste0("> ", input$max_p))
