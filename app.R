@@ -361,7 +361,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$explor, {
-    req(rv$export_dir, rv$html_file, rv$clusters, rv$res_stats_df)
+    req(rv$export_dir, rv$clusters)
 
     if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
       showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
@@ -372,6 +372,16 @@ server <- function(input, output, session) {
     }
 
     classe_defaut <- as.character(rv$clusters[1])
+    max_k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
+    if (!is.finite(max_k_plot) || is.na(max_k_plot) || max_k_plot < 2) {
+      max_k_plot <- max(2L, length(unique(rv$clusters)))
+    }
+
+    concordancier_src <- if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
+      paste0("/", rv$exports_prefix, "/segments_par_classe.html")
+    } else {
+      NULL
+    }
 
     showModal(modalDialog(
       title = "Exploration (serveur)",
@@ -387,7 +397,7 @@ server <- function(input, output, session) {
           fluidRow(
             column(
               4,
-              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = rv$max_n_groups_chd, value = min(rv$max_n_groups_chd, 8), step = 1),
+              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = max_k_plot, value = min(max_k_plot, 8), step = 1),
               selectInput(
                 "measure_plot", "Statistiques",
                 choices = c(
@@ -415,10 +425,18 @@ server <- function(input, output, session) {
         ),
         tabPanel(
           "Concordancier HTML",
-          tags$iframe(
-            src = paste0("/", rv$exports_prefix, "/segments_par_classe.html"),
-            style = "width: 100%; height: 70vh; border: 1px solid #999;"
-          )
+          if (is.null(concordancier_src)) {
+            tags$div(
+              style = "padding: 12px;",
+              tags$p("Le fichier du concordancier HTML n'est pas disponible pour cette analyse."),
+              tags$p("Relancez l'analyse puis vérifiez les logs si le problème persiste.")
+            )
+          } else {
+            tags$iframe(
+              src = concordancier_src,
+              style = "width: 100%; height: 70vh; border: 1px solid #999;"
+            )
+          }
         ),
         tabPanel(
           "Wordcloud",
