@@ -1,4 +1,4 @@
-# concordancier.R
+# concordancier_lexique.R
 
 horodater <- function() format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
