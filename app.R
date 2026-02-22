@@ -361,7 +361,7 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$explor, {
-    req(rv$export_dir, rv$clusters)
+    req(rv$export_dir)
 
     if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
       showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
@@ -371,10 +371,13 @@ server <- function(input, output, session) {
       shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
     }
 
-    classe_defaut <- as.character(rv$clusters[1])
+    clusters_choices <- as.character(rv$clusters)
+    if (length(clusters_choices) == 0) clusters_choices <- character(0)
+
+    classe_defaut <- if (length(clusters_choices) > 0) clusters_choices[1] else NULL
     max_k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
     if (!is.finite(max_k_plot) || is.na(max_k_plot) || max_k_plot < 2) {
-      max_k_plot <- max(2L, length(unique(rv$clusters)))
+      max_k_plot <- max(2L, length(unique(clusters_choices)))
     }
 
     concordancier_src <- if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
@@ -389,7 +392,7 @@ server <- function(input, output, session) {
       easyClose = TRUE,
       footer = modalButton("Fermer"),
 
-      selectInput("classe_viz", "Classe", choices = as.character(rv$clusters), selected = classe_defaut),
+      selectInput("classe_viz", "Classe", choices = clusters_choices, selected = classe_defaut),
 
       tabsetPanel(
         tabPanel(
