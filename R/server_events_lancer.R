@@ -871,6 +871,7 @@ register_events_lancer <- function(input, output, session, rv) {
             max_p = input$max_p,
             textes_indexation = textes_index_ok,
             spacy_tokens_df = rv$spacy_tokens_df,
+            source_dictionnaire = source_dictionnaire,
             avancer = avancer,
             rv = rv
           )
