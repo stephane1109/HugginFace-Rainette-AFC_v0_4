@@ -167,6 +167,7 @@ generer_concordancier_html <- function(
   max_p,
   textes_indexation,
   spacy_tokens_df,
+  source_dictionnaire = "spacy",
   avancer = NULL,
   rv = NULL,
   ...
@@ -280,16 +281,19 @@ generer_concordancier_html <- function(
     termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
+    keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]
 
     # Fallback : éviter un export HTML vide quand la correspondance stricte
-    # n'aboutit à aucun segment (différences de formes/lemmes possibles).
-    if (length(segments_keep) == 0 && length(segments) > 0) {
+    # n'aboutit à aucun segment (différences de formes/lemmes possibles),
+    # en particulier avec le dictionnaire lexique_fr.
+    if (length(segments) > 0 && sum(keep, na.rm = TRUE) == 0) {
       segments_keep <- segments
       if (!is.null(rv)) {
         ajouter_log(rv, paste0(
           "Concordancier : classe ", cl,
-          " sans segment après filtrage, fallback sur tous les segments de la classe."
+          " sans segment après filtrage (source=", source_dictionnaire,
+          "), fallback sur tous les segments de la classe."
         ))
       }
     }
