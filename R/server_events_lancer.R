@@ -3,22 +3,26 @@
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
 
 register_events_lancer <- function(input, output, session, rv) {
-    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-      app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
-      candidats <- unique(c(
-        "nettoyage.R",
-        if (!is.null(app_dir) && nzchar(app_dir)) file.path(app_dir, "nettoyage.R") else NA_character_,
-        file.path("/home/user/app", "nettoyage.R")
-      ))
-      candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+    app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+    if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
 
-      for (chemin_nettoyage in candidats) {
-        if (file.exists(chemin_nettoyage)) {
-          source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
-          if (exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-            break
-          }
-        }
+    chemin_spacy <- file.path(app_dir, "R", "nlp_spacy.R")
+    if (!exists("executer_spacy_filtrage", mode = "function", inherits = TRUE) ||
+        !exists("executer_spacy_ner", mode = "function", inherits = TRUE)) {
+      if (!file.exists(chemin_spacy)) {
+        stop(paste0("Fichier introuvable: ", chemin_spacy, " (requis pour executer_spacy_filtrage)."))
+      }
+      source(chemin_spacy, encoding = "UTF-8", local = TRUE)
+    }
+
+    if (!exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)) {
+      stop(paste0("Fonction 'executer_spacy_filtrage' introuvable après source de: ", chemin_spacy))
+    }
+
+    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
+      chemin_nettoyage <- file.path(app_dir, "nettoyage.R")
+      if (file.exists(chemin_nettoyage)) {
+        source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
       }
     }
 
