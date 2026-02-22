@@ -210,6 +210,42 @@ generer_concordancier_html <- function(
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
+    # Fallback : si aucun terme n'est significatif au seuil courant,
+    # conserver les termes les plus contributifs (chi2) pour éviter un
+    # concordancier vide et garder un rendu exploitable.
+    if (length(termes_cl) == 0) {
+      idx_top <- idx_cl & !is.na(res_stats_df$Terme) & nzchar(as.character(res_stats_df$Terme))
+      if (any(idx_top)) {
+        df_top <- res_stats_df[idx_top, , drop = FALSE]
+        if ("chi2" %in% names(df_top)) {
+          df_top <- df_top[order(-df_top$chi2), , drop = FALSE]
+        }
+        termes_cl <- unique(head(as.character(df_top$Terme), 20))
+        termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
+        if (!is.null(rv)) {
+          ajouter_log(rv, paste0(
+            "Concordancier : classe ", cl,
+            " sans terme p<=", max_p,
+            ", fallback sur top chi2 (", length(termes_cl), " termes)."
+          ))
+        }
+      }
+
+      # Sécurité supplémentaire : si l'appariement de classe échoue,
+      # prendre un petit top global pour éviter une classe vide.
+      if (length(termes_cl) == 0) {
+        idx_top_global <- !is.na(res_stats_df$Terme) & nzchar(as.character(res_stats_df$Terme))
+        if (any(idx_top_global)) {
+          df_top_global <- res_stats_df[idx_top_global, , drop = FALSE]
+          if ("chi2" %in% names(df_top_global)) {
+            df_top_global <- df_top_global[order(-df_top_global$chi2), , drop = FALSE]
+          }
+          termes_cl <- unique(head(as.character(df_top_global$Terme), 20))
+          termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
+        }
+      }
+    }
+
     segments <- segments_by_class[[cl]]
     ids_cl <- names(segments)
 
@@ -246,6 +282,18 @@ generer_concordancier_html <- function(
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
     segments_keep <- segments[keep]
 
+    # Fallback : éviter un export HTML vide quand la correspondance stricte
+    # n'aboutit à aucun segment (différences de formes/lemmes possibles).
+    if (length(segments_keep) == 0 && length(segments) > 0) {
+      segments_keep <- segments
+      if (!is.null(rv)) {
+        ajouter_log(rv, paste0(
+          "Concordancier : classe ", cl,
+          " sans segment après filtrage, fallback sur tous les segments de la classe."
+        ))
+      }
+    }
+
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
     if (length(segments_keep) == 0) {
@@ -254,7 +302,13 @@ generer_concordancier_html <- function(
     }
 
     if (length(termes_a_surligner) == 0) {
-      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
+      # Toujours afficher les segments de la classe même sans terme à surligner.
+      segments_hl_safe <- echapper_segments_en_preservant_surlignage(
+        unname(segments_keep),
+        "<span class='highlight'>",
+        "</span>"
+      )
+      for (seg in segments_hl_safe) writeLines(paste0("<p>", seg, "</p>"), con)
       next
     }
 
