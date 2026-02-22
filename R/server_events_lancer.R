@@ -7,17 +7,27 @@ register_events_lancer <- function(input, output, session, rv) {
     if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
 
     charger_module_spacy <- function() {
-      chemin_spacy <- file.path(app_dir, "R", "nlp_spacy.R")
-      if (!file.exists(chemin_spacy)) return(list(ok = FALSE, chemin = chemin_spacy, raison = "fichier introuvable"))
+      candidats_spacy <- unique(c(
+        file.path(app_dir, "R", "nlp_spacy.R"),
+        file.path(getwd(), "R", "nlp_spacy.R"),
+        file.path("R", "nlp_spacy.R")
+      ))
 
-      source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
+      dernier_chemin <- candidats_spacy[[1]]
+      for (chemin_spacy in candidats_spacy) {
+        dernier_chemin <- chemin_spacy
+        if (!file.exists(chemin_spacy)) next
 
-      ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
-      ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
-      if (!ok_filtrage || !ok_ner) {
-        return(list(ok = FALSE, chemin = chemin_spacy, raison = "fonctions spaCy absentes après source"))
+        source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
+
+        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
+        ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
+        if (ok_filtrage && ok_ner) {
+          return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
+        }
       }
-      list(ok = TRUE, chemin = chemin_spacy, raison = "")
+
+      list(ok = FALSE, chemin = dernier_chemin, raison = "fonctions spaCy absentes après source")
     }
 
     if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
@@ -876,7 +886,11 @@ register_events_lancer <- function(input, output, session, rv) {
             rv = rv
           )
 
-          do.call(generer_concordancier_html, args_concordancier)
+          if (identical(source_dictionnaire, "lexique_fr")) {
+            do.call(generer_concordancier_lexique_html, args_concordancier)
+          } else {
+            do.call(generer_concordancier_spacy_html, args_concordancier)
+          }
 
           rv$html_file <- html_file
 
