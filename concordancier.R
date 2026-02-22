@@ -167,6 +167,7 @@ generer_concordancier_html <- function(
   max_p,
   textes_indexation,
   spacy_tokens_df,
+  source_dictionnaire = "spacy",
   avancer = NULL,
   rv = NULL,
   ...
@@ -254,8 +255,15 @@ generer_concordancier_html <- function(
       next
     }
 
-    # Important : le filtrage doit se faire sur les textes d'indexation (lemmatisés / normalisés)
-    # pour rester cohérent avec les termes issus des stats Rainette.
+    source_dic <- as.character(source_dictionnaire)
+    if (!source_dic %in% c("spacy", "lexique_fr")) source_dic <- "spacy"
+
+    # Branche 1 : dictionnaire spaCy
+    # - filtrage sur textes indexés
+    # - expansion des termes avec tokens de surface (lemma -> token)
+    # Branche 2 : dictionnaire lexique_fr
+    # - filtrage sur textes indexés lexique
+    # - pas de dépendance aux tokens spaCy
     textes_filtrage <- unname(segments)
     if (!is.null(textes_indexation) && length(textes_indexation) > 0) {
       tx <- textes_indexation[ids_cl]
@@ -265,31 +273,50 @@ generer_concordancier_html <- function(
       }
     }
 
-    tokens_surface <- character(0)
-    if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
-      df_tok <- spacy_tokens_df
-      df_tok$doc_id <- as.character(df_tok$doc_id)
-      df_tok <- df_tok[df_tok$doc_id %in% ids_cl, , drop = FALSE]
-      if (nrow(df_tok) > 0) {
-        tokens_surface <- unique(df_tok$token[df_tok$lemma %in% termes_cl | df_tok$token %in% termes_cl])
-        tokens_surface <- tokens_surface[!is.na(tokens_surface) & nzchar(tokens_surface)]
+    termes_a_surligner <- termes_cl
+
+    if (identical(source_dic, "spacy")) {
+      tokens_surface <- character(0)
+      if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
+        df_tok <- spacy_tokens_df
+        df_tok$doc_id <- as.character(df_tok$doc_id)
+        df_tok <- df_tok[df_tok$doc_id %in% ids_cl, , drop = FALSE]
+        if (nrow(df_tok) > 0) {
+          tokens_surface <- unique(df_tok$token[df_tok$lemma %in% termes_cl | df_tok$token %in% termes_cl])
+          tokens_surface <- tokens_surface[!is.na(tokens_surface) & nzchar(tokens_surface)]
+        }
       }
+      termes_a_surligner <- unique(c(tokens_surface, termes_cl))
     }
 
-    termes_a_surligner <- unique(c(tokens_surface, termes_cl))
     termes_a_surligner <- expandir_variantes_termes(termes_a_surligner)
 
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
+    keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]
 
     # Fallback : éviter un export HTML vide quand la correspondance stricte
-    # n'aboutit à aucun segment (différences de formes/lemmes possibles).
-    if (length(segments_keep) == 0 && length(segments) > 0) {
+    # n'aboutit à aucun segment (différences de formes/lemmes possibles),
+    # en particulier avec le dictionnaire lexique_fr.
+    if (length(segments) > 0 && sum(keep, na.rm = TRUE) == 0) {
       segments_keep <- segments
       if (!is.null(rv)) {
         ajouter_log(rv, paste0(
           "Concordancier : classe ", cl,
-          " sans segment après filtrage, fallback sur tous les segments de la classe."
+          " sans segment après filtrage (source=", source_dictionnaire,
+          "), fallback sur tous les segments de la classe."
+        ))
+      }
+    }
+
+    # Garde-fou final : quel que soit le mode (spaCy/lexique),
+    # ne jamais produire 0/N si la classe contient des segments.
+    if (length(segments_keep) == 0 && length(segments) > 0) {
+      segments_keep <- segments
+      if (!is.null(rv)) {
+        ajouter_log(rv, paste0(
+          "Concordancier : garde-fou activé pour la classe ", cl,
+          " (source=", source_dictionnaire, ") : affichage de tous les segments."
         ))
       }
     }
