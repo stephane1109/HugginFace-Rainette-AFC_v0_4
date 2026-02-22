@@ -21,6 +21,16 @@ if (!exists("ui_aide_huggingface", mode = "function")) {
   }
 }
 
+if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
+  if (file.exists("nettoyage.R")) {
+    source("nettoyage.R", encoding = "UTF-8", local = TRUE)
+  }
+}
+
+if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
+  REGEX_CARACTERES_A_SUPPRIMER <- "Regex indisponible (source nettoyage.R manquante)."
+}
+
 ui <- fluidPage(
   tags$head(
     tags$style(HTML("

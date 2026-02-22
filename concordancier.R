@@ -20,6 +20,42 @@ echapper_regex <- function(x) {
   gsub("([\\^\\$\\*\\+\\?\\(\\)\\[\\]\\{\\}\\.\\|\\\\\\-])", "\\\\\\1", x)
 }
 
+echapper_html <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x
+}
+
+expandir_variantes_termes <- function(termes) {
+  termes <- unique(as.character(termes))
+  termes <- trimws(termes)
+  termes <- termes[!is.na(termes) & nzchar(termes)]
+  if (length(termes) == 0) return(character(0))
+
+  variantes <- unique(c(
+    termes,
+    gsub("’", "'", termes, fixed = TRUE),
+    gsub("'", "’", termes, fixed = TRUE)
+  ))
+
+  variantes[!is.na(variantes) & nzchar(variantes)]
+}
+
+echapper_segments_en_preservant_surlignage <- function(segments, start_tag, end_tag) {
+  if (length(segments) == 0) return(segments)
+
+  start_placeholder <- "__RAINETTE_HL_START__"
+  end_placeholder <- "__RAINETTE_HL_END__"
+
+  x <- gsub(start_tag, start_placeholder, segments, fixed = TRUE)
+  x <- gsub(end_tag, end_placeholder, x, fixed = TRUE)
+  x <- echapper_html(x)
+  x <- gsub(start_placeholder, start_tag, x, fixed = TRUE)
+  x <- gsub(end_placeholder, end_tag, x, fixed = TRUE)
+  x
+}
+
 normaliser_id_classe <- function(x) {
   x_chr <- as.character(x)
   x_chr <- trimws(x_chr)
@@ -78,7 +114,7 @@ preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
   })
 }
 
-surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag) {
+surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
 
   out <- segments
@@ -91,7 +127,10 @@ surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag)
     for (pat in motifs) {
       s_nfd <- tryCatch(
         gsub(pat, paste0(start_tag, "\\1", end_tag), s_nfd, perl = TRUE),
-        error = function(e) s_nfd
+        error = function(e) {
+          if (is.function(on_error)) on_error(e, pat)
+          s_nfd
+        }
       )
     }
 
@@ -128,7 +167,6 @@ generer_concordancier_html <- function(
   max_p,
   textes_indexation,
   spacy_tokens_df,
-  explor_assets = NULL,
   avancer = NULL,
   rv = NULL,
   ...
@@ -159,7 +197,16 @@ generer_concordancier_html <- function(
 
     cl_num <- normaliser_id_classe(cl)
     classes_stats <- normaliser_id_classe(res_stats_df$Classe)
-    termes_cl <- res_stats_df$Terme[!is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num & !is.na(res_stats_df$p) & res_stats_df$p <= max_p]
+
+    idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
+    if (!"p_value" %in% names(res_stats_df)) {
+      if (!is.null(rv)) ajouter_log(rv, "Concordancier : colonne p_value absente dans res_stats_df.")
+      writeLines("<p><em>Erreur : colonne p_value absente dans les statistiques.</em></p>", con)
+      next
+    }
+
+    idx_sig <- idx_cl & !is.na(res_stats_df$p_value) & res_stats_df$p_value <= max_p
+    termes_cl <- res_stats_df$Terme[idx_sig]
     termes_cl <- unique(termes_cl)
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
@@ -201,22 +248,31 @@ generer_concordancier_html <- function(
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
-    if (length(termes_a_surligner) == 0 || length(segments_keep) == 0) {
+    if (length(segments_keep) == 0) {
       writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
       next
     }
 
-    if (mode_degrade) {
-      writeLines("<p><em>Note : aucun terme significatif n'a été retrouvé textuellement ; affichage des segments non filtré.</em></p>", con)
+    if (length(termes_a_surligner) == 0) {
+      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
+      next
     }
 
+
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
+
+    log_regex <- function(e, pat) {
+      if (!is.null(rv)) {
+        ajouter_log(rv, paste0("Concordancier : erreur regex sur motif [", pat, "] - ", conditionMessage(e)))
+      }
+    }
 
     segments_hl <- surligner_vecteur_html_unicode(
       unname(segments_keep),
       motifs,
       "<span class='highlight'>",
-      "</span>"
+      "</span>",
+      on_error = log_regex
     )
 
     # Si les termes sont surtout visibles dans l'espace d'indexation (lemmes),
@@ -229,13 +285,20 @@ generer_concordancier_html <- function(
         unname(textes_keep_idx),
         motifs,
         "<span class='highlight'>",
-        "</span>"
+        "</span>",
+        on_error = log_regex
       )
       has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
       if (has_hl_idx) segments_hl <- segments_hl_idx
     }
 
-    for (seg in segments_hl) writeLines(paste0("<p>", seg, "</p>"), con)
+    segments_hl_safe <- echapper_segments_en_preservant_surlignage(
+      segments_hl,
+      "<span class='highlight'>",
+      "</span>"
+    )
+
+    for (seg in segments_hl_safe) writeLines(paste0("<p>", seg, "</p>"), con)
   }
 
   writeLines("</body></html>", con)
