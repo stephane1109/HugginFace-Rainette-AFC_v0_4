@@ -321,6 +321,20 @@ generer_concordancier_html <- function(
       }
     }
 
+    # Verrou final anti-vide : évite tout affichage 0/N quand la classe contient des segments.
+    if (length(segments_keep) == 0 && length(segments) > 0) {
+      segments_keep <- segments
+    }
+
+    if (!is.null(rv)) {
+      ajouter_log(rv, paste0(
+        "Concordancier : classe ", cl,
+        " | source=", source_dictionnaire,
+        " | segments=", length(segments),
+        " | keep=", length(segments_keep)
+      ))
+    }
+
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
 
     if (length(segments_keep) == 0) {
@@ -371,6 +385,10 @@ generer_concordancier_html <- function(
       )
       has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
       if (has_hl_idx) segments_hl <- segments_hl_idx
+    }
+
+    if (length(segments_hl) == 0 && length(segments_keep) > 0) {
+      segments_hl <- unname(segments_keep)
     }
 
     segments_hl_safe <- echapper_segments_en_preservant_surlignage(
