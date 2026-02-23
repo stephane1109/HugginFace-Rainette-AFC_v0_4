@@ -1,3 +1,6 @@
+# Rôle du fichier: start.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 options(
   repos = c(CRAN = "https://cloud.r-project.org"),
   bspm.sudo = TRUE

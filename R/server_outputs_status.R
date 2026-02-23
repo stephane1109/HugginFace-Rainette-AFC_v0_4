@@ -1,3 +1,6 @@
+# Rôle du fichier: server_outputs_status.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module server - sorties de statut global
 # Ce fichier enregistre les sorties Shiny de statut transversal (logs, statut,
 # barre de progression, table de classes) pour alléger `app.R` sans changer la logique.

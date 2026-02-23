@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: proposition_segmentation_appR.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 # Proposition de segmentation de `app.R` (1930 lignes)
 
 ## Objectif

@@ -1,3 +1,6 @@
+# Rôle du fichier: nlp_language.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module NLP - langue et dictionnaires spaCy
 # Ce fichier regroupe la détection de langue du corpus, la vérification de cohérence
 # entre langue estimée et langue sélectionnée, ainsi que la configuration des modèles

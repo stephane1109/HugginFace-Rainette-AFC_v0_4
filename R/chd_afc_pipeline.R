@@ -1,3 +1,6 @@
+# Rôle du fichier: chd_afc_pipeline.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module CHD/AFC - préparation des données et génération des artefacts CHD
 # Ce fichier centralise les fonctions de préparation DFM/docvars, l'ajustement de `k`,
 # les utilitaires de graphes d'adjacence/cooccurrence, et la génération des exports

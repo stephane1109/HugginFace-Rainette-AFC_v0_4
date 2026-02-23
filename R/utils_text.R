@@ -1,3 +1,6 @@
+# Rôle du fichier: utils_text.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 normaliser_classes <- function(x) {
   y <- trimws(as.character(x))
   y[y == "" | is.na(y)] <- NA_character_

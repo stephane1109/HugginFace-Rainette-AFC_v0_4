@@ -1,3 +1,6 @@
+# Rôle du fichier: pipeline_spacy_analysis.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 executer_pipeline_spacy <- function(input, rv, ids_corpus, textes_chd, avancer, charger_module_spacy) {
   filtrage_morpho <- isTRUE(input$filtrage_morpho)
   utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)

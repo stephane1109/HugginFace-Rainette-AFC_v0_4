@@ -1,3 +1,6 @@
+# Rôle du fichier: server_events_lancer.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module server - événement principal `input$lancer`
 # Ce fichier encapsule le pipeline principal lancé au clic sur "Lancer l'analyse"
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
