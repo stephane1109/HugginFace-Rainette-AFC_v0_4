@@ -155,59 +155,21 @@ obtenir_stopwords_quanteda_fr <- local({
 obtenir_stopwords_analyse <- function(langue_spacy = "fr", source_dictionnaire = "spacy", lexique_source_stopwords = "quanteda", rv = NULL) {
   source_dictionnaire <- tolower(trimws(as.character(source_dictionnaire)))
   if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
-  lexique_source_stopwords <- tolower(trimws(as.character(lexique_source_stopwords)))
-  if (!lexique_source_stopwords %in% c("quanteda", "spacy")) lexique_source_stopwords <- "quanteda"
 
   # Politique explicite:
   # - dictionnaire spaCy   -> stopwords spaCy uniquement
-  # - dictionnaire lexique -> source choisie dans l'UI (quanteda ou spaCy)
+  # - dictionnaire lexique -> stopwords quanteda (fr) uniquement
   if (identical(source_dictionnaire, "lexique_fr")) {
-    if (identical(lexique_source_stopwords, "spacy")) {
-      sw_spacy_fr <- obtenir_stopwords_spacy(langue_spacy = "fr", rv = rv)
-      sw_spacy_fr <- unique(trimws(as.character(sw_spacy_fr)))
-      sw_spacy_fr <- sw_spacy_fr[nzchar(sw_spacy_fr)]
-      if (length(sw_spacy_fr) > 0) {
-        if (!is.null(rv)) {
-          ajouter_log(rv, paste0("lexique_fr: stopwords spaCy (FR) sélectionnés : ", length(sw_spacy_fr), " termes."))
-        }
-        return(sw_spacy_fr)
-      }
-
-      sw_quanteda <- obtenir_stopwords_quanteda_fr(rv = rv)
-      if (length(sw_quanteda) > 0) {
-        if (!is.null(rv)) {
-          ajouter_log(rv, paste0("lexique_fr: fallback quanteda (fr) utilisé : ", length(sw_quanteda), " termes."))
-        }
-        return(sw_quanteda)
-      }
-
-      if (!is.null(rv)) {
-        ajouter_log(rv, "Aucun stopword exploitable pour lexique_fr (spaCy/quanteda).")
-      }
-      return(character(0))
-    }
-
     sw_quanteda <- obtenir_stopwords_quanteda_fr(rv = rv)
     if (length(sw_quanteda) > 0) {
       if (!is.null(rv)) {
-        ajouter_log(rv, paste0("lexique_fr: stopwords quanteda sélectionnés : ", length(sw_quanteda), " termes."))
+        ajouter_log(rv, paste0("lexique_fr: stopwords quanteda (fr) utilisés : ", length(sw_quanteda), " termes."))
       }
       return(sw_quanteda)
     }
 
-    sw_spacy_fr <- obtenir_stopwords_spacy(langue_spacy = "fr", rv = rv)
-    sw_spacy_fr <- unique(trimws(as.character(sw_spacy_fr)))
-    sw_spacy_fr <- sw_spacy_fr[nzchar(sw_spacy_fr)]
-
-    if (length(sw_spacy_fr) > 0) {
-      if (!is.null(rv)) {
-        ajouter_log(rv, paste0("lexique_fr: fallback spaCy (FR) utilisé : ", length(sw_spacy_fr), " termes."))
-      }
-      return(sw_spacy_fr)
-    }
-
     if (!is.null(rv)) {
-      ajouter_log(rv, "Aucun stopword exploitable pour lexique_fr (quanteda/spaCy).")
+      ajouter_log(rv, "Aucun stopword quanteda exploitable pour lexique_fr.")
     }
     return(character(0))
   }
