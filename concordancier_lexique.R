@@ -177,7 +177,6 @@ detecter_segments_contenant_termes_unicode <- function(textes_index, termes) {
 }
 
 # concordancier_lexique.R
-# Concordancier dédié au mode dictionnaire Lexique (fr).
 
 generer_concordancier_lexique_html <- function(
   chemin_sortie,

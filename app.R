@@ -43,6 +43,7 @@ if (file.exists("help.md")) {
 }
 
 source("nettoyage.R", encoding = "UTF-8", local = TRUE)
+source("concordancier_utils.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_spacy.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_lexique.R", encoding = "UTF-8", local = TRUE)
 source("afc.R", encoding = "UTF-8", local = TRUE)
