@@ -262,7 +262,38 @@ generer_concordancier_spacy_html <- function(
     }
 
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
-    segments_hl <- surligner_vecteur_html_unicode(unname(segments_keep), motifs, "<span class='highlight'>", "</span>")
+
+    log_regex <- function(e, pat) {
+      if (!is.null(rv)) {
+        ajouter_log(rv, paste0("Concordancier : erreur regex sur motif [", pat, "] - ", conditionMessage(e)))
+      }
+    }
+
+    segments_hl <- surligner_vecteur_html_unicode(
+      unname(segments_keep),
+      motifs,
+      "<span class='highlight'>",
+      "</span>",
+      on_error = log_regex
+    )
+
+    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
+    if (!has_hl) {
+      textes_keep_idx <- textes_filtrage[keep]
+      if (length(textes_keep_idx) == length(segments_keep)) {
+        segments_hl_idx <- surligner_vecteur_html_unicode(
+          unname(textes_keep_idx),
+          motifs,
+          "<span class='highlight'>",
+          "</span>",
+          on_error = log_regex
+        )
+        if (any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))) {
+          segments_hl <- segments_hl_idx
+        }
+      }
+    }
+
     if (length(segments_hl) == 0 && length(segments_keep) > 0) segments_hl <- unname(segments_keep)
 
     for (seg in echapper_segments_en_preservant_surlignage(segments_hl, "<span class='highlight'>", "</span>")) writeLines(paste0("<p>", seg, "</p>"), con)
