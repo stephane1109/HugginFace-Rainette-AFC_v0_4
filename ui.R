@@ -110,7 +110,7 @@ ui <- fluidPage(
       ),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'lexique_fr'",
-        checkboxInput("lexique_utiliser_lemmes", "Lemmatisation (Lexique fr)", value = TRUE)
+        checkboxInput("lexique_utiliser_lemmes", "Lemmatisation via les lemmes de lexique_fr (forme → c_lemme)", value = TRUE)
       ),
       uiOutput("ui_spacy_langue_detection"),
 
@@ -138,17 +138,7 @@ ui <- fluidPage(
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (selon dictionnaire)", value = FALSE),
-      conditionalPanel(
-        condition = "input.source_dictionnaire == 'lexique_fr' && input.retirer_stopwords == true",
-        radioButtons(
-          "lexique_source_stopwords",
-          "Source stopwords (Lexique fr)",
-          choices = c("quanteda (stopwords-iso)" = "quanteda", "spaCy (secours/option)" = "spacy"),
-          selected = "quanteda",
-          inline = FALSE
-        )
-      ),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy si source spaCy, quanteda si source Lexique fr)", value = FALSE),
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique", value = FALSE),
       tags$small("Le filtrage morphosyntaxique s'applique à spaCy ou lexique_fr selon la source sélectionnée."),
       conditionalPanel(
@@ -186,7 +176,7 @@ ui <- fluidPage(
       ),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
-        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE)
+        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation via spaCy uniquement", value = FALSE)
       ),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),

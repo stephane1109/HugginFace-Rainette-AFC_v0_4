@@ -5,8 +5,7 @@ executer_pipeline_lexique <- function(input, rv, textes_chd) {
   filtrage_morpho <- isTRUE(input$filtrage_morpho)
   utiliser_lemmes_lexique <- isTRUE(input$lexique_utiliser_lemmes)
   langue_reference <- "fr"
-  lexique_source_stopwords <- tolower(trimws(as.character(input$lexique_source_stopwords)))
-  if (!lexique_source_stopwords %in% c("quanteda", "spacy")) lexique_source_stopwords <- "quanteda"
+  lexique_source_stopwords <- "quanteda"
 
   if (isTRUE(utiliser_lemmes_lexique) || isTRUE(filtrage_morpho)) {
     lexique_fr <- charger_lexique_fr("lexique_fr.csv")
@@ -42,7 +41,7 @@ executer_pipeline_lexique <- function(input, rv, textes_chd) {
         "lexique_fr | filtrage morpho=1 (c_morpho: ",
         paste(cgram_lexique_a_conserver, collapse = ", "),
         ") | lemmes=", ifelse(utiliser_lemmes_lexique, "1", "0"),
-        " | stopwords: ", lexique_source_stopwords, " (Lexique fr)"
+        " | stopwords: quanteda (Lexique fr)"
       )
     )
 
