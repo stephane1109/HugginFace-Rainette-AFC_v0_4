@@ -129,7 +129,8 @@ construire_motif_terme_valide_lexique <- function(pat_terme) {
 }
 
 preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
-  terms <- unique(terms)
+  terms <- unique(as.character(terms))
+  terms <- trimws(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
 
@@ -138,11 +139,16 @@ preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
   patterns <- patterns[nzchar(patterns)]
   if (length(patterns) == 0) return(list())
 
-  motifs <- vapply(patterns, construire_motif_terme_valide_lexique, FUN.VALUE = character(1))
-  motifs <- motifs[nzchar(motifs)]
-  as.list(unique(motifs))
-}
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
 
+  lapply(lots, function(lot) {
+    paste0(
+      "(*UCP)(?i)(?<![\\p{L}\\p{M}])(",
+      paste0(lot, collapse = "|"),
+      ")(?![\\p{L}\\p{M}])"
+    )
+  })
+}
 surligner_vecteur_html_unicode_lexique <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
 
@@ -198,6 +204,7 @@ generer_concordancier_lexique_html <- function(
   max_p,
   textes_indexation,
   spacy_tokens_df = NULL,
+  lexique_fr_df = NULL,
   avancer = NULL,
   rv = NULL,
   ...
@@ -281,7 +288,17 @@ generer_concordancier_lexique_html <- function(
       if (any(ok_tx)) textes_filtrage[ok_tx] <- tx[ok_tx]
     }
 
-    termes_a_surligner <- expandir_variantes_termes_lexique(termes_cl)
+    tokens_surface <- character(0)
+    if (!is.null(lexique_fr_df) && all(c("c_mot", "c_lemme") %in% names(lexique_fr_df)) && length(termes_cl) > 0) {
+      df_lex <- lexique_fr_df
+      df_lex$c_mot <- tolower(as.character(df_lex$c_mot))
+      df_lex$c_lemme <- tolower(as.character(df_lex$c_lemme))
+      termes_cl_low <- tolower(as.character(termes_cl))
+      tokens_surface <- unique(df_lex$c_mot[df_lex$c_lemme %in% termes_cl_low])
+      tokens_surface <- tokens_surface[!is.na(tokens_surface) & nzchar(tokens_surface)]
+    }
+
+    termes_a_surligner <- expandir_variantes_termes_lexique(unique(c(tokens_surface, termes_cl)))
     keep <- detecter_segments_contenant_termes_unicode_lexique(textes_filtrage, termes_a_surligner)
     keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]

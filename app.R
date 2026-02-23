@@ -93,6 +93,7 @@ server <- function(input, output, session) {
     exports_prefix = paste0("exports_", session$token),
 
     spacy_tokens_df = NULL,
+    lexique_fr_df = NULL,
     textes_indexation = NULL,
 
     ner_df = NULL,
@@ -387,10 +388,15 @@ server <- function(input, output, session) {
         max_k_plot <- max(2L, length(unique(clusters_choices)))
       }
 
-      concordancier_src <- if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
-        paste0("/", rv$exports_prefix, "/segments_par_classe.html")
-      } else {
-        NULL
+      concordancier_src <- NULL
+      if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
+        nom_html <- basename(rv$html_file)
+        src_html <- file.path(rv$export_dir, nom_html)
+        if (!file.exists(src_html)) {
+          ok_copy <- tryCatch(file.copy(rv$html_file, src_html, overwrite = TRUE), error = function(e) FALSE)
+          if (!isTRUE(ok_copy)) src_html <- rv$html_file
+        }
+        concordancier_src <- paste0("/", rv$exports_prefix, "/", basename(src_html))
       }
 
       removeModal()
