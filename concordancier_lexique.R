@@ -53,6 +53,9 @@ echapper_segments_en_preservant_surlignage_lexique <- function(segments, start_t
   x <- echapper_html_lexique(x)
   x <- gsub(start_placeholder, start_tag, x, fixed = TRUE)
   x <- gsub(end_placeholder, end_tag, x, fixed = TRUE)
+  x <- gsub("&lt;span class='highlight'&gt;", start_tag, x, fixed = TRUE)
+  x <- gsub("&lt;span class=\"highlight\"&gt;", start_tag, x, fixed = TRUE)
+  x <- gsub("&lt;/span&gt;", end_tag, x, fixed = TRUE)
   x
 }
 
