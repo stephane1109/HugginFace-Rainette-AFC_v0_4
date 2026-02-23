@@ -177,7 +177,6 @@ detecter_segments_contenant_termes_unicode_spacy <- function(textes_index, terme
 }
 
 # concordancier_spacy.R
-# Concordancier dédié au mode dictionnaire spaCy.
 
 generer_concordancier_spacy_html <- function(
   chemin_sortie,
