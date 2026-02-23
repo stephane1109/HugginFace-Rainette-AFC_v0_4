@@ -93,29 +93,7 @@ construire_regex_terme_nfd <- function(terme) {
   paste0(pieces, collapse = "")
 }
 
-motif_unicode_est_valide <- function(pat) {
-  if (is.na(pat) || !nzchar(pat)) return(FALSE)
-  ok <- tryCatch({
-    grepl(pat, "", perl = TRUE)
-    TRUE
-  }, error = function(e) FALSE)
-  ok
-}
-
-construire_motif_terme_valide <- function(pat_terme) {
-  candidats <- c(
-    paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
-    paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
-    paste0("(?i)(", pat_terme, ")")
-  )
-
-  for (cand in candidats) {
-    if (motif_unicode_est_valide(cand)) return(cand)
-  }
-  ""
-}
-
-preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
+preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 80) {
   terms <- unique(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
@@ -125,9 +103,15 @@ preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
   patterns <- patterns[nzchar(patterns)]
   if (length(patterns) == 0) return(list())
 
-  motifs <- vapply(patterns, construire_motif_terme_valide, FUN.VALUE = character(1))
-  motifs <- motifs[nzchar(motifs)]
-  as.list(unique(motifs))
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+
+  lapply(lots, function(lot) {
+    paste0(
+      "(?i)(?<![\\p{L}\\p{M}])(",
+      paste0(lot, collapse = "|"),
+      ")(?![\\p{L}\\p{M}])"
+    )
+  })
 }
 
 surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
@@ -191,7 +175,7 @@ generer_concordancier_spacy_html <- function(
   ...
 ) {
   source_dictionnaire <- "spacy"
-  if (!is.null(rv)) ajouter_log(rv, "Concordancier spaCy : génération HTML (filtré + surlignage Unicode).")
+  if (!is.null(rv)) ajouter_log(rv, "Concordancier spaCy : génération HTML.")
 
   con <- file(chemin_sortie, open = "wt", encoding = "UTF-8")
   on.exit(try(close(con), silent = TRUE), add = TRUE)
@@ -217,7 +201,6 @@ generer_concordancier_spacy_html <- function(
     idx_cl <- !is.na(classes_stats) & !is.na(cl_num) & classes_stats == cl_num
 
     if (!"p_value" %in% names(res_stats_df)) {
-      if (!is.null(rv)) ajouter_log(rv, "Concordancier spaCy : colonne p_value absente dans res_stats_df.")
       writeLines("<p><em>Erreur : colonne p_value absente dans les statistiques.</em></p>", con)
       next
     }
@@ -233,25 +216,6 @@ generer_concordancier_spacy_html <- function(
         if ("chi2" %in% names(df_top)) df_top <- df_top[order(-df_top$chi2), , drop = FALSE]
         termes_cl <- unique(head(as.character(df_top$Terme), 20))
         termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
-        if (!is.null(rv)) {
-          ajouter_log(rv, paste0(
-            "Concordancier spaCy : classe ", cl,
-            " sans terme p<=", max_p,
-            ", fallback sur top chi2 (", length(termes_cl), " termes)."
-          ))
-        }
-      }
-
-      if (length(termes_cl) == 0) {
-        idx_top_global <- !is.na(res_stats_df$Terme) & nzchar(as.character(res_stats_df$Terme))
-        if (any(idx_top_global)) {
-          df_top_global <- res_stats_df[idx_top_global, , drop = FALSE]
-          if ("chi2" %in% names(df_top_global)) {
-            df_top_global <- df_top_global[order(-df_top_global$chi2), , drop = FALSE]
-          }
-          termes_cl <- unique(head(as.character(df_top_global$Terme), 20))
-          termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
-        }
       }
     }
 
@@ -270,7 +234,7 @@ generer_concordancier_spacy_html <- function(
     }
 
     tokens_surface <- character(0)
-    if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
+    if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0) {
       df_tok <- spacy_tokens_df
       df_tok$doc_id <- as.character(df_tok$doc_id)
       df_tok <- df_tok[df_tok$doc_id %in% ids_cl, , drop = FALSE]
@@ -284,38 +248,7 @@ generer_concordancier_spacy_html <- function(
     keep <- detecter_segments_contenant_termes_unicode(textes_filtrage, termes_a_surligner)
     keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]
-
-    if (length(segments) > 0 && sum(keep, na.rm = TRUE) == 0) {
-      segments_keep <- segments
-      if (!is.null(rv)) {
-        ajouter_log(rv, paste0(
-          "Concordancier spaCy : classe ", cl,
-          " sans segment après filtrage, fallback sur tous les segments de la classe."
-        ))
-      }
-    }
-
-    if (length(segments_keep) == 0 && length(segments) > 0) {
-      segments_keep <- segments
-      if (!is.null(rv)) {
-        ajouter_log(rv, paste0(
-          "Concordancier spaCy : garde-fou activé pour la classe ", cl,
-          " : affichage de tous les segments."
-        ))
-      }
-    }
-
-    if (length(segments_keep) == 0 && length(segments) > 0) {
-      segments_keep <- segments
-    }
-
-    if (!is.null(rv)) {
-      ajouter_log(rv, paste0(
-        "Concordancier spaCy : classe ", cl,
-        " | segments=", length(segments),
-        " | keep=", length(segments_keep)
-      ))
-    }
+    if (length(segments_keep) == 0 && length(segments) > 0) segments_keep <- segments
 
     writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
     if (length(segments_keep) == 0) {
@@ -329,34 +262,7 @@ generer_concordancier_spacy_html <- function(
     }
 
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
-    log_regex <- function(e, pat) {
-      if (!is.null(rv)) {
-        ajouter_log(rv, paste0("Concordancier spaCy : erreur regex sur motif [", pat, "] - ", conditionMessage(e)))
-      }
-    }
-
-    segments_hl <- surligner_vecteur_html_unicode(
-      unname(segments_keep),
-      motifs,
-      "<span class='highlight'>",
-      "</span>",
-      on_error = log_regex
-    )
-
-    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
-    if (!has_hl) {
-      textes_keep_idx <- textes_filtrage[keep]
-      segments_hl_idx <- surligner_vecteur_html_unicode(
-        unname(textes_keep_idx),
-        motifs,
-        "<span class='highlight'>",
-        "</span>",
-        on_error = log_regex
-      )
-      has_hl_idx <- any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))
-      if (has_hl_idx) segments_hl <- segments_hl_idx
-    }
-
+    segments_hl <- surligner_vecteur_html_unicode(unname(segments_keep), motifs, "<span class='highlight'>", "</span>")
     if (length(segments_hl) == 0 && length(segments_keep) > 0) segments_hl <- unname(segments_keep)
 
     for (seg in echapper_segments_en_preservant_surlignage(segments_hl, "<span class='highlight'>", "</span>")) writeLines(paste0("<p>", seg, "</p>"), con)
@@ -364,6 +270,5 @@ generer_concordancier_spacy_html <- function(
 
   writeLines("</body></html>", con)
   close(con)
-  if (!is.null(rv)) ajouter_log(rv, paste0("Concordancier spaCy : HTML écrit dans : ", chemin_sortie))
-  chemin_sortie
+  invisible(chemin_sortie)
 }
