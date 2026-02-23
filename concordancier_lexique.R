@@ -53,16 +53,19 @@ echapper_segments_en_preservant_surlignage_lexique <- function(segments, start_t
   x <- echapper_html_lexique(x)
   x <- gsub(start_placeholder, start_tag, x, fixed = TRUE)
   x <- gsub(end_placeholder, end_tag, x, fixed = TRUE)
-  x <- gsub("&lt;span class='highlight'&gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&lt;span class=\"highlight\"&gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&lt;span class=&#39;highlight&#39;&gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&lt;span class=&quot;highlight&quot;&gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&amp;lt;span class='highlight'&amp;gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&amp;lt;span class=\"highlight\"&amp;gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&amp;lt;span class=&#39;highlight&#39;&amp;gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&amp;lt;span class=&quot;highlight&quot;&amp;gt;", start_tag, x, fixed = TRUE)
-  x <- gsub("&lt;/span&gt;", end_tag, x, fixed = TRUE)
-  x <- gsub("&amp;lt;/span&amp;gt;", end_tag, x, fixed = TRUE)
+
+  # Restaure les balises highlight même si elles ont subi plusieurs niveaux d'échappement HTML.
+  for (iter in seq_len(6)) {
+    prev <- x
+    x <- gsub(
+      "&(?:amp;)*lt;span\\s+class=(?:'|\"|&#39;|&#x27;|&quot;|&#34;)highlight(?:'|\"|&#39;|&#x27;|&quot;|&#34;)&(?:amp;)*gt;",
+      start_tag,
+      x,
+      perl = TRUE
+    )
+    x <- gsub("&(?:amp;)*lt;/span&(?:amp;)*gt;", end_tag, x, perl = TRUE)
+    if (identical(x, prev)) break
+  }
   x
 }
 
