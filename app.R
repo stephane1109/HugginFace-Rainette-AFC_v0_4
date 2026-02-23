@@ -400,11 +400,7 @@ server <- function(input, output, session) {
       }
       k_plot_defaut <- max(2L, min(max_k_plot, k_plot_defaut))
 
-      nfeat_dfm_plot <- tryCatch(quanteda::nfeat(rv$dfm_chd), error = function(e) NA_integer_)
-      n_terms_plot_defaut <- 50L
-      if (is.finite(nfeat_dfm_plot) && !is.na(nfeat_dfm_plot)) {
-        n_terms_plot_defaut <- max(20L, min(200L, as.integer(nfeat_dfm_plot)))
-      }
+      n_terms_plot_defaut <- 20L
 
       concordancier_src <- NULL
       html_file_ok <- !is.null(rv$html_file) && length(rv$html_file) == 1 && !is.na(rv$html_file) && nzchar(rv$html_file)
@@ -445,7 +441,7 @@ server <- function(input, output, session) {
                   selected = "frequency"
                 ),
                 selectInput("type_plot", "Type", choices = c("bar", "cloud"), selected = "bar"),
-                numericInput("n_terms_plot", "Nombre de termes", value = n_terms_plot_defaut, min = 10, max = 1000, step = 5),
+                numericInput("n_terms_plot", "Nombre de termes", value = n_terms_plot_defaut, min = 5, max = 1000, step = 1),
                 conditionalPanel(
                   "input.measure_plot != 'docprop'",
                   checkboxInput("same_scales_plot", "Forcer les mêmes échelles", value = TRUE)
