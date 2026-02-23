@@ -102,33 +102,17 @@ motif_unicode_est_valide <- function(pat) {
   ok
 }
 
-construire_motif_lot <- function(lot) {
-  paste0(
-    "(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(",
-    paste0(lot, collapse = "|"),
-    ")(?![\\p{L}\\p{M}])"
+construire_motif_terme_valide <- function(pat_terme) {
+  candidats <- c(
+    paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
+    paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
+    paste0("(?i)(", pat_terme, ")")
   )
-}
 
-ajouter_motif_ou_decouper <- function(lot, out) {
-  if (length(lot) == 0) return(out)
-
-  pat <- construire_motif_lot(lot)
-  if (motif_unicode_est_valide(pat)) {
-    out[[length(out) + 1]] <- pat
-    return(out)
+  for (cand in candidats) {
+    if (motif_unicode_est_valide(cand)) return(cand)
   }
-
-  if (length(lot) == 1) {
-    terme_seul <- paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", lot, ")(?![\\p{L}\\p{M}])")
-    if (motif_unicode_est_valide(terme_seul)) out[[length(out) + 1]] <- terme_seul
-    return(out)
-  }
-
-  mid <- floor(length(lot) / 2)
-  out <- ajouter_motif_ou_decouper(lot[seq_len(mid)], out)
-  out <- ajouter_motif_ou_decouper(lot[(mid + 1):length(lot)], out)
-  out
+  ""
 }
 
 preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
@@ -141,10 +125,9 @@ preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
   patterns <- patterns[nzchar(patterns)]
   if (length(patterns) == 0) return(list())
 
-  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
-  out <- list()
-  for (lot in lots) out <- ajouter_motif_ou_decouper(lot, out)
-  out
+  motifs <- vapply(patterns, construire_motif_terme_valide, FUN.VALUE = character(1))
+  motifs <- motifs[nzchar(motifs)]
+  as.list(unique(motifs))
 }
 
 surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
