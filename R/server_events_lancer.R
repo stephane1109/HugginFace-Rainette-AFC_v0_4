@@ -23,7 +23,7 @@ register_events_lancer <- function(input, output, session, rv) {
         dernier_chemin <- chemin_spacy
         if (!file.exists(chemin_spacy)) next
 
-        env_spacy <- new.env(parent = baseenv())
+        env_spacy <- new.env(parent = parent.frame())
         source_res <- tryCatch({
           source(chemin_spacy, encoding = "UTF-8", local = env_spacy)
           NULL
@@ -42,6 +42,14 @@ register_events_lancer <- function(input, output, session, rv) {
           assign("executer_spacy_ner", get("executer_spacy_ner", envir = env_spacy, inherits = FALSE), envir = caller_env)
           return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
         }
+
+        fonctions_disponibles <- ls(envir = env_spacy, all.names = FALSE)
+        derniere_raison <- paste0(
+          "fonctions spaCy absentes après source",
+          " (filtrage=", ifelse(ok_filtrage, "OK", "KO"),
+          ", ner=", ifelse(ok_ner, "OK", "KO"),
+          ", objets chargés=", length(fonctions_disponibles), ")"
+        )
       }
 
       list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
