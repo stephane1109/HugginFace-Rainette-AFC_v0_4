@@ -391,10 +391,11 @@ server <- function(input, output, session) {
       }
 
       concordancier_src <- NULL
-      if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
+      html_file_ok <- !is.null(rv$html_file) && length(rv$html_file) == 1 && !is.na(rv$html_file) && nzchar(rv$html_file)
+      if (isTRUE(html_file_ok) && isTRUE(file.exists(rv$html_file))) {
         nom_html <- basename(rv$html_file)
         src_html <- file.path(rv$export_dir, nom_html)
-        if (!file.exists(src_html)) {
+        if (!isTRUE(file.exists(src_html))) {
           ok_copy <- tryCatch(file.copy(rv$html_file, src_html, overwrite = TRUE), error = function(e) FALSE)
           if (!isTRUE(ok_copy)) src_html <- rv$html_file
         }

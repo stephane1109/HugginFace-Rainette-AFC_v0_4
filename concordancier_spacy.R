@@ -144,6 +144,8 @@ preparer_motifs_surlignage_nfd_spacy <- function(terms, taille_lot = 80) {
 
   construire_motif_lot <- function(lot) {
     pat_lot <- paste0(lot, collapse = "|")
+    if (!nzchar(pat_lot) || nchar(pat_lot) > 4000) return("")
+
     candidats <- c(
       paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])"),
       paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])")
