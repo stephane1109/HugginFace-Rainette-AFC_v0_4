@@ -36,7 +36,10 @@ expandir_variantes_termes_spacy <- function(termes) {
   variantes <- unique(c(
     termes,
     gsub("’", "'", termes, fixed = TRUE),
-    gsub("'", "’", termes, fixed = TRUE)
+    gsub("'", "’", termes, fixed = TRUE),
+    gsub("_", " ", termes, fixed = TRUE),
+    gsub("_", "-", termes, fixed = TRUE),
+    gsub(" ", "_", termes, fixed = TRUE)
   ))
 
   variantes[!is.na(variantes) & nzchar(variantes)]
@@ -94,6 +97,7 @@ construire_regex_terme_nfd_spacy <- function(terme) {
   pieces <- vapply(chars, function(ch) {
     if (grepl("\\p{M}", ch, perl = TRUE)) return("")
     if (ch %in% c(" ", "\t", "\n", "\r")) return("\\s+")
+    if (ch == "_") return("[_\\s\\-]+")
     if (ch %in% c("'", "’")) return("['’]")
 
     if (grepl("\\p{L}", ch, perl = TRUE)) {
@@ -128,21 +132,21 @@ construire_motif_terme_valide_spacy <- function(pat_terme) {
   ""
 }
 
-preparer_motifs_surlignage_nfd_spacy <- function(terms, taille_lot = 200) {
-  terms <- unique(terms)
+preparer_motifs_surlignage_nfd_spacy <- function(terms, taille_lot = 80) {
+  terms <- unique(as.character(terms))
+  terms <- trimws(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
 
   terms <- terms[order(nchar(terms), decreasing = TRUE)]
   patterns <- vapply(terms, construire_regex_terme_nfd_spacy, FUN.VALUE = character(1))
-  patterns <- patterns[nzchar(patterns)]
+  patterns <- unique(patterns[nzchar(patterns)])
   if (length(patterns) == 0) return(list())
 
   motifs <- vapply(patterns, construire_motif_terme_valide_spacy, FUN.VALUE = character(1))
   motifs <- motifs[nzchar(motifs)]
   as.list(unique(motifs))
 }
-
 surligner_vecteur_html_unicode_spacy <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
 
@@ -293,6 +297,13 @@ generer_concordancier_spacy_html <- function(
     }
 
     termes_a_surligner <- expandir_variantes_termes_spacy(unique(c(tokens_surface, termes_cl)))
+    if (!is.null(rv)) {
+      ajouter_log_spacy(rv, paste0(
+        "Concordancier spaCy : classe ", cl,
+        " | termes_significatifs=", length(unique(termes_cl)),
+        " | variantes_surlignage=", length(unique(termes_a_surligner))
+      ))
+    }
     keep <- detecter_segments_contenant_termes_unicode_spacy(textes_filtrage, termes_a_surligner)
     keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]
@@ -340,7 +351,7 @@ generer_concordancier_spacy_html <- function(
       next
     }
 
-    motifs <- preparer_motifs_surlignage_nfd_spacy(termes_a_surligner, taille_lot = 160)
+    motifs <- preparer_motifs_surlignage_nfd_spacy(termes_a_surligner, taille_lot = 80)
     log_regex <- function(e, pat) {
       if (!is.null(rv)) {
         ajouter_log_spacy(rv, paste0("Concordancier spaCy : erreur regex sur motif [", pat, "] - ", conditionMessage(e)))
