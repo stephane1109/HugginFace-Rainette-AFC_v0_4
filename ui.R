@@ -138,7 +138,17 @@ ui <- fluidPage(
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (selon dictionnaire)", value = FALSE),
+      conditionalPanel(
+        condition = "input.source_dictionnaire == 'lexique_fr' && input.retirer_stopwords == true",
+        radioButtons(
+          "lexique_source_stopwords",
+          "Source stopwords (Lexique fr)",
+          choices = c("quanteda (stopwords-iso)" = "quanteda", "spaCy (secours/option)" = "spacy"),
+          selected = "quanteda",
+          inline = FALSE
+        )
+      ),
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique", value = FALSE),
       tags$small("Le filtrage morphosyntaxique s'applique à spaCy ou lexique_fr selon la source sélectionnée."),
       conditionalPanel(

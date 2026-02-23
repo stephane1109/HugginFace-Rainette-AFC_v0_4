@@ -69,7 +69,8 @@ executer_pipeline_spacy <- function(input, rv, ids_corpus, textes_chd, avancer, 
     retirer_stopwords = isTRUE(input$retirer_stopwords),
     langue_spacy = langue_reference,
     rv = rv,
-    libelle = "spaCy"
+    libelle = "spaCy",
+    source_dictionnaire = "spacy"
   )
 
   list(
