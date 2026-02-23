@@ -1,18 +1,15 @@
-options(repos = c(CRAN = "https://cloud.r-project.org"))
-
-auto_update_rainette <- tolower(Sys.getenv("AUTO_UPDATE_RAINETTE", "true")) %in% c("1", "true", "yes")
-
-if (auto_update_rainette) {
-  message("AUTO_UPDATE_RAINETTE=true -> tentative de mise à jour de rainette")
-  try(install.packages("rainette", quiet = TRUE), silent = TRUE)
-}
+options(
+  repos = c(CRAN = "https://cloud.r-project.org"),
+  bspm.sudo = TRUE
+)
 
 port <- as.integer(Sys.getenv("PORT", "7860"))
 app_dir <- "/home/user/app"
 app_file <- file.path(app_dir, "app.R")
 
 app_env <- new.env(parent = globalenv())
-app_obj <- source(app_file, local = app_env, chdir = TRUE)$value
+source_result <- source(app_file, local = app_env, chdir = TRUE)
+app_obj <- source_result$value
 
 if (!inherits(app_obj, "shiny.appobj")) {
   if (exists("app", envir = app_env, inherits = FALSE) && inherits(app_env$app, "shiny.appobj")) {
@@ -23,8 +20,17 @@ if (!inherits(app_obj, "shiny.appobj")) {
     is.function(app_env$server)
   ) {
     app_obj <- shiny::shinyApp(ui = app_env$ui, server = app_env$server)
+  } else if (
+    exists("ui", envir = globalenv(), inherits = FALSE) &&
+    exists("server", envir = globalenv(), inherits = FALSE) &&
+    is.function(get("server", envir = globalenv(), inherits = FALSE))
+  ) {
+    app_obj <- shiny::shinyApp(
+      ui = get("ui", envir = globalenv(), inherits = FALSE),
+      server = get("server", envir = globalenv(), inherits = FALSE)
+    )
   } else {
-    stop("app.R doit retourner un objet shiny.appobj ou définir ui + server.")
+    app_obj <- shiny::shinyAppDir(app_dir)
   }
 }
 
