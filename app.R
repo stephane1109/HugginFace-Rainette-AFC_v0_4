@@ -394,6 +394,14 @@ server <- function(input, output, session) {
         max_k_plot <- max(2L, length(unique(clusters_choices)))
       }
 
+      k_plot_defaut <- suppressWarnings(as.integer(input$k))
+      if (!is.finite(k_plot_defaut) || is.na(k_plot_defaut) || k_plot_defaut < 2) {
+        k_plot_defaut <- min(max_k_plot, 3L)
+      }
+      k_plot_defaut <- max(2L, min(max_k_plot, k_plot_defaut))
+
+      n_terms_plot_defaut <- 20L
+
       concordancier_src <- NULL
       html_file_ok <- !is.null(rv$html_file) && length(rv$html_file) == 1 && !is.na(rv$html_file) && nzchar(rv$html_file)
       if (isTRUE(html_file_ok) && isTRUE(file.exists(rv$html_file))) {
@@ -421,19 +429,19 @@ server <- function(input, output, session) {
             fluidRow(
               column(
                 4,
-                sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = max_k_plot, value = min(max_k_plot, 8), step = 1),
+                sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = max_k_plot, value = k_plot_defaut, step = 1),
                 selectInput(
                   "measure_plot", "Statistiques",
                   choices = c(
+                    "Frequency - Terms" = "frequency",
                     "Keyness - Chi-squared" = "chi2",
                     "Keyness - Likelihood ratio" = "lr",
-                    "Frequency - Terms" = "frequency",
                     "Frequency - Documents proportion" = "docprop"
                   ),
-                  selected = "chi2"
+                  selected = "frequency"
                 ),
                 selectInput("type_plot", "Type", choices = c("bar", "cloud"), selected = "bar"),
-                numericInput("n_terms_plot", "Nombre de termes", value = 20, min = 5, max = 200, step = 1),
+                numericInput("n_terms_plot", "Nombre de termes", value = n_terms_plot_defaut, min = 5, max = 1000, step = 1),
                 conditionalPanel(
                   "input.measure_plot != 'docprop'",
                   checkboxInput("same_scales_plot", "Forcer les mêmes échelles", value = TRUE)
