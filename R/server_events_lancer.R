@@ -93,6 +93,7 @@ register_events_lancer <- function(input, output, session, rv) {
       rv$progression <- 0
 
       rv$spacy_tokens_df <- NULL
+      rv$lexique_fr_df <- NULL
       rv$textes_indexation <- NULL
       rv$ner_df <- NULL
       rv$ner_nb_segments <- NA_integer_
@@ -219,189 +220,30 @@ register_events_lancer <- function(input, output, session, rv) {
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
 
-          filtrage_morpho <- isTRUE(input$filtrage_morpho)
           source_dictionnaire <- as.character(input$source_dictionnaire)
           if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
 
-          utiliser_lemmes_spacy <- isTRUE(input$spacy_utiliser_lemmes)
-          source_lexique <- identical(source_dictionnaire, "lexique_fr")
-          utiliser_lemmes_lexique <- source_lexique && isTRUE(input$lexique_utiliser_lemmes)
-          langue_spacy_sel <- if (isTRUE(source_lexique)) "fr" else as.character(input$spacy_langue)
-          config_spacy <- configurer_langue_spacy(langue_spacy_sel)
-          langue_reference <- if (isTRUE(source_lexique)) "fr" else config_spacy$code
-          utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes_spacy
-
-          if (isTRUE(utiliser_lemmes_lexique)) {
-            lexique_fr <- charger_lexique_fr("lexique_fr.csv")
-            ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
-          } else if (isTRUE(source_lexique)) {
-            lexique_fr <- NULL
-            ajouter_log(rv, "Lexique (fr) sélectionné sans lemmatisation : conservation des formes d'origine.")
+          if (identical(source_dictionnaire, "lexique_fr")) {
+            sortie_pipeline <- executer_pipeline_lexique(
+              input = input,
+              rv = rv,
+              textes_chd = textes_chd
+            )
           } else {
-            lexique_fr <- NULL
+            sortie_pipeline <- executer_pipeline_spacy(
+              input = input,
+              rv = rv,
+              ids_corpus = ids_corpus,
+              textes_chd = textes_chd,
+              avancer = avancer,
+              charger_module_spacy = charger_module_spacy
+            )
           }
 
-          if (isTRUE(utiliser_lemmes_lexique) && !isTRUE(filtrage_morpho)) {
-
-            ajouter_log(rv, "Lexique (fr) sans filtrage morphosyntaxique : lemmatisation directe forme->lemme.")
-
-            textes_lexique <- lemmatiser_textes_lexique(
-              textes = textes_chd,
-              lexique = lexique_fr,
-              rv = rv
-            )
-
-            tok_base <- tokens(
-              textes_lexique,
-              remove_punct = isTRUE(input$supprimer_ponctuation),
-              remove_numbers = isTRUE(input$supprimer_chiffres)
-            )
-
-            res_dfm <- construire_dfm_avec_fallback_stopwords(
-              tok_base = tok_base,
-              min_docfreq = input$min_docfreq,
-              retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = langue_reference,
-              rv = rv,
-              libelle = "Lexique (fr)"
-            )
-            tok <- res_dfm$tok
-            dfm_obj <- res_dfm$dfm
-
-          } else if (!utiliser_pipeline_spacy && !isTRUE(utiliser_lemmes_lexique)) {
-
-            ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
-            tok_base <- tokens(
-              textes_chd,
-              remove_punct = isTRUE(input$supprimer_ponctuation),
-              remove_numbers = isTRUE(input$supprimer_chiffres)
-            )
-
-            res_dfm <- construire_dfm_avec_fallback_stopwords(
-              tok_base = tok_base,
-              min_docfreq = input$min_docfreq,
-              retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = langue_reference,
-              rv = rv,
-              libelle = "Standard"
-            )
-            tok <- res_dfm$tok
-            dfm_obj <- res_dfm$dfm
-
-          } else if (isTRUE(source_lexique) && isTRUE(filtrage_morpho)) {
-
-            cgram_lexique_a_conserver <- toupper(trimws(as.character(input$pos_lexique_a_conserver)))
-            cgram_lexique_a_conserver <- unique(cgram_lexique_a_conserver[nzchar(cgram_lexique_a_conserver)])
-            if (is.null(cgram_lexique_a_conserver) || length(cgram_lexique_a_conserver) == 0) {
-              cgram_lexique_a_conserver <- c("NOM", "ADJ", "VER")
-            }
-
-            ajouter_log(
-              rv,
-              paste0(
-                "lexique_fr | filtrage morpho=1 (c_morpho: ",
-                paste(cgram_lexique_a_conserver, collapse = ", "),
-                ") | lemmes=", ifelse(utiliser_lemmes_lexique, "1", "0"),
-                " | stopwords: spaCy"
-              )
-            )
-
-            textes_lexique <- filtrer_textes_lexique_par_cgram(
-              textes = textes_chd,
-              lexique = lexique_fr,
-              cgram_a_conserver = cgram_lexique_a_conserver,
-              rv = rv
-            )
-
-            if (isTRUE(utiliser_lemmes_lexique)) {
-              textes_lexique <- lemmatiser_textes_lexique(
-                textes = textes_lexique,
-                lexique = lexique_fr,
-                rv = rv
-              )
-            }
-
-            tok_base <- tokens(
-              textes_lexique,
-              remove_punct = isTRUE(input$supprimer_ponctuation),
-              remove_numbers = isTRUE(input$supprimer_chiffres)
-            )
-
-            res_dfm <- construire_dfm_avec_fallback_stopwords(
-              tok_base = tok_base,
-              min_docfreq = input$min_docfreq,
-              retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = langue_reference,
-              rv = rv,
-              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr) + filtrage c_morpho", "lexique_fr (c_morpho)")
-            )
-            tok <- res_dfm$tok
-            dfm_obj <- res_dfm$dfm
-
-          } else {
-
-            pos_a_conserver <- NULL
-            pos_spacy_pipeline <- pos_a_conserver
-
-            if (isTRUE(filtrage_morpho)) {
-              pos_a_conserver <- input$pos_spacy_a_conserver
-              if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
-              pos_spacy_pipeline <- pos_a_conserver
-            }
-
-            ajouter_log(
-              rv,
-              paste0(
-                "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage morpho=", ifelse(filtrage_morpho, "1", "0"),
-                ifelse(filtrage_morpho, paste0(" (spaCy POS: ", paste(pos_a_conserver, collapse = ", "), ")"), ""),
-                " | lemmes=", ifelse(utiliser_lemmes_spacy && !source_lexique, "1", "0"),
-                " | source lemmes=spaCy",
-                " | stopwords: spaCy"
-              )
-            )
-
-            avancer(0.28, "spaCy : exécution Python")
-            rv$statut <- "spaCy : prétraitement..."
-
-            if (!exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)) {
-              charge_spacy <- charger_module_spacy()
-              if (!isTRUE(charge_spacy$ok)) {
-                stop(paste0("Module spaCy indisponible pour le dictionnaire spaCy (", charge_spacy$raison, ") : ", charge_spacy$chemin))
-              }
-            }
-
-            sp <- executer_spacy_filtrage(
-              ids = ids_corpus,
-              textes = unname(textes_chd),
-              pos_a_conserver = pos_spacy_pipeline,
-              utiliser_lemmes = utiliser_lemmes_spacy && !source_lexique,
-              lower_input = isTRUE(input$forcer_minuscules_avant),
-              modele_spacy = config_spacy$modele,
-              rv = rv
-            )
-
-            textes_spacy <- sp$textes
-            names(textes_spacy) <- ids_corpus
-            rv$spacy_tokens_df <- sp$tokens_df
-
-            avancer(0.40, "spaCy : tokens + DFM")
-            tok_base <- tokens(
-              textes_spacy,
-              remove_punct = isTRUE(input$supprimer_ponctuation),
-              remove_numbers = isTRUE(input$supprimer_chiffres)
-            )
-
-            res_dfm <- construire_dfm_avec_fallback_stopwords(
-              tok_base = tok_base,
-              min_docfreq = input$min_docfreq,
-              retirer_stopwords = isTRUE(input$retirer_stopwords),
-              langue_spacy = langue_reference,
-              rv = rv,
-              libelle = ifelse(utiliser_lemmes_lexique, "Lexique (fr)", "spaCy")
-            )
-            tok <- res_dfm$tok
-            dfm_obj <- res_dfm$dfm
-          }
+          tok <- sortie_pipeline$tok
+          dfm_obj <- sortie_pipeline$dfm_obj
+          langue_reference <- sortie_pipeline$langue_reference
+          source_dictionnaire <- sortie_pipeline$source_dictionnaire
 
           if (anyDuplicated(docnames(dfm_obj)) > 0) {
             dups_dfm <- sum(duplicated(as.character(docnames(dfm_obj))))
@@ -881,6 +723,7 @@ register_events_lancer <- function(input, output, session, rv) {
             max_p = input$max_p,
             textes_indexation = textes_index_ok,
             spacy_tokens_df = rv$spacy_tokens_df,
+            lexique_fr_df = rv$lexique_fr_df,
             source_dictionnaire = source_dictionnaire,
             avancer = avancer,
             rv = rv
