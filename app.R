@@ -368,17 +368,9 @@ server <- function(input, output, session) {
       showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
       return(invisible(NULL))
     }
+
     if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
       shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
-    }
-
-    clusters_choices <- as.character(rv$clusters)
-    if (length(clusters_choices) == 0) clusters_choices <- character(0)
-
-    classe_defaut <- if (length(clusters_choices) > 0) clusters_choices[1] else NULL
-    max_k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
-    if (!is.finite(max_k_plot) || is.na(max_k_plot) || max_k_plot < 2) {
-      max_k_plot <- max(2L, length(unique(clusters_choices)))
     }
 
     concordancier_src <- if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
@@ -387,74 +379,24 @@ server <- function(input, output, session) {
       NULL
     }
 
+    removeModal()
     showModal(modalDialog(
-      title = "Exploration (serveur)",
+      title = "Explore_rainette",
       size = "l",
       easyClose = TRUE,
       footer = modalButton("Fermer"),
-
-      selectInput("classe_viz", "Classe", choices = clusters_choices, selected = classe_defaut),
-
-      tabsetPanel(
-        tabPanel(
-          "CHD (rainette_plot)",
-          fluidRow(
-            column(
-              4,
-              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = max_k_plot, value = min(max_k_plot, 8), step = 1),
-              selectInput(
-                "measure_plot", "Statistiques",
-                choices = c(
-                  "Keyness - Chi-squared" = "chi2",
-                  "Keyness - Likelihood ratio" = "lr",
-                  "Frequency - Terms" = "frequency",
-                  "Frequency - Documents proportion" = "docprop"
-                ),
-                selected = "chi2"
-              ),
-              selectInput("type_plot", "Type", choices = c("bar", "cloud"), selected = "bar"),
-              numericInput("n_terms_plot", "Nombre de termes", value = 20, min = 5, max = 200, step = 1),
-              conditionalPanel(
-                "input.measure_plot != 'docprop'",
-                checkboxInput("same_scales_plot", "Forcer les mêmes échelles", value = TRUE)
-              ),
-              checkboxInput("show_negative_plot", "Afficher les valeurs négatives", value = FALSE),
-              numericInput("text_size_plot", "Taille du texte", value = 12, min = 6, max = 30, step = 1)
-            ),
-            column(
-              8,
-              plotOutput("plot_chd", height = "70vh")
-            )
-          )
-        ),
-        tabPanel(
-          "Concordancier HTML",
-          if (is.null(concordancier_src)) {
-            tags$div(
-              style = "padding: 12px;",
-              tags$p("Le fichier du concordancier HTML n'est pas disponible pour cette analyse."),
-              tags$p("Relancez l'analyse puis vérifiez les logs si le problème persiste.")
-            )
-          } else {
-            tags$iframe(
-              src = concordancier_src,
-              style = "width: 100%; height: 70vh; border: 1px solid #999;"
-            )
-          }
-        ),
-        tabPanel(
-          "Wordcloud",
-          uiOutput("ui_wordcloud")
-        ),
-        tabPanel(
-          "Cooccurrences",
-          uiOutput("ui_cooc")
-        ),
-        tabPanel(
-          "Statistiques",
-          tableOutput("table_stats_classe")
+      if (is.null(concordancier_src)) {
+        tags$div(
+          style = "padding:12px;",
+          tags$p("Le concordancier HTML n'est pas disponible."),
+          tags$p("Relance l'analyse puis vérifie les logs.")
         )
-      )
+      } else {
+        tags$iframe(
+          src = concordancier_src,
+          style = "width: 100%; height: 75vh; border: 1px solid #999;"
+        )
+      }
     ))
   })
 
