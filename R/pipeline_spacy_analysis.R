@@ -31,10 +31,12 @@ executer_pipeline_spacy <- function(input, rv, ids_corpus, textes_chd, avancer, 
   rv$statut <- "spaCy : prétraitement..."
 
   if (!exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)) {
+    ajouter_log(rv, "Diagnostic spaCy: fonction executer_spacy_filtrage absente avant chargement dynamique.")
     charge_spacy <- charger_module_spacy()
     if (!isTRUE(charge_spacy$ok)) {
       stop(paste0("Module spaCy indisponible pour le dictionnaire spaCy (", charge_spacy$raison, ") : ", charge_spacy$chemin))
     }
+    ajouter_log(rv, paste0("Diagnostic spaCy: module chargé depuis ", charge_spacy$chemin, "."))
   }
 
   sp <- executer_spacy_filtrage(

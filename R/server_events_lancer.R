@@ -14,20 +14,34 @@ register_events_lancer <- function(input, output, session, rv) {
       ))
 
       dernier_chemin <- candidats_spacy[[1]]
+      derniere_raison <- "fonctions spaCy absentes après source"
+
       for (chemin_spacy in candidats_spacy) {
         dernier_chemin <- chemin_spacy
         if (!file.exists(chemin_spacy)) next
 
-        source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
+        env_spacy <- new.env(parent = baseenv())
+        source_res <- tryCatch({
+          source(chemin_spacy, encoding = "UTF-8", local = env_spacy)
+          NULL
+        }, error = function(e) e)
 
-        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
-        ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
+        if (inherits(source_res, "error")) {
+          derniere_raison <- paste0("échec source: ", conditionMessage(source_res))
+          next
+        }
+
+        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", where = env_spacy, inherits = FALSE)
+        ok_ner <- exists("executer_spacy_ner", mode = "function", where = env_spacy, inherits = FALSE)
         if (ok_filtrage && ok_ner) {
+          caller_env <- parent.frame()
+          assign("executer_spacy_filtrage", get("executer_spacy_filtrage", envir = env_spacy, inherits = FALSE), envir = caller_env)
+          assign("executer_spacy_ner", get("executer_spacy_ner", envir = env_spacy, inherits = FALSE), envir = caller_env)
           return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
         }
       }
 
-      list(ok = FALSE, chemin = dernier_chemin, raison = "fonctions spaCy absentes après source")
+      list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
     }
 
     if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
@@ -223,6 +237,16 @@ register_events_lancer <- function(input, output, session, rv) {
           source_dictionnaire <- as.character(input$source_dictionnaire)
           if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
 
+          ajouter_log(
+            rv,
+            paste0(
+              "Diagnostic pipeline: dictionnaire=", source_dictionnaire,
+              " | langue UI=", as.character(input$spacy_langue),
+              " | filtrage_morpho=", ifelse(isTRUE(input$filtrage_morpho), "1", "0"),
+              " | retirer_stopwords=", ifelse(isTRUE(input$retirer_stopwords), "1", "0")
+            )
+          )
+
           if (identical(source_dictionnaire, "lexique_fr")) {
             sortie_pipeline <- executer_pipeline_lexique(
               input = input,
@@ -359,10 +383,12 @@ register_events_lancer <- function(input, output, session, rv) {
 
           if (isTRUE(input$activer_ner)) {
             if (!exists("executer_spacy_ner", mode = "function", inherits = TRUE)) {
+              ajouter_log(rv, "Diagnostic NER: fonction executer_spacy_ner absente avant chargement dynamique.")
               charge_spacy <- charger_module_spacy()
               if (!isTRUE(charge_spacy$ok)) {
                 stop(paste0("Module spaCy indisponible pour le NER (", charge_spacy$raison, ") : ", charge_spacy$chemin))
               }
+              ajouter_log(rv, paste0("Diagnostic NER: module spaCy chargé depuis ", charge_spacy$chemin, "."))
             }
             config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
             ids_ner <- docnames(filtered_corpus_ok)
