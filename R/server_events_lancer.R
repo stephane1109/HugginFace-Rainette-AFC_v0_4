@@ -24,7 +24,7 @@ register_events_lancer <- function(input, output, session, rv) {
         if (!file.exists(chemin_spacy)) next
 
         source_res <- tryCatch({
-          source(chemin_spacy, encoding = "UTF-8", local = TRUE)
+          source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
           NULL
         }, error = function(e) e)
 
