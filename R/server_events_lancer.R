@@ -93,6 +93,7 @@ register_events_lancer <- function(input, output, session, rv) {
       rv$progression <- 0
 
       rv$spacy_tokens_df <- NULL
+      rv$lexique_fr_df <- NULL
       rv$textes_indexation <- NULL
       rv$ner_df <- NULL
       rv$ner_nb_segments <- NA_integer_
@@ -234,11 +235,14 @@ register_events_lancer <- function(input, output, session, rv) {
           if (isTRUE(utiliser_lemmes_lexique)) {
             lexique_fr <- charger_lexique_fr("lexique_fr.csv")
             ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
+            rv$lexique_fr_df <- lexique_fr
           } else if (isTRUE(source_lexique)) {
             lexique_fr <- NULL
+            rv$lexique_fr_df <- NULL
             ajouter_log(rv, "Lexique (fr) sélectionné sans lemmatisation : conservation des formes d'origine.")
           } else {
             lexique_fr <- NULL
+            rv$lexique_fr_df <- NULL
           }
 
           if (isTRUE(utiliser_lemmes_lexique) && !isTRUE(filtrage_morpho)) {
@@ -881,6 +885,7 @@ register_events_lancer <- function(input, output, session, rv) {
             max_p = input$max_p,
             textes_indexation = textes_index_ok,
             spacy_tokens_df = rv$spacy_tokens_df,
+            lexique_fr_df = rv$lexique_fr_df,
             source_dictionnaire = source_dictionnaire,
             avancer = avancer,
             rv = rv
