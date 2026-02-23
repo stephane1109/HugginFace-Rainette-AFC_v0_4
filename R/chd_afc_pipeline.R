@@ -48,12 +48,18 @@ assurer_docvars_dfm_minimal <- function(dfm_obj, corpus_aligne) {
   dfm_obj
 }
 
-construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retirer_stopwords, langue_spacy, rv, libelle) {
+construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retirer_stopwords, langue_spacy, rv, libelle, source_dictionnaire = "spacy", lexique_source_stopwords = "quanteda") {
   n_base <- compter_tokens(tok_base)
   ajouter_log(rv, paste0(libelle, " : tokens (avant stopwords) = ", n_base))
 
   if (isTRUE(retirer_stopwords)) {
-    tok_sw <- tokens_remove(tok_base, obtenir_stopwords_spacy(langue_spacy = langue_spacy, rv = rv))
+    stopwords_a_retirer <- obtenir_stopwords_analyse(
+      langue_spacy = langue_spacy,
+      source_dictionnaire = source_dictionnaire,
+      lexique_source_stopwords = lexique_source_stopwords,
+      rv = rv
+    )
+    tok_sw <- tokens_remove(tok_base, stopwords_a_retirer)
     tok_sw <- tokens_tolower(tok_sw)
     n_sw <- compter_tokens(tok_sw)
     ajouter_log(rv, paste0(libelle, " : tokens (après stopwords) = ", n_sw))
