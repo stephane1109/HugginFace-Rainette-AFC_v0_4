@@ -129,7 +129,8 @@ construire_motif_terme_valide_lexique <- function(pat_terme) {
 }
 
 preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
-  terms <- unique(terms)
+  terms <- unique(as.character(terms))
+  terms <- trimws(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
 
@@ -138,11 +139,16 @@ preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
   patterns <- patterns[nzchar(patterns)]
   if (length(patterns) == 0) return(list())
 
-  motifs <- vapply(patterns, construire_motif_terme_valide_lexique, FUN.VALUE = character(1))
-  motifs <- motifs[nzchar(motifs)]
-  as.list(unique(motifs))
-}
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
 
+  lapply(lots, function(lot) {
+    paste0(
+      "(*UCP)(?i)(?<![\\p{L}\\p{M}])(",
+      paste0(lot, collapse = "|"),
+      ")(?![\\p{L}\\p{M}])"
+    )
+  })
+}
 surligner_vecteur_html_unicode_lexique <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
 
