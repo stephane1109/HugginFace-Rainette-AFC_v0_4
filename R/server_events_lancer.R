@@ -24,7 +24,7 @@ register_events_lancer <- function(input, output, session, rv) {
         if (!file.exists(chemin_spacy)) next
 
         source_res <- tryCatch({
-          source(chemin_spacy, encoding = "UTF-8", local = parent.frame())
+          source(chemin_spacy, encoding = "UTF-8", local = FALSE)
           NULL
         }, error = function(e) e)
 
@@ -33,8 +33,8 @@ register_events_lancer <- function(input, output, session, rv) {
           next
         }
 
-        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
-        ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
+        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", envir = .GlobalEnv, inherits = FALSE)
+        ok_ner <- exists("executer_spacy_ner", mode = "function", envir = .GlobalEnv, inherits = FALSE)
         if (ok_filtrage && ok_ner) {
           return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
         }
