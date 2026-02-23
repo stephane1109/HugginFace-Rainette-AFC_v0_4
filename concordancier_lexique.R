@@ -128,7 +128,7 @@ construire_motif_terme_valide_lexique <- function(pat_terme) {
   ""
 }
 
-preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
+preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 80) {
   terms <- unique(as.character(terms))
   terms <- trimws(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
@@ -136,18 +136,40 @@ preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 200) {
 
   terms <- terms[order(nchar(terms), decreasing = TRUE)]
   patterns <- vapply(terms, construire_regex_terme_nfd_lexique, FUN.VALUE = character(1))
-  patterns <- patterns[nzchar(patterns)]
+  patterns <- unique(patterns[nzchar(patterns)])
   if (length(patterns) == 0) return(list())
 
-  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+  taille_lot <- suppressWarnings(as.integer(taille_lot))
+  if (!is.finite(taille_lot) || is.na(taille_lot) || taille_lot < 1) taille_lot <- 80L
 
-  lapply(lots, function(lot) {
-    paste0(
-      "(*UCP)(?i)(?<![\\p{L}\\p{M}])(",
-      paste0(lot, collapse = "|"),
-      ")(?![\\p{L}\\p{M}])"
+  construire_motif_lot <- function(lot) {
+    pat_lot <- paste0(lot, collapse = "|")
+    candidats <- c(
+      paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])"),
+      paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])")
     )
-  })
+    for (cand in candidats) {
+      if (motif_unicode_est_valide_lexique(cand)) return(cand)
+    }
+    ""
+  }
+
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+  motifs <- character(0)
+
+  for (lot in lots) {
+    motif_lot <- construire_motif_lot(lot)
+    if (nzchar(motif_lot)) {
+      motifs <- c(motifs, motif_lot)
+      next
+    }
+
+    motifs_unit <- vapply(lot, construire_motif_terme_valide_lexique, FUN.VALUE = character(1))
+    motifs_unit <- motifs_unit[nzchar(motifs_unit)]
+    if (length(motifs_unit) > 0) motifs <- c(motifs, motifs_unit)
+  }
+
+  as.list(unique(motifs))
 }
 surligner_vecteur_html_unicode_lexique <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
@@ -346,7 +368,7 @@ generer_concordancier_lexique_html <- function(
       next
     }
 
-    motifs <- preparer_motifs_surlignage_nfd_lexique(termes_a_surligner, taille_lot = 160)
+    motifs <- preparer_motifs_surlignage_nfd_lexique(termes_a_surligner, taille_lot = 80)
     log_regex <- function(e, pat) {
       if (!is.null(rv)) {
         ajouter_log_lexique(rv, paste0("Concordancier lexique_fr : erreur regex sur motif [", pat, "] - ", conditionMessage(e)))
