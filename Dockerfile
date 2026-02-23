@@ -38,7 +38,6 @@ RUN set -eux; \
     fi
 
 ENV HOME=/home/user
-ENV AUTO_UPDATE_RAINETTE=true
 WORKDIR /home/user/app
 
 COPY . /home/user/app

@@ -25,6 +25,7 @@ library(htmltools)
 
 options(shiny.maxRequestSize = 300 * 1024^2)
 options(shinygadgets.viewer = shiny::browserViewer())
+options(bspm.sudo = TRUE)
 
 if (file.exists("help.md")) {
   ui_aide_huggingface <- function() {
@@ -764,4 +765,5 @@ server <- function(input, output, session) {
 
 }
 
-shinyApp(ui = ui, server = server)
+app <- shinyApp(ui = ui, server = server)
+app
