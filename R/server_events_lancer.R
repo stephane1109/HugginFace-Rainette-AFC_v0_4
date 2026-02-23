@@ -23,9 +23,8 @@ register_events_lancer <- function(input, output, session, rv) {
         dernier_chemin <- chemin_spacy
         if (!file.exists(chemin_spacy)) next
 
-        env_spacy <- new.env(parent = parent.frame())
         source_res <- tryCatch({
-          source(chemin_spacy, encoding = "UTF-8", local = env_spacy)
+          source(chemin_spacy, encoding = "UTF-8", local = TRUE)
           NULL
         }, error = function(e) e)
 
@@ -34,21 +33,16 @@ register_events_lancer <- function(input, output, session, rv) {
           next
         }
 
-        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", where = env_spacy, inherits = FALSE)
-        ok_ner <- exists("executer_spacy_ner", mode = "function", where = env_spacy, inherits = FALSE)
+        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", inherits = TRUE)
+        ok_ner <- exists("executer_spacy_ner", mode = "function", inherits = TRUE)
         if (ok_filtrage && ok_ner) {
-          caller_env <- parent.frame()
-          assign("executer_spacy_filtrage", get("executer_spacy_filtrage", envir = env_spacy, inherits = FALSE), envir = caller_env)
-          assign("executer_spacy_ner", get("executer_spacy_ner", envir = env_spacy, inherits = FALSE), envir = caller_env)
           return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
         }
 
-        fonctions_disponibles <- ls(envir = env_spacy, all.names = FALSE)
         derniere_raison <- paste0(
           "fonctions spaCy absentes après source",
           " (filtrage=", ifelse(ok_filtrage, "OK", "KO"),
-          ", ner=", ifelse(ok_ner, "OK", "KO"),
-          ", objets chargés=", length(fonctions_disponibles), ")"
+          ", ner=", ifelse(ok_ner, "OK", "KO"), ")"
         )
       }
 
@@ -265,6 +259,12 @@ register_events_lancer <- function(input, output, session, rv) {
               textes_chd = textes_chd
             )
           } else {
+            charge_spacy <- charger_module_spacy()
+            if (!isTRUE(charge_spacy$ok)) {
+              stop(paste0("Module spaCy indisponible pour le dictionnaire spaCy (", charge_spacy$raison, ") : ", charge_spacy$chemin))
+            }
+            ajouter_log(rv, paste0("Diagnostic spaCy: module chargé depuis ", charge_spacy$chemin, "."))
+
             sortie_pipeline <- executer_pipeline_spacy(
               input = input,
               rv = rv,
