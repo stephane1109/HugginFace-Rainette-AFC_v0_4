@@ -93,7 +93,7 @@ construire_regex_terme_nfd <- function(terme) {
   paste0(pieces, collapse = "")
 }
 
-preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
+preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 80) {
   terms <- unique(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
@@ -107,7 +107,7 @@ preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 200) {
 
   lapply(lots, function(lot) {
     paste0(
-      "(*UCP)(?i)(?<![\\p{L}\\p{M}])(",
+      "(?i)(?<![\\p{L}\\p{M}])(",
       paste0(lot, collapse = "|"),
       ")(?![\\p{L}\\p{M}])"
     )
