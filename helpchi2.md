@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: helpchi2.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 ## Aide : interprétation du chi2 et de `Classe_max`
 
 Le code calcule un chi2 global par terme sur l’ensemble des classes :

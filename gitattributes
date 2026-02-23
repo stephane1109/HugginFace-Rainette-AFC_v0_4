@@ -1,3 +1,6 @@
+# Rôle du fichier: gitattributes définit les règles Git appliquées au dépôt.
+# Ce fichier contrôle le suivi des contenus et la normalisation associée.
+# Il évite les écarts de versionnement et garantit une base de travail stable.
 *.7z filter=lfs diff=lfs merge=lfs -text
 *.arrow filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text

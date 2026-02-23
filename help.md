@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: help.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 ### codeandcortex.fr - Stéphane Meurisse - version beta 0.4 - 18-02-2026
 - <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
 - <a href="https://www.codeandcortex.fr/comprendre-chd-methode-reinert/" target="_blank" rel="noopener noreferrer">Comprendre la CHD</a>

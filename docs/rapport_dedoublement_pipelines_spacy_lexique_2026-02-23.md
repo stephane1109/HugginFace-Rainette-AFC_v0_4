@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: rapport_dedoublement_pipelines_spacy_lexique_2026-02-23.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 # Rapport — Dédoublement des pipelines d'analyse (spaCy vs lexique_fr)
 
 ## Demande

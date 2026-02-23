@@ -1,3 +1,6 @@
+# Rôle du fichier: pipeline_lexique_analysis.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 executer_pipeline_lexique <- function(input, rv, textes_chd) {
   filtrage_morpho <- isTRUE(input$filtrage_morpho)
   utiliser_lemmes_lexique <- isTRUE(input$lexique_utiliser_lemmes)

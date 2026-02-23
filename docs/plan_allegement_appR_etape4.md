@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: plan_allegement_appR_etape4.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 # Vérification rapide + plan d'allègement supplémentaire de `app.R`
 
 ## 1) Vérification de l'état actuel (après étapes 1 à 3)

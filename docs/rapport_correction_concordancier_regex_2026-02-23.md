@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: rapport_correction_concordancier_regex_2026-02-23.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 # Rapport de correction — Concordancier spaCy / lexique_fr
 
 ## Problème observé

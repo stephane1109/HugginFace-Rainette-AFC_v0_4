@@ -1,3 +1,6 @@
+[//]: # (Rôle du fichier: rapport_erreurs_concordancier_html.md documente une partie de l'application Rainette.)
+[//]: # (Ce document sert de référence fonctionnelle/technique pour l'équipe.)
+[//]: # (Il décrit le comportement attendu afin de sécuriser maintenance et diagnostics.)
 # Rapport d'erreurs détaillé — concordancier HTML
 
 ## Méthode de scan

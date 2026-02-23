@@ -1,3 +1,6 @@
+# Rôle du fichier: nlp_spacy.R porte une partie du pipeline d'analyse Rainette.
+# Ce script centralise une responsabilité métier/technique utilisée par l'application.
+# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module NLP - exécution spaCy (filtrage POS et NER)
 # Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
 # et `ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
