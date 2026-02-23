@@ -83,7 +83,7 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **Nombre de termes** : nombre de termes affichés par classe dans la visualisation.
 - **Afficher les valeurs négatives** : inclut les termes négativement associés à une classe.
 
-### Mise à jour automatique de rainette
+### Démarrage
 
-- **AUTO_UPDATE_RAINETTE** : par défaut (`AUTO_UPDATE_RAINETTE=true`), l’application tente `install.packages("rainette")` au démarrage du conteneur avant de lancer Shiny.
-- Pour désactiver ce comportement, définir `AUTO_UPDATE_RAINETTE=false`. La mise à jour automatique peut rallonger le temps de démarrage et dépend de la disponibilité réseau/CRAN.
+- L’application ne fait plus de mise à jour automatique de `rainette` au lancement.
+- Si vous voyez un ancien message `AUTO_UPDATE_RAINETTE=true -> tentative de mise à jour`, vérifiez que l’image/conteneur a bien été reconstruit avec la dernière version du dépôt.
