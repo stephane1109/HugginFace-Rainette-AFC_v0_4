@@ -36,7 +36,10 @@ expandir_variantes_termes_lexique <- function(termes) {
   variantes <- unique(c(
     termes,
     gsub("’", "'", termes, fixed = TRUE),
-    gsub("'", "’", termes, fixed = TRUE)
+    gsub("'", "’", termes, fixed = TRUE),
+    gsub("_", " ", termes, fixed = TRUE),
+    gsub("_", "-", termes, fixed = TRUE),
+    gsub(" ", "_", termes, fixed = TRUE)
   ))
 
   variantes[!is.na(variantes) & nzchar(variantes)]
@@ -94,6 +97,7 @@ construire_regex_terme_nfd_lexique <- function(terme) {
   pieces <- vapply(chars, function(ch) {
     if (grepl("\\p{M}", ch, perl = TRUE)) return("")
     if (ch %in% c(" ", "\t", "\n", "\r")) return("\\s+")
+    if (ch == "_") return("[_\\s\\-]+")
     if (ch %in% c("'", "’")) return("['’]")
 
     if (grepl("\\p{L}", ch, perl = TRUE)) {
@@ -323,6 +327,13 @@ generer_concordancier_lexique_html <- function(
     }
 
     termes_a_surligner <- expandir_variantes_termes_lexique(unique(c(tokens_surface, termes_cl)))
+    if (!is.null(rv)) {
+      ajouter_log_lexique(rv, paste0(
+        "Concordancier lexique_fr : classe ", cl,
+        " | termes_significatifs=", length(unique(termes_cl)),
+        " | variantes_surlignage=", length(unique(termes_a_surligner))
+      ))
+    }
     keep <- detecter_segments_contenant_termes_unicode_lexique(textes_filtrage, termes_a_surligner)
     keep[is.na(keep)] <- FALSE
     segments_keep <- segments[keep]
