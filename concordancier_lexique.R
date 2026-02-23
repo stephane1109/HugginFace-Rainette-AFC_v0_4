@@ -143,8 +143,38 @@ preparer_motifs_surlignage_nfd_lexique <- function(terms, taille_lot = 80) {
   patterns <- unique(patterns[nzchar(patterns)])
   if (length(patterns) == 0) return(list())
 
-  motifs <- vapply(patterns, construire_motif_terme_valide_lexique, FUN.VALUE = character(1))
-  motifs <- motifs[nzchar(motifs)]
+  taille_lot <- suppressWarnings(as.integer(taille_lot))
+  if (!is.finite(taille_lot) || is.na(taille_lot) || taille_lot < 1) taille_lot <- 80L
+
+  construire_motif_lot <- function(lot) {
+    pat_lot <- paste0(lot, collapse = "|")
+    if (!nzchar(pat_lot) || nchar(pat_lot) > 4000) return("")
+
+    candidats <- c(
+      paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])"),
+      paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])")
+    )
+    for (cand in candidats) {
+      if (motif_unicode_est_valide_lexique(cand)) return(cand)
+    }
+    ""
+  }
+
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+  motifs <- character(0)
+
+  for (lot in lots) {
+    motif_lot <- construire_motif_lot(lot)
+    if (nzchar(motif_lot)) {
+      motifs <- c(motifs, motif_lot)
+      next
+    }
+
+    motifs_unit <- vapply(lot, construire_motif_terme_valide_lexique, FUN.VALUE = character(1))
+    motifs_unit <- motifs_unit[nzchar(motifs_unit)]
+    if (length(motifs_unit) > 0) motifs <- c(motifs, motifs_unit)
+  }
+
   as.list(unique(motifs))
 }
 surligner_vecteur_html_unicode_lexique <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
