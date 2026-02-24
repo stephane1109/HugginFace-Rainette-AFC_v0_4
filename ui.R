@@ -135,6 +135,7 @@ ui <- fluidPage(
 
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
       checkboxInput("supprimer_ponctuation", "Supprimer la ponctuation", value = FALSE),
+      tags$small("Supprime la ponctuation à la tokenisation quanteda (remove_punct), pour les deux sources (spaCy et lexique_fr), par ex. . , ; : ! ? ' ’ \" - ( ) [ ] …"),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
