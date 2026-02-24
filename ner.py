@@ -12,6 +12,7 @@ Sortie : TSV (doc_id, ent_text, ent_label, start_char, end_char)
 
 import argparse
 import csv
+import re
 import sys
 from typing import List, Tuple
 
@@ -42,11 +43,104 @@ def ecrire_tsv(chemin: str, lignes: List[dict]) -> None:
             ecrivain.writerow(row)
 
 
+STOPWORDS_BRUIT_FR = {
+    "ca",
+    "ça",
+    "ce",
+    "cet",
+    "cette",
+    "ces",
+    "c",
+    "j",
+    "je",
+    "tu",
+    "il",
+    "elle",
+    "on",
+    "nous",
+    "vous",
+    "ils",
+    "elles",
+    "me",
+    "te",
+    "se",
+    "moi",
+    "toi",
+    "lui",
+    "leur",
+    "leurs",
+}
+
+DETERMINANTS_FR = {
+    "un",
+    "une",
+    "des",
+    "du",
+    "de",
+    "le",
+    "la",
+    "les",
+    "ce",
+    "cet",
+    "cette",
+    "ces",
+    "mon",
+    "ma",
+    "mes",
+    "ton",
+    "ta",
+    "tes",
+    "son",
+    "sa",
+    "ses",
+    "notre",
+    "nos",
+    "votre",
+    "vos",
+    "leur",
+    "leurs",
+}
+
+
+def est_entite_bruyante(entite_texte: str, entite_label: str) -> bool:
+    txt = " ".join((entite_texte or "").split())
+    if not txt:
+        return True
+
+    txt_lower = txt.lower()
+    tokens = [t for t in re.split(r"\s+", txt_lower) if t]
+    if not tokens:
+        return True
+
+    if len(tokens) == 1 and tokens[0] in STOPWORDS_BRUIT_FR:
+        return True
+
+    if tokens[0] in DETERMINANTS_FR and entite_label in {"PER", "LOC", "ORG"}:
+        return True
+
+    # Cas fréquent de faux positifs NER: mot unique tout en minuscules.
+    if (
+        len(tokens) == 1
+        and entite_label in {"PER", "LOC", "ORG"}
+        and txt == txt_lower
+        and not any(ch.isdigit() for ch in txt)
+    ):
+        return True
+
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Chemin TSV d'entrée (doc_id, text).")
     parser.add_argument("--output", required=True, help="Chemin TSV de sortie.")
     parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
+    parser.add_argument(
+        "--filtrer-bruit",
+        choices=["0", "1"],
+        default="1",
+        help="Applique un post-filtrage léger pour réduire les faux positifs évidents.",
+    )
     args = parser.parse_args()
 
     try:
@@ -73,6 +167,8 @@ def main() -> int:
             for ent in doc.ents:
                 txt = (ent.text or "").strip()
                 if not txt:
+                    continue
+                if args.filtrer_bruit == "1" and est_entite_bruyante(txt, ent.label_):
                     continue
 
                 lignes.append(
