@@ -7,11 +7,11 @@
 # spaCy et le chargement (caché) des stopwords par langue.
 
 estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
-  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0, pt = 0, ca = 0, zh = 0, ja = 0)))
+  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, de = 0)))
 
   textes <- as.character(textes)
   textes <- textes[nzchar(trimws(textes))]
-  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0, pt = 0, ca = 0, zh = 0, ja = 0)))
+  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, de = 0)))
   if (length(textes) > max_segments) textes <- textes[seq_len(max_segments)]
 
   tok <- quanteda::tokens(textes, remove_punct = TRUE, remove_numbers = TRUE)
@@ -20,18 +20,13 @@ estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
   all_tokens <- trimws(all_tokens)
   all_tokens <- all_tokens[nzchar(all_tokens)]
 
-  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, it = 0, de = 0, pt = 0, ca = 0, zh = 0, ja = 0)))
+  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0, de = 0)))
 
   scores <- c(
     fr = mean(all_tokens %in% obtenir_stopwords_spacy("fr", rv = rv)),
     en = mean(all_tokens %in% obtenir_stopwords_spacy("en", rv = rv)),
     es = mean(all_tokens %in% obtenir_stopwords_spacy("es", rv = rv)),
-    it = mean(all_tokens %in% obtenir_stopwords_spacy("it", rv = rv)),
-    de = mean(all_tokens %in% obtenir_stopwords_spacy("de", rv = rv)),
-    pt = mean(all_tokens %in% obtenir_stopwords_spacy("pt", rv = rv)),
-    ca = mean(all_tokens %in% obtenir_stopwords_spacy("ca", rv = rv)),
-    zh = mean(all_tokens %in% obtenir_stopwords_spacy("zh", rv = rv)),
-    ja = mean(all_tokens %in% obtenir_stopwords_spacy("ja", rv = rv))
+    de = mean(all_tokens %in% obtenir_stopwords_spacy("de", rv = rv))
   )
 
   langue <- names(scores)[which.max(scores)]
@@ -65,19 +60,14 @@ verifier_coherence_dictionnaire_langue <- function(textes, langue_selectionnee, 
 configurer_langue_spacy <- function(langue) {
   if (is.null(langue) || !nzchar(as.character(langue))) langue <- "fr"
   langue <- trimws(tolower(as.character(langue)))
-  if (!langue %in% c("fr", "en", "es", "it", "de", "pt", "ca", "zh", "ja")) langue <- "fr"
+  if (!langue %in% c("fr", "en", "es", "de")) langue <- "fr"
 
   cfg <- switch(
     langue,
     fr = list(code = "fr", libelle = "Français", modele = "fr_core_news_lg", stopwords_module = "fr"),
     en = list(code = "en", libelle = "Anglais", modele = "en_core_web_lg", stopwords_module = "en"),
     es = list(code = "es", libelle = "Espagnol", modele = "es_core_news_lg", stopwords_module = "es"),
-    it = list(code = "it", libelle = "Italien", modele = "it_core_news_lg", stopwords_module = "it"),
     de = list(code = "de", libelle = "Allemand", modele = "de_core_news_lg", stopwords_module = "de"),
-    pt = list(code = "pt", libelle = "Portugais", modele = "pt_core_news_lg", stopwords_module = "pt"),
-    ca = list(code = "ca", libelle = "Catalan", modele = "ca_core_news_lg", stopwords_module = "ca"),
-    zh = list(code = "zh", libelle = "Chinois", modele = "zh_core_web_lg", stopwords_module = "zh"),
-    ja = list(code = "ja", libelle = "Japonais", modele = "ja_core_news_lg", stopwords_module = "ja"),
     list(code = "fr", libelle = "Français", modele = "fr_core_news_lg", stopwords_module = "fr")
   )
 
