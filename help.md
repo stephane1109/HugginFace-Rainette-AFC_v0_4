@@ -59,6 +59,22 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **window (cooccurrences)** : taille de la fenêtre glissante pour calculer les cooccurrences.
 - **top_feat (cooccurrences)** : nombre de termes retenus pour construire le réseau de cooccurrences.
 
+### Options de nettoyage du texte (avant analyse)
+
+Ces options agissent surtout sur la **préparation linguistique** (tokenisation, DFM, CHD, stats), pas sur l’affichage « brut » des segments.
+
+- **Nettoyage caractères (regex)** (`nettoyage_caracteres`) : supprime les caractères non autorisés par la regex interne (ex. symboles exotiques). Les caractères autorisés incluent lettres accentuées, chiffres et ponctuation de base.
+- **Supprimer la ponctuation** (`supprimer_ponctuation`) : active `remove_punct` lors de la tokenisation quanteda. La ponctuation est retirée des tokens utilisés pour les analyses (CHD, stats, etc.).
+- **Supprimer les chiffres (0-9)** (`supprimer_chiffres`) : supprime les chiffres avant tokenisation (et active aussi la suppression de nombres dans les pipelines de tokenisation).
+- **Traiter les élisions FR** (`supprimer_apostrophes`) : enlève les élisions en début de mot (`c'`, `j'`, `l'`, `m'`, `n'`, `s'`, `t'`, `d'`, `qu'`) pour ramener par ex. `c'est` vers `est`.
+- **Forcer en minuscules avant analyse** (`forcer_minuscules_avant`) : convertit le texte en minuscules avant la construction des tokens/termes.
+
+#### Important : effet sur le concordancier HTML
+
+- Quand **Supprimer la ponctuation** est cochée, la ponctuation est bien retirée dans les **données d’analyse**.
+- Le **concordancier HTML** continue d’afficher les segments issus du corpus segmenté (texte lisible), donc vous pouvez encore voir de la ponctuation dans le texte affiché.
+- Cette différence est normale : elle permet de conserver un affichage humain tout en nettoyant les formes utilisées par les calculs statistiques.
+
 ### Classification double (rainette2)
 
 - **Classification double** : l’application combine deux classifications rainette (res1 et res2) via rainette2, puis découpe l’arbre final avec k.
