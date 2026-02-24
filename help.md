@@ -44,7 +44,7 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une ma
 
 ### Choix de la langue du dictionnaire spaCy
 
-Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle "medium" (md). Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
+Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle "large" (lg). Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
 
 ### Paramètres de l’analyse
 
@@ -59,21 +59,20 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **window (cooccurrences)** : taille de la fenêtre glissante pour calculer les cooccurrences.
 - **top_feat (cooccurrences)** : nombre de termes retenus pour construire le réseau de cooccurrences.
 
-### Options de nettoyage du texte (avant analyse)
+### Options de nettoyage du texte
 
-Ces options agissent surtout sur la **préparation linguistique** (tokenisation, DFM, CHD, stats), pas sur l’affichage « brut » des segments.
+Ces options agissent surtout sur la **préparation linguistique** (tokenisation, DFM, CHD, stats), pas sur l’affichage "brut" des segments.
 
-- **Nettoyage caractères (regex)** (`nettoyage_caracteres`) : supprime les caractères non autorisés par la regex interne (ex. symboles exotiques). Les caractères autorisés incluent lettres accentuées, chiffres et ponctuation de base.
-- **Supprimer la ponctuation** (`supprimer_ponctuation`) : active `remove_punct` lors de la tokenisation quanteda. La ponctuation est retirée des tokens utilisés pour les analyses (CHD, stats, etc.).
-- **Supprimer les chiffres (0-9)** (`supprimer_chiffres`) : supprime les chiffres avant tokenisation (et active aussi la suppression de nombres dans les pipelines de tokenisation).
+- **Nettoyage caractères (regex)** (`nettoyage_caracteres`) : supprime les caractères non autorisés par la regex interne (ex : @).
+- **Supprimer la ponctuation** (`supprimer_ponctuation`) : active `remove_punct` lors de la tokenisation quanteda. La ponctuation est retirée des tokens utilisés pour les analyses (CHD, stats).
+- **Supprimer les chiffres (0-9)** (`supprimer_chiffres`) : supprime les chiffres avant tokenisation.
 - **Traiter les élisions FR** (`supprimer_apostrophes`) : enlève les élisions en début de mot (`c'`, `j'`, `l'`, `m'`, `n'`, `s'`, `t'`, `d'`, `qu'`) pour ramener par ex. `c'est` vers `est`.
 - **Forcer en minuscules avant analyse** (`forcer_minuscules_avant`) : convertit le texte en minuscules avant la construction des tokens/termes.
 
-#### Important : effet sur le concordancier HTML
+#### Effet sur le concordancier HTML
 
 - Quand **Supprimer la ponctuation** est cochée, la ponctuation est bien retirée dans les **données d’analyse**.
-- Le **concordancier HTML** continue d’afficher les segments issus du corpus segmenté (texte lisible), donc vous pouvez encore voir de la ponctuation dans le texte affiché.
-- Cette différence est normale : elle permet de conserver un affichage humain tout en nettoyant les formes utilisées par les calculs statistiques.
+- Le **concordancier HTML** continue d’afficher les segments issus du corpus, donc vous pouvez encore voir de la ponctuation dans le texte affiché.
 
 ### Classification double (rainette2)
 
