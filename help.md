@@ -80,7 +80,9 @@ Ces options agissent surtout sur la **préparation linguistique** (tokenisation,
 
 ### Lemmatisation (option)
 
-- **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est (beaucoup) plus efficace avec IRaMuTeQ.
+- **Lemmatisation** : si activée, le texte est **lemmatisé avec Spacy ou le dictionnaire de lemme provenant du logiciel IRaMuTeQ - lexique_fr**. La lemmatisation semble (beaucoup) plus efficace avec le dictionnaire IRaMuTeQ provenant de **OpenLexicon (modifié)**.
+
+- <a href="https://openlexicon.fr/" target="_blank" rel="noopener noreferrer">OpenLexicon</a>
 
 ### Filtrage Morphosyntaxique
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex : NOUN, ADJ, VERB, PROPN, ADV...).
