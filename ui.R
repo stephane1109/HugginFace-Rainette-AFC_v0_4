@@ -315,6 +315,18 @@ ui <- fluidPage(
         ),
 
         tabPanel(
+          "Aide NER",
+          tags$div(
+            style = "padding: 12px;",
+            if (file.exists("ner.md")) {
+              includeMarkdown("ner.md")
+            } else {
+              tags$p("Le fichier ner.md est introuvable à la racine du projet.")
+            }
+          )
+        ),
+
+        tabPanel(
           "Readme (Rainette.md)",
           tags$div(
             style = "padding: 12px;",
