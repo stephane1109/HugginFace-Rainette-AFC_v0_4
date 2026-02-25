@@ -4,7 +4,7 @@
   "include": [
     {"text": "OpenAI", "label": "ORG"},
     {"text": "ChatGPT", "label": "PRODUCT"},
-    {"text": "regarder", "label": "ACTION"},
-    {"text": "commencer", "label": "ACTION"}
+    {"text": "regarder", "label": "VERBE ACTION"},
+    {"text": "commencer", "label": "VERBE ACTION"}
   ]
 }
