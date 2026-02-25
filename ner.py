@@ -8,12 +8,23 @@
 Extraction NER spaCy FR pour Rainette
 Entrée : TSV (doc_id, text)
 Sortie : TSV (doc_id, ent_text, ent_label, start_char, end_char)
+
+Support optionnel d'un dictionnaire JSON:
+{
+  "exclude_texts": ["ça", "«"],
+  "exclude_labels": ["MISC"],
+  "include": [
+    {"text": "OpenAI", "label": "ORG"}
+  ]
+}
 """
 
 import argparse
 import csv
+import json
+import re
 import sys
-from typing import List, Tuple
+from typing import Dict, List, Set, Tuple
 
 import spacy
 
@@ -42,12 +53,192 @@ def ecrire_tsv(chemin: str, lignes: List[dict]) -> None:
             ecrivain.writerow(row)
 
 
+STOPWORDS_BRUIT_FR = {
+    "ca",
+    "ça",
+    "ce",
+    "cet",
+    "cette",
+    "ces",
+    "c",
+    "j",
+    "je",
+    "tu",
+    "il",
+    "elle",
+    "on",
+    "nous",
+    "vous",
+    "ils",
+    "elles",
+    "me",
+    "te",
+    "se",
+    "moi",
+    "toi",
+    "lui",
+    "leur",
+    "leurs",
+}
+
+DETERMINANTS_FR = {
+    "un",
+    "une",
+    "des",
+    "du",
+    "de",
+    "le",
+    "la",
+    "les",
+    "ce",
+    "cet",
+    "cette",
+    "ces",
+    "mon",
+    "ma",
+    "mes",
+    "ton",
+    "ta",
+    "tes",
+    "son",
+    "sa",
+    "ses",
+    "notre",
+    "nos",
+    "votre",
+    "vos",
+    "leur",
+    "leurs",
+}
+
+
+def charger_dictionnaire_ner(chemin: str) -> Dict[str, object]:
+    with open(chemin, "r", encoding="utf-8") as f:
+        brut = json.load(f)
+
+    if not isinstance(brut, dict):
+        raise ValueError("Le dictionnaire JSON NER doit être un objet JSON.")
+
+    exclude_texts_raw = brut.get("exclude_texts", [])
+    exclude_labels_raw = brut.get("exclude_labels", [])
+    include_raw = brut.get("include", [])
+
+    if not isinstance(exclude_texts_raw, list) or not isinstance(exclude_labels_raw, list) or not isinstance(include_raw, list):
+        raise ValueError("Le dictionnaire JSON NER doit contenir des listes pour 'exclude_texts', 'exclude_labels' et 'include'.")
+
+    exclude_texts: Set[str] = {
+        " ".join(str(x).split()).lower() for x in exclude_texts_raw if str(x).strip()
+    }
+    exclude_labels: Set[str] = {str(x).strip().upper() for x in exclude_labels_raw if str(x).strip()}
+
+    include: List[Dict[str, str]] = []
+    for row in include_raw:
+        if not isinstance(row, dict):
+            continue
+        txt = " ".join(str(row.get("text", "")).split())
+        lbl = str(row.get("label", "MISC")).strip().upper() or "MISC"
+        if txt:
+            include.append({"text": txt, "label": lbl})
+
+    return {
+        "exclude_texts": exclude_texts,
+        "exclude_labels": exclude_labels,
+        "include": include,
+    }
+
+
+def est_entite_bruyante(entite_texte: str, entite_label: str, dico: Dict[str, object]) -> bool:
+    txt = " ".join((entite_texte or "").split())
+    if not txt:
+        return True
+
+    txt_lower = txt.lower()
+    label_upper = (entite_label or "").upper()
+    tokens = [t for t in re.split(r"\s+", txt_lower) if t]
+    if not tokens:
+        return True
+
+    if txt_lower in dico["exclude_texts"]:
+        return True
+
+    if label_upper in dico["exclude_labels"]:
+        return True
+
+    if len(tokens) == 1 and tokens[0] in STOPWORDS_BRUIT_FR:
+        return True
+
+    # Rejette ponctuation/quotes/emoji seuls (ex: «, », "", ...).
+    if not any(ch.isalnum() for ch in txt):
+        return True
+
+    # Rejette aussi les entités d'un seul caractère non alphanumérique utile.
+    if len(txt) == 1 and not txt.isalnum():
+        return True
+
+    if tokens[0] in DETERMINANTS_FR and label_upper in {"PER", "LOC", "ORG"}:
+        return True
+
+    # Cas fréquent de faux positifs NER: mot unique tout en minuscules.
+    if (
+        len(tokens) == 1
+        and label_upper in {"PER", "LOC", "ORG"}
+        and txt == txt_lower
+        and not any(ch.isdigit() for ch in txt)
+    ):
+        return True
+
+    return False
+
+
+def ajouter_entites_dictionnaire(doc_id: str, texte: str, dico: Dict[str, object], deja_vues: Set[Tuple[int, int, str]]) -> List[dict]:
+    out: List[dict] = []
+    for ent in dico["include"]:
+        term = ent["text"]
+        label = ent["label"]
+        motif = re.compile(rf"\b{re.escape(term)}\b", flags=re.IGNORECASE)
+        for m in motif.finditer(texte or ""):
+            start, end = m.span()
+            cle = (start, end, label)
+            if cle in deja_vues:
+                continue
+            deja_vues.add(cle)
+            out.append(
+                {
+                    "doc_id": doc_id,
+                    "ent_text": " ".join((m.group(0) or "").split()),
+                    "ent_label": label,
+                    "start_char": start,
+                    "end_char": end,
+                }
+            )
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Chemin TSV d'entrée (doc_id, text).")
     parser.add_argument("--output", required=True, help="Chemin TSV de sortie.")
-    parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
+    parser.add_argument("--modele", default="fr_core_news_lg", help="Nom du modèle spaCy FR.")
+    parser.add_argument(
+        "--filtrer-bruit",
+        choices=["0", "1"],
+        default="1",
+        help="Applique un post-filtrage léger pour réduire les faux positifs évidents.",
+    )
+    parser.add_argument(
+        "--dictionnaire-json",
+        default="",
+        help="Chemin optionnel vers un dictionnaire JSON NER (exclude/include).",
+    )
     args = parser.parse_args()
+
+    dico = {"exclude_texts": set(), "exclude_labels": set(), "include": []}
+    if str(args.dictionnaire_json).strip():
+        try:
+            dico = charger_dictionnaire_ner(args.dictionnaire_json)
+        except Exception as e:
+            sys.stderr.write(f"Erreur chargement dictionnaire JSON NER '{args.dictionnaire_json}' : {e}\n")
+            return 6
 
     try:
         nlp = spacy.load(args.modele)
@@ -69,11 +260,19 @@ def main() -> int:
 
     lignes: List[dict] = []
     try:
-        for did, doc in zip(doc_ids, nlp.pipe(textes)):
+        for did, texte, doc in zip(doc_ids, textes, nlp.pipe(textes)):
+            deja_vues: Set[Tuple[int, int, str]] = set()
             for ent in doc.ents:
                 txt = (ent.text or "").strip()
                 if not txt:
                     continue
+                if args.filtrer_bruit == "1" and est_entite_bruyante(txt, ent.label_, dico):
+                    continue
+
+                cle = (ent.start_char, ent.end_char, (ent.label_ or "").upper())
+                if cle in deja_vues:
+                    continue
+                deja_vues.add(cle)
 
                 lignes.append(
                     {
@@ -84,6 +283,8 @@ def main() -> int:
                         "end_char": ent.end_char,
                     }
                 )
+
+            lignes.extend(ajouter_entites_dictionnaire(did, texte, dico, deja_vues))
     except Exception as e:
         sys.stderr.write(f"Erreur traitement NER : {e}\n")
         return 4
