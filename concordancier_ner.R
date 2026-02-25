@@ -1,6 +1,5 @@
 # Rôle du fichier: concordancier_ner.R porte une partie du pipeline d'analyse Rainette.
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
-# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 
 construire_colonne_segment_ner <- function(df_entites, textes_par_doc) {
   if (is.null(df_entites) || nrow(df_entites) == 0) return(df_entites)
