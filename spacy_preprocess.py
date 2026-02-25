@@ -95,7 +95,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Chemin TSV d'entrée (doc_id, text).")
     parser.add_argument("--output", required=True, help="Chemin TSV de sortie (doc_id, text).")
-    parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
+    parser.add_argument("--modele", default="fr_core_news_lg", help="Nom du modèle spaCy FR.")
     parser.add_argument("--pos_keep", default="", help="Liste POS à conserver (virgules), ex: NOUN,ADJ,VERB.")
     parser.add_argument("--lemmes", default="0", help="1 pour utiliser token.lemma_, 0 sinon.")
     parser.add_argument("--lower_input", default="0", help="1 pour forcer le texte d'entrée en minuscules avant spaCy.")
