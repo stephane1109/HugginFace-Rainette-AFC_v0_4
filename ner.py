@@ -130,13 +130,33 @@ def charger_dictionnaire_ner(chemin: str) -> Dict[str, object]:
     exclude_labels: Set[str] = {str(x).strip().upper() for x in exclude_labels_raw if str(x).strip()}
 
     include: List[Dict[str, str]] = []
-    for row in include_raw:
+    erreurs_include: List[str] = []
+    for i, row in enumerate(include_raw, start=1):
         if not isinstance(row, dict):
+            erreurs_include.append(f"include[{i}] doit être un objet JSON.")
             continue
+
+        champs_inconnus = sorted(k for k in row.keys() if k not in {"text", "label"})
+        if champs_inconnus:
+            erreurs_include.append(
+                f"include[{i}] contient des clés non supportées: {', '.join(champs_inconnus)} (attendu: text, label)."
+            )
+            continue
+
         txt = " ".join(str(row.get("text", "")).split())
         lbl = str(row.get("label", "MISC")).strip().upper() or "MISC"
-        if txt:
-            include.append({"text": txt, "label": lbl})
+
+        if not txt:
+            erreurs_include.append(f"include[{i}].text est vide.")
+            continue
+
+        include.append({"text": txt, "label": lbl})
+
+    if erreurs_include:
+        raise ValueError(
+            "Entrées 'include' invalides dans le dictionnaire NER JSON\n- "
+            + "\n- ".join(erreurs_include)
+        )
 
     return {
         "exclude_texts": exclude_texts,
