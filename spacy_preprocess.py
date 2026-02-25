@@ -1,8 +1,8 @@
 # Rôle du fichier: spacy_preprocess.py porte une partie du pipeline d'analyse Rainette.
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
-# Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
+
 # spacy_preprocess.py
-# -*- coding: utf-8 -*-
+
 
 """
 Prétraitement spaCy FR pour Rainette (Shiny / Hugging Face)
