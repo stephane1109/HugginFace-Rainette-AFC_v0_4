@@ -258,6 +258,12 @@ ui <- fluidPage(
           tableOutput("table_classes")
         ),
 
+        tabPanel(
+          "Prévisualisation corpus",
+          tags$h3("Corpus importé"),
+          uiOutput("ui_corpus_preview")
+        ),
+
         
         tabPanel(
           "AFC",
