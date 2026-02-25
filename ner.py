@@ -218,7 +218,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Chemin TSV d'entrée (doc_id, text).")
     parser.add_argument("--output", required=True, help="Chemin TSV de sortie.")
-    parser.add_argument("--modele", default="fr_core_news_lg", help="Nom du modèle spaCy FR.")
+    parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
     parser.add_argument(
         "--filtrer-bruit",
         choices=["0", "1"],

@@ -69,16 +69,16 @@ configurer_langue_spacy <- function(langue) {
 
   cfg <- switch(
     langue,
-    fr = list(code = "fr", libelle = "Français", modele = "fr_core_news_lg", stopwords_module = "fr"),
-    en = list(code = "en", libelle = "Anglais", modele = "en_core_web_lg", stopwords_module = "en"),
-    es = list(code = "es", libelle = "Espagnol", modele = "es_core_news_lg", stopwords_module = "es"),
-    it = list(code = "it", libelle = "Italien", modele = "it_core_news_lg", stopwords_module = "it"),
-    de = list(code = "de", libelle = "Allemand", modele = "de_core_news_lg", stopwords_module = "de"),
-    pt = list(code = "pt", libelle = "Portugais", modele = "pt_core_news_lg", stopwords_module = "pt"),
-    ca = list(code = "ca", libelle = "Catalan", modele = "ca_core_news_lg", stopwords_module = "ca"),
-    zh = list(code = "zh", libelle = "Chinois", modele = "zh_core_web_lg", stopwords_module = "zh"),
-    ja = list(code = "ja", libelle = "Japonais", modele = "ja_core_news_lg", stopwords_module = "ja"),
-    list(code = "fr", libelle = "Français", modele = "fr_core_news_lg", stopwords_module = "fr")
+    fr = list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr"),
+    en = list(code = "en", libelle = "Anglais", modele = "en_core_web_md", stopwords_module = "en"),
+    es = list(code = "es", libelle = "Espagnol", modele = "es_core_news_md", stopwords_module = "es"),
+    it = list(code = "it", libelle = "Italien", modele = "it_core_news_md", stopwords_module = "it"),
+    de = list(code = "de", libelle = "Allemand", modele = "de_core_news_md", stopwords_module = "de"),
+    pt = list(code = "pt", libelle = "Portugais", modele = "pt_core_news_md", stopwords_module = "pt"),
+    ca = list(code = "ca", libelle = "Catalan", modele = "ca_core_news_md", stopwords_module = "ca"),
+    zh = list(code = "zh", libelle = "Chinois", modele = "zh_core_web_md", stopwords_module = "zh"),
+    ja = list(code = "ja", libelle = "Japonais", modele = "ja_core_news_md", stopwords_module = "ja"),
+    list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr")
   )
 
   # Permet de surcharger le modèle spaCy via variable d'environnement, par langue.
