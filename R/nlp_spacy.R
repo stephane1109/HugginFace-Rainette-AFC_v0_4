@@ -22,7 +22,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
     row.names = FALSE, col.names = TRUE, fileEncoding = "UTF-8"
   )
 
-  if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
+  if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- character(0)
 
   args <- c(
     script_spacy,
