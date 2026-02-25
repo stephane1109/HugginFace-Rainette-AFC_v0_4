@@ -202,18 +202,6 @@ server <- function(input, output, session) {
   })
 
 
-  output$ui_ner_json_upload <- renderUI({
-    if (!isTRUE(input$activer_ner)) return(NULL)
-
-    tagList(
-      fileInput(
-        "ner_json_file",
-        "Dictionnaire NER JSON (optionnel)",
-        accept = c(".json", "application/json")
-      ),
-      tags$small("Optionnel : permet d'exclure/ajouter des entités via un fichier JSON. Laisser vide pour ne pas appliquer de règles JSON.")
-    )
-  })
 
   output$ui_ner_statut <- renderUI({
     if (!isTRUE(input$activer_ner)) {
