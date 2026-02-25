@@ -29,7 +29,7 @@ Exemple :
 ```
 
 ## Signification des champs JSON
-- `exclude_texts` : liste de textes d'entité à **rejeter** (comparaison normalisée, insensible à la casse).
+- `exclude_texts` : liste de textes d'entité à **rejeter** (insensible à la casse).
 - `exclude_labels` : liste de labels d'entité à **rejeter** (ex: `MISC`).
 - `include` : liste d'entités à **forcer**.
   - `text` : texte recherché dans le document.
