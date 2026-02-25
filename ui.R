@@ -98,7 +98,6 @@ ui <- fluidPage(
         selected = "spacy",
         inline = FALSE
       ),
-      tags$small("Le mode 'Lexique (fr)' utilise lexique_fr.csv au format : c_mot, c_lemme, c_morpho."),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
         selectInput(
