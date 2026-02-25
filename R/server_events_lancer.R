@@ -446,8 +446,13 @@ register_events_lancer <- function(input, output, session, rv) {
             groups = docvars(filtered_corpus_ok)$Classes,
             measure = c("chi2", "lr", "frequency", "docprop"),
             n_terms = 9999,
-            show_negative = TRUE,
-            max_p = input$max_p
+            # Harmonisation avec le graphe CHD :
+            # - pas de chi2 négatifs dans l'onglet Statistiques
+            # - pas de coupe préalable sur p-value pour conserver le même
+            #   vivier de termes entre les vues (la colonne p_value_filter
+            #   reste disponible pour distinguer les termes significatifs).
+            show_negative = FALSE,
+            max_p = 1
           )
 
           labels_stats <- names(res_stats_list)
