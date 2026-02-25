@@ -198,7 +198,7 @@ ui <- fluidPage(
           "Importer un dictionnaire NER (.json)",
           accept = c(".json", "application/json")
         ),
-        tags$small("Optionnel : si non fourni, l'app utilise la variable d'environnement RAINETTE_NER_JSON si elle existe.")
+        tags$small("Optionnel : importez un dictionnaire NER JSON si vous voulez personnaliser les entités. Si vous ne fournissez pas de fichier, l'analyse utilise le NER spaCy classique.")
       ),
 
       tags$hr(),
