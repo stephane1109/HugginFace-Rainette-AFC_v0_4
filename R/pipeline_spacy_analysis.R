@@ -49,7 +49,8 @@ executer_pipeline_spacy <- function(input, rv, ids_corpus, textes_chd, avancer, 
     utiliser_lemmes = utiliser_lemmes_spacy,
     lower_input = isTRUE(input$forcer_minuscules_avant),
     modele_spacy = config_spacy$modele,
-    rv = rv
+    rv = rv,
+    strip_fr_elisions = isTRUE(input$supprimer_apostrophes)
   )
 
   textes_spacy <- sp$textes

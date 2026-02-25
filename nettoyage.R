@@ -31,7 +31,7 @@ appliquer_nettoyage_et_minuscules <- function(textes,
   # Exemple : "c'est" -> "est", "m'ecrire" -> "ecrire"
   # Les apostrophes lexicales internes (ex. "aujourd'hui") sont conservées.
   if (isTRUE(supprimer_apostrophes)) {
-    x <- gsub("(?i)\\b(?:[cdjlmnst]|qu)['’](?=\\p{L})", "", x, perl = TRUE)
+    x <- gsub("(?i)\\b(?:[cdjlmnst]|qu)['’`´ʼʹ](?=\\p{L})", "", x, perl = TRUE)
   }
 
   # Option : nettoyage des caractères "non autorisés"
