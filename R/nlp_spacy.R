@@ -56,7 +56,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   list(textes = res[ids], tokens_df = df_tok)
 }
 
-executer_spacy_ner <- function(ids, textes, modele_spacy, rv) {
+executer_spacy_ner <- function(ids, textes, modele_spacy, rv, dico_ner_json = NULL) {
   script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : ner.py (à la racine du projet).")
 
@@ -72,7 +72,10 @@ executer_spacy_ner <- function(ids, textes, modele_spacy, rv) {
     row.names = FALSE, col.names = TRUE, fileEncoding = "UTF-8"
   )
 
-  dico_ner_json <- trimws(Sys.getenv("RAINETTE_NER_JSON", unset = ""))
+  dico_json_input <- if (is.null(dico_ner_json)) "" else trimws(as.character(dico_ner_json))
+  dico_json_env <- trimws(Sys.getenv("RAINETTE_NER_JSON", unset = ""))
+  dico_ner_json <- if (nzchar(dico_json_input)) dico_json_input else dico_json_env
+
   args <- c(
     script_ner,
     "--input", in_tsv,

@@ -407,11 +407,18 @@ register_events_lancer <- function(input, output, session, rv) {
             rv$ner_nb_segments <- length(textes_ner)
             ajouter_log(rv, paste0("NER spaCy : modèle ", config_spacy_ner$modele, " (", config_spacy_ner$libelle, ")."))
 
+            dico_ner_json_ui <- NULL
+            if (!is.null(input$ner_json_file) && nrow(input$ner_json_file) > 0) {
+              dico_ner_json_ui <- as.character(input$ner_json_file$datapath[1])
+              ajouter_log(rv, paste0("NER : fichier JSON uploadé via UI : ", input$ner_json_file$name[1]))
+            }
+
             df_ent <- executer_spacy_ner(
               ids_ner,
               textes_ner,
               modele_spacy = config_spacy_ner$modele,
-              rv = rv
+              rv = rv,
+              dico_ner_json = dico_ner_json_ui
             )
 
             classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)

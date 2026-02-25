@@ -1,18 +1,26 @@
 # NER (spaCy + règles JSON)
 
-## Fonctionnement
-1. spaCy détecte des entités (PER, ORG, LOC, etc...)
-2. Un "mini" filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc...)
+## Fonctionnement (résumé)
+1. spaCy détecte des entités (PER, ORG, LOC, etc.).
+2. Un filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc.).
 3. Si un JSON est fourni, ses règles sont appliquées : exclusion et ajouts.
 
 ## Activer un dictionnaire JSON
-Définir la variable d'environnement avant de lancer l'app :
+### Option 1 (recommandée) : upload via l'interface
+1. Cocher **Activer NER (spaCy)**.
+2. Utiliser le champ **Dictionnaire NER JSON (optionnel)**.
+3. Lancer l'analyse.
+
+Le fichier uploadé est passé automatiquement au script `ner.py`.
+
+### Option 2 : variable d'environnement (fallback)
+Définir la variable avant de lancer l'app :
 
 ```bash
 export RAINETTE_NER_JSON=/chemin/vers/mon_ner.json
 ```
 
-Le pipeline R passera automatiquement ce fichier à `ner.py`.
+Si un fichier est uploadé dans l'UI, il est prioritaire sur la variable d'environnement.
 
 ## Structure du JSON
 Exemple :
@@ -29,7 +37,7 @@ Exemple :
 ```
 
 ## Signification des champs JSON
-- `exclude_texts` : liste de textes d'entité à **rejeter** (insensible à la casse).
+- `exclude_texts` : liste de textes d'entité à **rejeter** (comparaison normalisée, insensible à la casse).
 - `exclude_labels` : liste de labels d'entité à **rejeter** (ex: `MISC`).
 - `include` : liste d'entités à **forcer**.
   - `text` : texte recherché dans le document.
