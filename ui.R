@@ -192,6 +192,15 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
+      conditionalPanel(
+        condition = "input.activer_ner == true",
+        fileInput(
+          "fichier_ner_json",
+          "Importer un dictionnaire NER (.json)",
+          accept = c(".json", "application/json")
+        ),
+        tags$small("Optionnel : si non fourni, l'app utilise la variable d'environnement RAINETTE_NER_JSON si elle existe.")
+      ),
 
       tags$hr(),
 

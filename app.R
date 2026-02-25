@@ -211,7 +211,21 @@ server <- function(input, output, session) {
 
     nb_ent <- nrow(rv$ner_df)
     nb_seg <- ifelse(is.na(rv$ner_nb_segments), 0, rv$ner_nb_segments)
-    tags$p(paste0("NER calculé sur ", nb_seg, " segments. Entités détectées : ", nb_ent, "."))
+
+    source_dico <- "Aucun dictionnaire JSON personnalisé."
+    if (!is.null(rv$ner_file) && nzchar(as.character(rv$ner_file)) && file.exists(rv$ner_file)) {
+      source_dico <- paste0("Dictionnaire JSON personnalisé importé : ", basename(rv$ner_file), ".")
+    } else {
+      dico_env <- trimws(Sys.getenv("RAINETTE_NER_JSON", unset = ""))
+      if (nzchar(dico_env)) {
+        source_dico <- paste0("Dictionnaire JSON personnalisé via variable d'environnement : ", dico_env, ".")
+      }
+    }
+
+    tags$div(
+      tags$p(paste0("NER calculé sur ", nb_seg, " segments. Entités détectées : ", nb_ent, ".")),
+      tags$p(source_dico)
+    )
   })
 
   output$table_stats_corpus <- renderTable({

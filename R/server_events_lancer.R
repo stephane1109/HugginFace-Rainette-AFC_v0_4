@@ -154,6 +154,11 @@ register_events_lancer <- function(input, output, session, rv) {
         return(invisible(NULL))
       }
 
+      if (isTRUE(input$activer_ner) && !is.null(input$fichier_ner_json) && !is.null(input$fichier_ner_json$datapath) && file.exists(input$fichier_ner_json$datapath)) {
+        rv$ner_file <- input$fichier_ner_json$datapath
+        ajouter_log(rv, paste0("NER : dictionnaire JSON importé via l'UI : ", input$fichier_ner_json$name))
+      }
+
       withProgress(message = "Analyse Rainette en cours", value = 0, {
 
         p <- Progress$new(session, min = 0, max = 1)
@@ -411,7 +416,8 @@ register_events_lancer <- function(input, output, session, rv) {
               ids_ner,
               textes_ner,
               modele_spacy = config_spacy_ner$modele,
-              rv = rv
+              rv = rv,
+              dictionnaire_json = rv$ner_file
             )
 
             classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)
