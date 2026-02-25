@@ -191,12 +191,7 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
-      fileInput(
-        "ner_json_file",
-        "Dictionnaire NER JSON (optionnel)",
-        accept = c(".json", "application/json")
-      ),
-      tags$small("Optionnel : permet d'exclure/ajouter des entités via un fichier JSON. Laisser vide pour ne pas appliquer de règles JSON."),
+      uiOutput("ui_ner_json_upload"),
 
       tags$hr(),
 

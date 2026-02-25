@@ -10,7 +10,7 @@
 1. Utiliser le champ **Dictionnaire NER JSON (optionnel)** dans la section *Paramètres SpaCy/NER*.
 2. Cocher **Activer NER (spaCy)** puis lancer l'analyse.
 
-Le champ d'upload est visible en permanence ; le fichier n'est utilisé que lors d'une analyse NER.
+Le champ d'upload apparaît uniquement après avoir coché **Activer NER (spaCy)**.
 
 ### Option 2 : variable d'environnement (fallback)
 Définir la variable avant de lancer l'app :
