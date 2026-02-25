@@ -108,6 +108,10 @@ ui <- fluidPage(
         )
       ),
       conditionalPanel(
+        condition = "input.source_dictionnaire == 'spacy'",
+        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation via spaCy uniquement", value = FALSE)
+      ),
+      conditionalPanel(
         condition = "input.source_dictionnaire == 'lexique_fr'",
         checkboxInput("lexique_utiliser_lemmes", "Lemmatisation via les lemmes de lexique_fr (forme → c_lemme)", value = TRUE)
       ),
@@ -174,11 +178,6 @@ ui <- fluidPage(
           )
         )
       ),
-      conditionalPanel(
-        condition = "input.source_dictionnaire == 'spacy'",
-        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation via spaCy uniquement", value = FALSE)
-      ),
-
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
         style = "white-space: pre-wrap; font-size: 11px; border: 1px solid #ddd; padding: 6px;",
