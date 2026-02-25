@@ -1,8 +1,8 @@
 # NER (spaCy + règles JSON)
 
-## Fonctionnement (résumé)
-1. spaCy détecte des entités (PER, ORG, LOC, etc.).
-2. Un filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc.).
+## Fonctionnement
+1. spaCy détecte des entités (PER, ORG, LOC, etc...)
+2. Un "mini" filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc...)
 3. Si un JSON est fourni, ses règles sont appliquées : exclusion et ajouts.
 
 ## Activer un dictionnaire JSON
