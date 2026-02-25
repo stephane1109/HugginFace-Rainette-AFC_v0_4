@@ -29,11 +29,14 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
     "--input", in_tsv,
     "--output", out_tsv,
     "--modele", modele_spacy,
-    "--pos_keep", paste(pos_a_conserver, collapse = ","),
     "--lemmes", ifelse(isTRUE(utiliser_lemmes), "1", "0"),
     "--lower_input", ifelse(isTRUE(lower_input), "1", "0"),
     "--output_tokens", tok_tsv
   )
+
+  if (length(pos_a_conserver) > 0) {
+    args <- c(args, "--pos_keep", paste(pos_a_conserver, collapse = ","))
+  }
 
   ajouter_log(rv, paste0("spaCy : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
 
