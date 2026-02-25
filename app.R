@@ -184,7 +184,6 @@ server <- function(input, output, session) {
       " (scores stopwords FR=", sprintf("%.3f", est$scores[["fr"]]),
       ", EN=", sprintf("%.3f", est$scores[["en"]]),
       ", ES=", sprintf("%.3f", est$scores[["es"]]),
-      ", IT=", sprintf("%.3f", est$scores[["it"]]),
       ", DE=", sprintf("%.3f", est$scores[["de"]]), ")."
     )
 

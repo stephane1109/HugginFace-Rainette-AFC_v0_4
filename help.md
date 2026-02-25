@@ -7,7 +7,7 @@
 
 
 ### IRaMuTeQ
-IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une référence pour l’analyse textuelle en sciences humaines et sociales. Il met en œuvre la méthode de Reinert (CHD), l’AFC, ainsi que l’analyse de similitudes de Vergès, et propose de nombreux traitements complémentaires pour explorer la structure lexicale d’un corpus. Un atout est son dictionnaire de lemmes, plus précis et performant que beaucoup d’alternatives, ce qui améliore la stabilité des classes.
+IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une référence pour l’analyse textuelle en sciences humaines et sociales. Il met en œuvre la méthode de Reinert (CHD), l’AFC, ainsi que l’analyse de similitudes de Vergès, et propose de nombreux traitements complémentaires pour explorer la structure lexicale d’un corpus. Un atout est son dictionnaire de lemmes, plus précis et performant que beaucoup d’alternatives, ce qui améliore la stabilité des classes. Depuis la version 0.4 vous avez le choix avec le dictionnaire NLP de spaCy et celui de **IRaMuTeQ - lexique_fr** (uniquement fr)
 Ce qui change à partir de la version O.4 c'est l'utilisation du **dictionnaire** utilisé par **IRaMuTeQ** (uniquement fr). **Ce dictionnaire est plus précis que spaCy**.
 
 - <a href="https://pratinaud.gitpages.huma-num.fr/iramuteq-website/" target="_blank" rel="noopener noreferrer">IRaMuTeQ</a>
@@ -44,7 +44,7 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une ma
 
 ### Choix de la langue du dictionnaire spaCy
 
-Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle "medium" (md). Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
+Vous avez le choix entre 4 langues spaCy préinstallées : français, anglais, espagnol et allemand (modèles "large", lg). D’autres langues peuvent être ajoutées ensuite selon les besoins. Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
 
 ### Paramètres de l’analyse
 
@@ -59,13 +59,30 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **window (cooccurrences)** : taille de la fenêtre glissante pour calculer les cooccurrences.
 - **top_feat (cooccurrences)** : nombre de termes retenus pour construire le réseau de cooccurrences.
 
+### Options de nettoyage du texte
+
+Ces options agissent surtout sur la **préparation linguistique** (tokenisation, DFM, CHD, stats), pas sur l’affichage "brut" des segments.
+
+- **Nettoyage caractères (regex)** (`nettoyage_caracteres`) : supprime les caractères non autorisés par la regex interne (ex : @).
+- **Supprimer la ponctuation** (`supprimer_ponctuation`) : active `remove_punct` lors de la tokenisation quanteda. La ponctuation est retirée des tokens utilisés pour les analyses (CHD, stats).
+- **Supprimer les chiffres (0-9)** (`supprimer_chiffres`) : supprime les chiffres avant tokenisation.
+- **Traiter les élisions FR** (`supprimer_apostrophes`) : enlève les élisions en début de mot (`c'`, `j'`, `l'`, `m'`, `n'`, `s'`, `t'`, `d'`, `qu'`) pour ramener par ex. `c'est` vers `est`.
+- **Forcer en minuscules avant analyse** (`forcer_minuscules_avant`) : convertit le texte en minuscules avant la construction des tokens/termes.
+
+#### Effet sur le concordancier HTML
+
+- Quand **Supprimer la ponctuation** est cochée, la ponctuation est bien retirée dans les **données d’analyse**.
+- Le **concordancier HTML** continue d’afficher les segments issus du corpus, donc vous pouvez encore voir de la ponctuation dans le texte affiché.
+
 ### Classification double (rainette2)
 
 - **Classification double** : l’application combine deux classifications rainette (res1 et res2) via rainette2, puis découpe l’arbre final avec k.
 
 ### Lemmatisation (option)
 
-- **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est (beaucoup) plus efficace avec IRaMuTeQ.
+- **Lemmatisation** : si activée, le texte est **lemmatisé avec Spacy ou le dictionnaire de lemme provenant du logiciel IRaMuTeQ - lexique_fr**. La lemmatisation semble (beaucoup) plus efficace avec le dictionnaire IRaMuTeQ provenant de **OpenLexicon (modifié)**.
+
+- <a href="https://openlexicon.fr/" target="_blank" rel="noopener noreferrer">OpenLexicon</a>
 
 ### Filtrage Morphosyntaxique
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex : NOUN, ADJ, VERB, PROPN, ADV...).
