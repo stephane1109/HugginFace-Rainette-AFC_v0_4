@@ -32,10 +32,27 @@ Exemple valide :
   "exclude_labels": ["MISC"],
   "include": [
     {"text": "OpenAI", "label": "ORG"},
-    {"text": "ChatGPT", "label": "PRODUCT"}
+    {"text": "ChatGPT", "label": "PRODUCT"},
+    {"text": "regarder", "label": "ACTION"},
+    {"text": "commencer", "label": "ACTION"}
   ]
 }
 ```
+
+
+## Peut-on créer ses propres labels ?
+Oui, via `include`.
+
+- Les entités détectées *nativement* par spaCy gardent les labels du modèle (`PER`, `ORG`, `LOC`, etc.).
+- Les entités ajoutées via `include` peuvent utiliser **n'importe quel label** (ex: `ACTION`, `OUTIL`, `THEME`).
+- Ces labels personnalisés apparaissent ensuite dans la sortie NER (`ent_label`).
+
+Exemple: `{"text": "commencer", "label": "ACTION"}` forcera la présence de `commencer` avec le label `ACTION` si le mot est trouvé dans le texte.
+
+⚠️ Format strict des entrées `include`:
+- chaque entrée doit être un objet avec `text` (obligatoire) et `label` (optionnel, défaut `MISC`) ;
+- les autres clés ne sont pas acceptées ;
+- si `text` est vide, le JSON est rejeté avec message d'erreur explicite.
 
 ## Signification des champs JSON
 - `exclude_texts` : liste de textes d'entité à **rejeter** (insensible à la casse).
