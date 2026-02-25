@@ -228,6 +228,45 @@ server <- function(input, output, session) {
     )
   })
 
+  output$ui_corpus_preview <- renderUI({
+    fichier <- input$fichier_corpus
+    if (is.null(fichier) || is.null(fichier$datapath) || !file.exists(fichier$datapath)) {
+      return(tags$p("Aucun corpus importé pour le moment."))
+    }
+
+    lignes <- tryCatch(
+      readLines(fichier$datapath, encoding = "UTF-8", warn = FALSE),
+      error = function(e) NULL
+    )
+
+    if (is.null(lignes) || length(lignes) == 0) {
+      return(tags$p("Le corpus importé est vide ou illisible."))
+    }
+
+    max_lignes <- 250
+    extrait <- lignes[seq_len(min(length(lignes), max_lignes))]
+    texte <- paste(extrait, collapse = "\n")
+
+    if (length(lignes) > max_lignes) {
+      texte <- paste0(
+        texte,
+        "\n\n… Aperçu limité aux ", max_lignes,
+        " premières lignes (", length(lignes), " lignes au total)."
+      )
+    }
+
+    tags$div(
+      tags$p(
+        style = "margin-bottom: 8px;",
+        paste0("Fichier : ", fichier$name)
+      ),
+      tags$pre(
+        style = "white-space: pre-wrap; max-height: 70vh; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fafafa;",
+        texte
+      )
+    )
+  })
+
   output$table_stats_corpus <- renderTable({
     req(rv$stats_corpus_df)
     rv$stats_corpus_df
