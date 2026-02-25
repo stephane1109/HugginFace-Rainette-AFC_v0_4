@@ -104,7 +104,7 @@ ui <- fluidPage(
         selectInput(
           "spacy_langue",
           "Langue spaCy",
-          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es", "Italien" = "it", "Allemand" = "de"),
+          choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es", "Italien" = "it", "Allemand" = "de", "Portugais" = "pt", "Catalan" = "ca", "Chinois" = "zh", "Japonais" = "ja"),
           selected = "fr"
         )
       ),
@@ -191,6 +191,15 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
+      conditionalPanel(
+        condition = "input.activer_ner == true",
+        fileInput(
+          "ner_json_file",
+          "Dictionnaire NER JSON (optionnel)",
+          accept = c(".json", "application/json")
+        ),
+        tags$small("Optionnel : permet d'exclure/ajouter des entités via un fichier JSON.")
+      ),
 
       tags$hr(),
 
