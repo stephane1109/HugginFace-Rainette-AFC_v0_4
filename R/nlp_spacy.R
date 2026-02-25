@@ -5,7 +5,7 @@
 # Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
 # et `ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
 
-executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv) {
+executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv, strip_fr_elisions = FALSE) {
   script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : spacy_preprocess.py (à la racine du projet).")
 
@@ -31,6 +31,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
     "--modele", modele_spacy,
     "--lemmes", ifelse(isTRUE(utiliser_lemmes), "1", "0"),
     "--lower_input", ifelse(isTRUE(lower_input), "1", "0"),
+    "--strip_fr_elisions", ifelse(isTRUE(strip_fr_elisions), "1", "0"),
     "--output_tokens", tok_tsv
   )
 

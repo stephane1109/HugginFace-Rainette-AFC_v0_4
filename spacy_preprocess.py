@@ -52,13 +52,31 @@ def ecrire_tokens(chemin: str, lignes: List[dict]) -> None:
             ecrivain.writerow(row)
 
 
-def nettoyer_et_filtrer_doc(doc, pos_keep_set, utiliser_lemmes: bool) -> Tuple[str, List[dict]]:
+def _est_prefixe_elision_fr(token_surface: str) -> bool:
+    base = (token_surface or "").strip().lower()
+    if not base:
+        return False
+    base = base.rstrip("'’`´ʼʹ")
+    return base in {"c", "d", "j", "l", "m", "n", "s", "t", "qu"}
+
+
+def nettoyer_et_filtrer_doc(doc, pos_keep_set, utiliser_lemmes: bool, strip_fr_elisions: bool) -> Tuple[str, List[dict]]:
     tokens_sortie: List[str] = []
     lignes_tokens: List[dict] = []
 
     for tok in doc:
         if tok.is_space or tok.is_punct or tok.like_num:
             continue
+
+        if strip_fr_elisions:
+            token_surface = (tok.text or "").strip()
+            if _est_prefixe_elision_fr(token_surface):
+                next_i = tok.i + 1
+                if next_i < len(doc):
+                    tok_next = doc[next_i]
+                    if tok.whitespace_ == "" and (tok_next.text or "").strip().isalpha():
+                        continue
+
         pos = (tok.pos_ or "").upper().strip()
         if pos_keep_set and pos not in pos_keep_set:
             continue
@@ -99,12 +117,14 @@ def main() -> int:
     parser.add_argument("--pos_keep", default="", help="Liste POS à conserver (virgules), ex: NOUN,ADJ,VERB.")
     parser.add_argument("--lemmes", default="0", help="1 pour utiliser token.lemma_, 0 sinon.")
     parser.add_argument("--lower_input", default="0", help="1 pour forcer le texte d'entrée en minuscules avant spaCy.")
+    parser.add_argument("--strip_fr_elisions", default="0", help="1 pour retirer les préfixes d'élision FR (n', d', l', t', ...).")
     parser.add_argument("--output_tokens", default="", help="Chemin TSV optionnel pour exporter tokens (doc_id, token, lemma, pos).")
 
     args = parser.parse_args()
 
     utiliser_lemmes = str(args.lemmes).strip() == "1"
     lower_input = str(args.lower_input).strip() == "1"
+    strip_fr_elisions = str(args.strip_fr_elisions).strip() == "1"
 
     pos_keep = [p.strip().upper() for p in (args.pos_keep or "").split(",") if p.strip()]
     pos_keep_set = set(pos_keep)
@@ -133,6 +153,7 @@ def main() -> int:
                 doc=doc,
                 pos_keep_set=pos_keep_set,
                 utiliser_lemmes=utiliser_lemmes,
+                strip_fr_elisions=strip_fr_elisions,
             )
             textes_sortie.append(reconstruit)
 
