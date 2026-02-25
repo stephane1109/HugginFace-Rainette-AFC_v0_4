@@ -1,12 +1,21 @@
 # NER (spaCy + règles JSON)
 
 ## Fonctionnement
-1. spaCy détecte des entités (PER, ORG, LOC, etc...)
-2. Un "mini" filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc...)
-3. Si un JSON est fourni, ses règles sont appliquées : exclusion et ajouts.
+1. spaCy détecte des entités (PER, ORG, LOC, etc...).
+2. Un mini-filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc.).
+3. Si un JSON est fourni, ses règles sont appliquées : exclusions et ajouts.
 
-## Activer un dictionnaire JSON
-Définir la variable d'environnement avant de lancer l'app :
+## Importer un dictionnaire JSON dans l'UI
+1. Coche **Activer NER (spaCy)** dans la barre latérale.
+2. Dans le champ **Importer un dictionnaire NER (.json)**, sélectionne ton fichier local.
+3. Lance (ou relance) l'analyse avec **Lancer l'analyse**.
+
+Notes :
+- Le fichier doit être au **format `.json`**.
+- L'import via l'UI est **optionnel** : si aucun fichier n'est importé, l'application tente d'utiliser la variable d'environnement `RAINETTE_NER_JSON` si elle est définie.
+
+## Alternative sans UI (variable d'environnement)
+Tu peux aussi définir la variable d'environnement avant de lancer l'app :
 
 ```bash
 export RAINETTE_NER_JSON=/chemin/vers/mon_ner.json
@@ -14,8 +23,8 @@ export RAINETTE_NER_JSON=/chemin/vers/mon_ner.json
 
 Le pipeline R passera automatiquement ce fichier à `ner.py`.
 
-## Structure du JSON
-Exemple :
+## Format attendu du fichier JSON
+Exemple valide :
 
 ```json
 {
@@ -30,7 +39,7 @@ Exemple :
 
 ## Signification des champs JSON
 - `exclude_texts` : liste de textes d'entité à **rejeter** (insensible à la casse).
-- `exclude_labels` : liste de labels d'entité à **rejeter** (ex: `MISC`).
+- `exclude_labels` : liste de labels d'entité à **rejeter** (ex. `MISC`).
 - `include` : liste d'entités à **forcer**.
   - `text` : texte recherché dans le document.
   - `label` : label assigné à l'entité ajoutée.
@@ -48,6 +57,6 @@ Cela veut dire :
 Exemple : `"text": "Paris"` matche `Paris` mais pas `parisien`.
 
 ## Bonnes pratiques
-- Commencer petit (quelques exclusions très fréquentes).
+- Commencer petit (quelques exclusions fréquentes).
 - Ajouter `exclude_labels` seulement si nécessaire (peut être trop agressif).
-- Vérifier les logs NER pour confirmer que le JSON est chargé.
+- Vérifier les logs NER et le statut NER pour confirmer que le JSON est chargé.
