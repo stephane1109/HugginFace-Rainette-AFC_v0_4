@@ -50,6 +50,7 @@ source("nettoyage.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_utils.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_spacy.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_lexique.R", encoding = "UTF-8", local = TRUE)
+source("concordancier_ner.R", encoding = "UTF-8", local = TRUE)
 source("afc.R", encoding = "UTF-8", local = TRUE)
 source("stats.R", encoding = "UTF-8", local = TRUE)
 source("ui.R", encoding = "UTF-8", local = TRUE)
@@ -340,7 +341,7 @@ server <- function(input, output, session) {
     req(rv$ner_df)
     if (nrow(rv$ner_df) == 0) return(data.frame(Message = "Aucune entité détectée.", stringsAsFactors = FALSE))
 
-    df <- rv$ner_df[, intersect(c("Classe", "doc_id", "ent_text", "ent_label", "start_char", "end_char"), names(rv$ner_df)), drop = FALSE]
+    df <- rv$ner_df[, intersect(c("Classe", "doc_id", "ent_text", "ent_label", "segment_texte"), names(rv$ner_df)), drop = FALSE]
     head(df, 200)
   }, rownames = FALSE)
 

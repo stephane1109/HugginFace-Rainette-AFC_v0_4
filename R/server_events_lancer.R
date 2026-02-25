@@ -474,6 +474,11 @@ register_events_lancer <- function(input, output, session, rv) {
             df_ent$Classe <- as.integer(df_ent$Classe)
             df_ent <- df_ent[!is.na(df_ent$Classe), , drop = FALSE]
 
+            textes_ner_index <- stats::setNames(as.character(textes_ner), ids_ner)
+            if (exists("construire_colonne_segment_ner", mode = "function", inherits = TRUE)) {
+              df_ent <- construire_colonne_segment_ner(df_ent, textes_ner_index)
+            }
+
             rv$ner_df <- df_ent
           }
 
