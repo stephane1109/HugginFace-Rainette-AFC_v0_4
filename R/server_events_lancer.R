@@ -49,6 +49,40 @@ register_events_lancer <- function(input, output, session, rv) {
       list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
     }
 
+    charger_module_langue <- function() {
+      candidats_langue <- unique(c(
+        file.path(app_dir, "R", "nlp_language.R"),
+        file.path(getwd(), "R", "nlp_language.R"),
+        file.path("R", "nlp_language.R")
+      ))
+
+      dernier_chemin <- candidats_langue[[1]]
+      derniere_raison <- "fonction verifier_coherence_dictionnaire_langue absente après source"
+
+      for (chemin_langue in candidats_langue) {
+        dernier_chemin <- chemin_langue
+        if (!file.exists(chemin_langue)) next
+
+        source_res <- tryCatch({
+          source(chemin_langue, encoding = "UTF-8", local = FALSE)
+          NULL
+        }, error = function(e) e)
+
+        if (inherits(source_res, "error")) {
+          derniere_raison <- paste0("échec source: ", conditionMessage(source_res))
+          next
+        }
+
+        if (exists("verifier_coherence_dictionnaire_langue", mode = "function", envir = .GlobalEnv, inherits = FALSE)) {
+          return(list(ok = TRUE, chemin = chemin_langue, raison = ""))
+        }
+
+        derniere_raison <- "fonction verifier_coherence_dictionnaire_langue absente après source"
+      }
+
+      list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
+    }
+
     if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
       chemin_nettoyage <- file.path(app_dir, "nettoyage.R")
       if (file.exists(chemin_nettoyage)) {
@@ -239,7 +273,19 @@ register_events_lancer <- function(input, output, session, rv) {
           )
           names(textes_chd) <- ids_corpus
 
-          verifier_coherence_dictionnaire_langue(textes_chd, if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "fr" else as.character(input$spacy_langue), rv = rv)
+          if (!exists("verifier_coherence_dictionnaire_langue", mode = "function", inherits = TRUE)) {
+            charge_langue <- charger_module_langue()
+            if (!isTRUE(charge_langue$ok)) {
+              stop(paste0("Module langue indisponible (", charge_langue$raison, ") : ", charge_langue$chemin))
+            }
+            ajouter_log(rv, paste0("Diagnostic langue: module chargé depuis ", charge_langue$chemin, "."))
+          }
+
+          verifier_coherence_dictionnaire_langue(
+            textes_chd,
+            if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "fr" else as.character(input$spacy_langue),
+            rv = rv
+          )
 
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
