@@ -304,20 +304,6 @@ server <- function(input, output, session) {
     ord <- order(df$log_rang)
     lines(df$log_rang[ord], df$log_pred[ord], col = "#D7301F", lwd = 2.5)
 
-    fit_zipf <- stats::lm(log_frequence ~ log_rang, data = df)
-    pente <- stats::coef(fit_zipf)[2]
-    r2 <- summary(fit_zipf)$r.squared
-    texte_modele <- sprintf("pente = %.3f | R² = %.3f", pente, r2)
-    usr <- par("usr")
-    text(
-      x = usr[1] + 0.02 * (usr[2] - usr[1]),
-      y = usr[4] - 0.05 * (usr[4] - usr[3]),
-      labels = texte_modele,
-      adj = c(0, 1),
-      col = "#333333",
-      cex = 0.95
-    )
-
     legend(
       "topright",
       legend = c("Données", "Régression log-log"),
