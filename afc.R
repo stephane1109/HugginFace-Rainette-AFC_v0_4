@@ -450,6 +450,13 @@ calculer_table_classes_modalites <- function(corpus_aligne, groupes, max_modalit
   exclure <- c("segment_source", "Classes")
   cols <- setdiff(colnames(dv2), exclure)
 
+  # Priorité aux variables étoilées importées depuis l'entête IRaMuTeQ.
+  # Certains imports exposent les variables avec un nom préfixé "*".
+  cols_etoilees <- cols[grepl("^\\*", cols)]
+  if (length(cols_etoilees) > 0) {
+    cols <- cols_etoilees
+  }
+
   modalites_par_seg <- NULL
 
   if (length(cols) > 0) {
@@ -464,7 +471,19 @@ calculer_table_classes_modalites <- function(corpus_aligne, groupes, max_modalit
         v <- gsub("\\s+", " ", trimws(v), perl = TRUE)
         if (!nzchar(v)) next
         # Modalité de type "var=valeur"
-        mods <- c(mods, paste0(cn, "=", v))
+        # Si la colonne est déjà une variable étoilée, on garde une modalité
+        # compacte de type "*var_valeur" pour rester proche de la syntaxe IRaMuTeQ.
+        if (grepl("^\\*", cn)) {
+          val_norm <- gsub("\\s+", "_", v, perl = TRUE)
+          val_norm <- gsub("[^[:alnum:]_\\-]", "_", val_norm, perl = TRUE)
+          val_norm <- gsub("_+", "_", val_norm, perl = TRUE)
+          val_norm <- gsub("^_+|_+$", "", val_norm, perl = TRUE)
+          if (nzchar(val_norm)) {
+            mods <- c(mods, paste0(cn, "_", val_norm))
+          }
+        } else {
+          mods <- c(mods, paste0(cn, "=", v))
+        }
       }
       modalites_par_seg[[i]] <- unique(mods)
     }
@@ -523,6 +542,19 @@ executer_afc_variables_etoilees <- function(corpus_aligne, groupes, max_modalite
     groupes = groupes,
     max_modalites = max_modalites
   )
+
+  if (!is.null(rv)) {
+    ajouter_log(
+      rv,
+      paste0(
+        "AFC variables étoilées : table construite (",
+        nrow(tab),
+        " classes × ",
+        ncol(tab),
+        " modalités)."
+      )
+    )
+  }
 
   ca <- FactoMineR::CA(tab, graph = FALSE)
   rowcoord <- ca$row$coord
