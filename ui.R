@@ -251,8 +251,8 @@ ui <- fluidPage(
           tags$h3("Analyse du corpus (mode debug)"),
           tableOutput("table_stats_corpus"),
           tags$div(
-            style = "width: 360px;",
-            plotOutput("plot_stats_zipf", height = "360px", width = "360px")
+            style = "width: 600px;",
+            plotOutput("plot_stats_zipf", height = "600px", width = "600px")
           ),
           tags$h3("Répartition des classes"),
           tableOutput("table_classes")
