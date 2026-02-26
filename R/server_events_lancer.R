@@ -189,6 +189,18 @@ register_events_lancer <- function(input, output, session, rv) {
         return(invisible(NULL))
       }
 
+      if (isTRUE(input$activer_ner) && identical(as.character(input$source_dictionnaire), "lexique_fr")) {
+        rv$statut <- "Configuration invalide : NER incompatible avec Lexique (fr)."
+        rv$progression <- 0
+        ajouter_log(rv, "Blocage de l'analyse : NER activé avec la source Lexique (fr), combinaison non supportée.")
+        showNotification(
+          "Analyse bloquée : le NER n'est pas disponible avec Lexique (fr). Désactive 'Activer NER (spaCy)' ou sélectionne la source spaCy.",
+          type = "error",
+          duration = 8
+        )
+        return(invisible(NULL))
+      }
+
       if (isTRUE(input$activer_ner) && !is.null(input$fichier_ner_json) && !is.null(input$fichier_ner_json$datapath) && file.exists(input$fichier_ner_json$datapath)) {
         rv$ner_file <- input$fichier_ner_json$datapath
         ajouter_log(rv, paste0("NER : dictionnaire JSON importé via l'UI : ", input$fichier_ner_json$name))

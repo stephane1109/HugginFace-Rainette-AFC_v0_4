@@ -190,6 +190,7 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
+      uiOutput("ui_ner_lexique_incompatibilite"),
       conditionalPanel(
         condition = "input.activer_ner == true",
         fileInput(
