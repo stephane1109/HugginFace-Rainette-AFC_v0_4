@@ -245,8 +245,6 @@ ui <- fluidPage(
           "Analyse",
           tags$h3("Statut"),
           textOutput("statut"),
-          tags$h3("Progression"),
-          uiOutput("barre_progression"),
           tags$h3("Journal"),
           tags$pre(style = "white-space: pre-wrap;", textOutput("logs")),
           tags$h3("Analyse du corpus (mode debug)"),

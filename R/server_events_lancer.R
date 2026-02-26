@@ -206,8 +206,6 @@ register_events_lancer <- function(input, output, session, rv) {
         ajouter_log(rv, paste0("NER : dictionnaire JSON importé via l'UI : ", input$fichier_ner_json$name))
       }
 
-      withProgress(message = "Analyse Rainette en cours", value = 0, {
-
         p <- Progress$new(session, min = 0, max = 1)
         on.exit(try(p$close(), silent = TRUE), add = TRUE)
 
@@ -877,6 +875,5 @@ register_events_lancer <- function(input, output, session, rv) {
           ajouter_log(rv, paste0("ERREUR : ", e$message))
           showNotification(e$message, type = "error", duration = 8)
         })
-      })
     })
 }
