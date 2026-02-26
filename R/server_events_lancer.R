@@ -312,7 +312,11 @@ register_events_lancer <- function(input, output, session, rv) {
               "Diagnostic pipeline: dictionnaire=", source_dictionnaire,
               " | langue UI=", as.character(input$spacy_langue),
               " | filtrage_morpho=", ifelse(isTRUE(input$filtrage_morpho), "1", "0"),
-              " | retirer_stopwords=", ifelse(isTRUE(input$retirer_stopwords), "1", "0")
+              " | retirer_stopwords=", ifelse(isTRUE(input$retirer_stopwords), "1", "0"),
+              " | supprimer_ponctuation=", ifelse(isTRUE(input$supprimer_ponctuation), "1", "0"),
+              " | supprimer_chiffres=", ifelse(isTRUE(input$supprimer_chiffres), "1", "0"),
+              " | supprimer_apostrophes=", ifelse(isTRUE(input$supprimer_apostrophes), "1", "0"),
+              " | nettoyage_caracteres=", ifelse(isTRUE(input$nettoyage_caracteres), "1", "0")
             )
           )
 
