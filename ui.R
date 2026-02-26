@@ -141,8 +141,8 @@ ui <- fluidPage(
       tags$small("Supprime la ponctuation à la tokenisation quanteda (remove_punct), pour les deux sources (spaCy et lexique_fr), par ex. . , ; : ! ? ' ’ \" - ( ) [ ] …"),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
-      checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy si source spaCy, quanteda si source Lexique fr)", value = FALSE),
+      tags$small("La normalisation en minuscules est appliquée automatiquement avant la construction du DFM."),
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique", value = FALSE),
       tags$small("Le filtrage morphosyntaxique s'applique à spaCy ou lexique_fr selon la source sélectionnée."),
       conditionalPanel(
