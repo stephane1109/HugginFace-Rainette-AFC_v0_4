@@ -5,6 +5,8 @@
 2. Dans le script un mini-filtrage a été ajouté pour supprimer des faux positifs (ponctuation seule, cas bruités, etc...)
 3. Vous pouvez ajouter un fichier au format **.JSON**, ses règles seront appliquées : exclusions et ajouts
 
+![Import NER](import_ner.png)
+
 ## Importer un dictionnaire JSON dans l'UI
 1. Coche **Activer NER (spaCy)** dans la barre latérale
 2. Dans le champ **Importer un dictionnaire NER (.json)**, sélectionne ton fichier local
