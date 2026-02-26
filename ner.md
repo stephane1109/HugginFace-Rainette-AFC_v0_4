@@ -2,7 +2,7 @@
 
 ## Fonctionnement
 1. spaCy détecte des entités (PER, ORG, LOC, etc...).
-2. Un mini-filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc.).
+2. Un mini-filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc...).
 3. Si un JSON est fourni, ses règles sont appliquées : exclusions et ajouts.
 
 ## Importer un dictionnaire JSON dans l'UI
