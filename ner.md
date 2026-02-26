@@ -1,15 +1,15 @@
-# NER (spaCy + règles JSON)
+# Named Entity Recognition NER (spaCy + règles JSON)
 
 ## Fonctionnement
-1. spaCy détecte des entités (PER, ORG, LOC, etc...).
-2. Un mini-filtrage supprime des faux positifs (ponctuation seule, cas bruités, etc...).
-3. Si un JSON est fourni, ses règles sont appliquées : exclusions et ajouts.
+1. spaCy détecte des entités (PER, ORG, LOC, etc...) mais le résultat nécessite bien souvent des corrections
+2. Dans le script un mini-filtrage a été ajouté pour supprimer des faux positifs (ponctuation seule, cas bruités, etc...)
+3. Vous pouvez ajouter un fichier au format **.JSON**, ses règles seront appliquées : exclusions et ajouts
 
 ## Importer un dictionnaire JSON dans l'UI
-1. Coche **Activer NER (spaCy)** dans la barre latérale.
-2. Dans le champ **Importer un dictionnaire NER (.json)**, sélectionne ton fichier local.
-3. Lance (ou relance) l'analyse avec **Lancer l'analyse**.
-
+1. Coche **Activer NER (spaCy)** dans la barre latérale
+2. Dans le champ **Importer un dictionnaire NER (.json)**, sélectionne ton fichier local
+3. Lance (ou relance) l'analyse avec **Lancer l'analyse**
+   
 ## Format attendu du fichier JSON
 - Le fichier doit être au **format `.json`**.
 Exemple totalement farfellu montrabt que vous pouvais exclure, inclure des mots definir le label selon les labels deja existant, soit créer un nouveau label :
