@@ -32,7 +32,7 @@ Exemple totalement farfellu montrabt que vous pouvais exclure, inclure des mots 
 Oui
 
 - Les entités détectées *nativement* par spaCy gardent les labels du modèle (`PER`, `ORG`, `LOC`, etc.).
-- Les entités ajoutées via `include` peuvent utiliser **n'importe quel label** (ex: `ACTION`, `OUTIL`, `THEME`).
+- Les entités ajoutées via `include` peuvent utiliser **n'importe quel label** (ex: `VOTRE_LABEL_1`, `VOTRE_LABEL_2`,...).
 - Ces labels personnalisés apparaissent ensuite dans la sortie NER (`ent_label`).
 
 Exemple: `{"text": "commencer", "label": "ACTION"}` forcera la présence de `commencer` avec le label `ACTION` si le mot est trouvé dans le texte.
