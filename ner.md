@@ -10,20 +10,8 @@
 2. Dans le champ **Importer un dictionnaire NER (.json)**, sélectionne ton fichier local.
 3. Lance (ou relance) l'analyse avec **Lancer l'analyse**.
 
-Notes :
-- Le fichier doit être au **format `.json`**.
-- L'import via l'UI est **optionnel** : si aucun fichier n'est importé, l'application tente d'utiliser la variable d'environnement `RAINETTE_NER_JSON` si elle est définie.
-
-## Alternative sans UI (variable d'environnement)
-Tu peux aussi définir la variable d'environnement avant de lancer l'app :
-
-```bash
-export RAINETTE_NER_JSON=/chemin/vers/mon_ner.json
-```
-
-Le pipeline R passera automatiquement ce fichier à `ner.py`.
-
 ## Format attendu du fichier JSON
+- Le fichier doit être au **format `.json`**.
 Exemple totalement farfellu montrabt que vous pouvais exclure, inclure des mots definir le label selon les labels deja existant, soit créer un nouveau label :
 
 ```json
