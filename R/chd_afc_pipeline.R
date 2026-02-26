@@ -69,6 +69,10 @@ construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retire
     tok_final <- tokens_tolower(tok_base)
   }
 
+  if (!isTRUE(retirer_stopwords) && isTRUE(min_docfreq > 1)) {
+    ajouter_log(rv, paste0(libelle, " : min_docfreq=", min_docfreq, " peut éliminer des nombres rares (ex: numéros de téléphone)."))
+  }
+
   dfm_obj <- dfm(tok_final)
   dfm_obj <- dfm_trim(dfm_obj, min_docfreq = min_docfreq)
   ajouter_log(
