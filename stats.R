@@ -59,7 +59,7 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
   nb_hapax <- sum(freqs == 1)
   nb_segments <- if (!is.null(corpus_segments)) quanteda::ndoc(corpus_segments) else NA_integer_
 
-  loi_zipf <- "Indisponible"
+  loi_zipf <- "—"
   zipf_df <- NULL
 
   if (length(freqs) >= 2) {
@@ -68,9 +68,6 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
     fit <- stats::lm(log(freq_rank) ~ log(rang))
     pente <- unname(stats::coef(fit)[2])
     intercept <- unname(stats::coef(fit)[1])
-    r2 <- summary(fit)$r.squared
-    loi_zipf <- paste0("pente=", sprintf("%.3f", pente), " ; R2=", sprintf("%.3f", r2))
-
     zipf_df <- data.frame(
       rang = rang,
       frequence = freq_rank,
