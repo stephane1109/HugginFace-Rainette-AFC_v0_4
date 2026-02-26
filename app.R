@@ -229,6 +229,19 @@ server <- function(input, output, session) {
     )
   })
 
+  output$ui_ner_lexique_incompatibilite <- renderUI({
+    if (!isTRUE(input$activer_ner) || !identical(input$source_dictionnaire, "lexique_fr")) {
+      return(NULL)
+    }
+
+    tags$div(
+      style = "border:1px solid #f5c2c7;background:#f8d7da;color:#842029;padding:10px;border-radius:4px;margin:8px 0;",
+      tags$strong("Incompatibilité détectée : "),
+      tags$span("le NER n'est pas disponible avec la source de lemmatisation \"Lexique (fr)\". "),
+      tags$span("Désactive \"Activer NER (spaCy)\" ou bascule la source vers \"spaCy\" avant de lancer l'analyse.")
+    )
+  })
+
   output$ui_corpus_preview <- renderUI({
     fichier <- input$fichier_corpus
     if (is.null(fichier) || is.null(fichier$datapath) || !file.exists(fichier$datapath)) {
