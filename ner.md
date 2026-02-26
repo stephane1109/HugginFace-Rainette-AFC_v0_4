@@ -29,7 +29,7 @@ Exemple totalement farfellu montrabt que vous pouvais exclure, inclure des mots 
 
 
 ## Peut-on créer ses propres labels ?
-Oui
+Oui. Il faut écrire les **LABELS en MAJUSCULES**
 
 - Les entités détectées *nativement* par spaCy gardent les labels du modèle (`PER`, `ORG`, `LOC`, etc.).
 - Les entités ajoutées via `include` peuvent utiliser **n'importe quel label** (ex: `VOTRE_LABEL_1`, `VOTRE_LABEL_2`,...).
@@ -46,7 +46,7 @@ Les labels disponibles dépendent du **modèle spaCy chargé**.
 - `LOC` : lieu
 - `MISC` : catégorie diverse (autres entités)
 
-### Labels NER officiels spaCy (OntoNotes)
+### Labels NER officiels spaCy (Si je ne me trompe pas avec des modeles "lg" on bénéficie de catégories étendus)
 - `PERSON`: People, including fictional.
 - `NORP`: Nationalities or religious or political groups.
 - `FAC`: Buildings, airports, highways, bridges, etc.
@@ -66,13 +66,6 @@ Les labels disponibles dépendent du **modèle spaCy chargé**.
 - `ORDINAL`: “first”, “second”, etc.
 - `CARDINAL`: Numerals that do not fall under another type.
 
-💡 Astuce : dans ce projet, les labels issus du JSON sont normalisés en majuscules, donc écris de préférence les labels en MAJUSCULES (`ORG`, `PER`, `PERSON`, etc.).
-
-⚠️ Format strict des entrées `include`:
-- chaque entrée doit être un objet avec `text` (obligatoire) et `label` (optionnel, défaut `MISC`) ;
-- les autres clés ne sont pas acceptées ;
-- si `text` est vide, le JSON est rejeté avec message d'erreur explicite.
-
 ## Signification des champs JSON
 - `exclude_texts` : liste de textes d'entité à **rejeter** (insensible à la casse).
 - `exclude_labels` : liste de labels d'entité à **rejeter** (ex. `MISC`).
@@ -91,8 +84,3 @@ Cela veut dire :
 - évite de matcher au milieu d'un mot.
 
 Exemple : `"text": "Paris"` matche `Paris` mais pas `parisien`.
-
-## Bonnes pratiques
-- Commencer petit (quelques exclusions fréquentes).
-- Ajouter `exclude_labels` seulement si nécessaire (peut être trop agressif).
-- Vérifier les logs NER et le statut NER pour confirmer que le JSON est chargé.
