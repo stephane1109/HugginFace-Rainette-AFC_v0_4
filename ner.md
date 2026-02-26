@@ -24,7 +24,7 @@ export RAINETTE_NER_JSON=/chemin/vers/mon_ner.json
 Le pipeline R passera automatiquement ce fichier à `ner.py`.
 
 ## Format attendu du fichier JSON
-Exemple valide :
+Exemple totalement farfellu montrabt que vous pouvais exclure, inclure des mots definir le label selon les labels deja existant, soit créer un nouveau label :
 
 ```json
 {
@@ -33,15 +33,15 @@ Exemple valide :
   "include": [
     {"text": "OpenAI", "label": "ORG"},
     {"text": "ChatGPT", "label": "PRODUCT"},
-    {"text": "regarder", "label": "ACTION"},
-    {"text": "commencer", "label": "ACTION"}
+    {"text": "regarder", "label": "VERBE"},
+    {"text": "commencer", "label": "VERBE"}
   ]
 }
 ```
 
 
 ## Peut-on créer ses propres labels ?
-Oui, via `include`.
+Oui
 
 - Les entités détectées *nativement* par spaCy gardent les labels du modèle (`PER`, `ORG`, `LOC`, etc.).
 - Les entités ajoutées via `include` peuvent utiliser **n'importe quel label** (ex: `ACTION`, `OUTIL`, `THEME`).
