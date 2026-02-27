@@ -63,6 +63,8 @@ source("R/afc_helpers.R", encoding = "UTF-8", local = TRUE)
 
 source("R/chd_afc_pipeline.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/chd_iramuteq.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/visualisation_chd.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/stats_chd.R", encoding = "UTF-8", local = TRUE)
 source("R/chd_engine_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_language.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_spacy.R", encoding = "UTF-8", local = TRUE)
@@ -485,7 +487,7 @@ server <- function(input, output, session) {
 
         tabsetPanel(
           tabPanel(
-            "CHD (rainette_plot)",
+            "CHD",
             fluidRow(
               column(
                 4,
@@ -557,17 +559,23 @@ server <- function(input, output, session) {
   })
 
   output$plot_chd <- renderPlot({
+    req(!is.null(input$measure_plot), !is.null(input$type_plot), !is.null(input$n_terms_plot))
+
     if (identical(rv$res_type, "iramuteq")) {
-      plot.new()
-      text(0.5, 0.5, "Visualisation CHD type rainette_plot indisponible en mode IRaMuTeQ-like.", cex = 1)
+      req(rv$res_stats_df)
+      tracer_chd_iramuteq(
+        res_stats_df = rv$res_stats_df,
+        classe = input$classe_viz,
+        mesure = as.character(input$measure_plot),
+        type = as.character(input$type_plot),
+        n_terms = input$n_terms_plot,
+        show_negative = isTRUE(input$show_negative_plot)
+      )
       return(invisible(NULL))
     }
 
     req(rv$res_chd, rv$dfm_chd)
     req(!is.null(input$k_plot))
-    req(!is.null(input$measure_plot))
-    req(!is.null(input$type_plot))
-    req(!is.null(input$n_terms_plot))
 
     same_scales <- isTRUE(input$same_scales_plot)
     show_negative <- isTRUE(input$show_negative_plot)
@@ -615,19 +623,7 @@ server <- function(input, output, session) {
 
   output$table_stats_classe <- renderTable({
     req(input$classe_viz, rv$res_stats_df)
-    cl <- as.numeric(input$classe_viz)
-
-    df <- rv$res_stats_df
-    df <- df[df$Classe == cl, , drop = FALSE]
-
-    colonnes_possibles <- intersect(
-      c("Terme", "chi2", "lr", "frequency", "docprop", "p", "p_value_filter"),
-      names(df)
-    )
-    df <- df[, colonnes_possibles, drop = FALSE]
-
-    if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
-    head(df, 50)
+    extraire_stats_chd_classe(rv$res_stats_df, classe = input$classe_viz, n_max = 50)
   }, rownames = FALSE)
 
   output$plot_afc <- renderPlot({
