@@ -107,7 +107,8 @@ preparer_entrees_chd_iramuteq <- function(
     candidats <- unique(c(
     base_dir,
     "iramuteq-like",
-    "iramuteq-like/Rscripts"
+    "iramuteq-like/Rscripts",
+    "iramuteq_clone_v3/Rscripts"
   ))
   candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
 
