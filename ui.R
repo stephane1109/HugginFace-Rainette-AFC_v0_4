@@ -84,7 +84,10 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres CHD"),
 
       numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
-      numericInput("k", "k (nombre de classes)", value = 3, min = 2, step = 1),
+      conditionalPanel(
+        condition = "input.modele_chd == 'rainette'",
+        numericInput("k", "k (nombre de classes)", value = 3, min = 2, step = 1)
+      ),
       numericInput("min_segment_size", "Nombre minimal de termes par segment (min_segment_size)", value = 10, min = 1, step = 1),
       numericInput("min_split_members", "Effectif minimal pour scinder une classe (min_split_members)", value = 10, min = 1, step = 1),
       numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),

@@ -101,8 +101,8 @@ lancer_moteur_chd_iramuteq <- function(
     mincl = mincl,
     mincl_mode = mincl_mode,
     classif_mode = classif_mode,
-    nb_classes_cible = k,
-    respecter_nb_classes = TRUE
+    nb_classes_cible = NULL,
+    respecter_nb_classes = FALSE
   )
 
   list(
