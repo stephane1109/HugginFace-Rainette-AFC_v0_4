@@ -8,13 +8,26 @@
   fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
   if (!is.null(fn)) return(fn)
 
-  if (file.exists(chemin_module)) {
-    source(chemin_module, encoding = "UTF-8", local = env)
-    fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
-    if (!is.null(fn)) return(fn)
+  candidats <- unique(c(
+    chemin_module,
+    file.path(".", "iramuteq-like", "chd_iramuteq.R"),
+    file.path(getwd(), "iramuteq-like", "chd_iramuteq.R")
+  ))
+
+  for (cand in candidats) {
+    if (!is.na(cand) && nzchar(cand) && file.exists(cand)) {
+      source(cand, encoding = "UTF-8", local = .GlobalEnv)
+      fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
+      if (!is.null(fn)) return(fn)
+    }
   }
 
-  stop("Moteur CHD IRaMuTeQ-like indisponible: ", nom_fonction, "() introuvable.")
+  stop(
+    "Moteur CHD IRaMuTeQ-like indisponible: ", nom_fonction,
+    "() introuvable. Module recherché dans: ",
+    paste(candidats, collapse = ", "),
+    "."
+  )
 }
 
 lancer_moteur_chd_iramuteq <- function(
