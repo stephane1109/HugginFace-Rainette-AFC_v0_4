@@ -144,7 +144,8 @@ calculer_chd_iramuteq <- function(
   svd_method = c("svdR", "irlba", "svdlibc"),
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = NULL
+  rscripts_dir = NULL,
+  seed = 123
 ) {
   svd_method <- match.arg(svd_method)
 
@@ -152,6 +153,8 @@ calculer_chd_iramuteq <- function(
   if (!is.finite(k) || is.na(k) || as.integer(k) < 2) stop("CHD IRaMuTeQ-like: k doit être >= 2.")
 
   .charger_scripts_iramuteq_chd(rscripts_dir)
+
+  if (!is.null(seed) && is.finite(seed)) set.seed(as.integer(seed))
 
   mat <- as.matrix(dfm_obj)
   if (nrow(mat) < 2 || ncol(mat) < 2) {
@@ -187,7 +190,9 @@ reconstruire_classes_terminales_iramuteq <- function(
   chd_obj,
   mincl = 0,
   mincl_mode = c("auto", "manuel"),
-  classif_mode = c("simple", "double")
+  classif_mode = c("simple", "double"),
+  nb_classes_cible = NULL,
+  respecter_nb_classes = TRUE
 ) {
   mincl_mode <- match.arg(mincl_mode)
   classif_mode <- match.arg(classif_mode)
@@ -220,6 +225,15 @@ reconstruire_classes_terminales_iramuteq <- function(
   }
 
   feuilles <- unique(as.integer(n1[, ncol(n1)]))
+
+  if (isTRUE(respecter_nb_classes) && !is.null(nb_classes_cible) && is.finite(nb_classes_cible)) {
+    nb_classes_cible <- as.integer(nb_classes_cible)
+    if (nb_classes_cible >= 2 && length(feuilles) == nb_classes_cible && length(unique(terminales)) != nb_classes_cible) {
+      terminales <- sort(feuilles)
+      mincl_use <- 1L
+    }
+  }
+
   classes_finales <- rep(0L, nrow(n1))
 
   for (i in seq_along(terminales)) {
