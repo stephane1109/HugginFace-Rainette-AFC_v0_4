@@ -399,12 +399,15 @@ register_events_lancer <- function(input, output, session, rv) {
             rv$res_type <- "iramuteq"
             ajouter_log(rv, "Mode : classification IRaMuTeQ-like.")
 
+            # Mode fidèle IRaMuTeQ: nbt=9 dans les scripts historiques, soit k théorique = 10.
+            # On n'utilise pas le k UI (réservé à Rainette).
             res_ira <- lancer_moteur_chd_iramuteq(
               dfm_obj = dfm_obj,
-              k = input$k,
+              k = 10,
               mincl_mode = "auto",
               classif_mode = "simple",
-              svd_method = "svdR"
+              svd_method = "svdR",
+              seed = 123
             )
 
             groupes <- as.integer(res_ira$classes)

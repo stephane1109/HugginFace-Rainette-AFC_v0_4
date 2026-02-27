@@ -144,7 +144,8 @@ calculer_chd_iramuteq <- function(
   svd_method = c("svdR", "irlba", "svdlibc"),
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = NULL
+  rscripts_dir = NULL,
+  seed = 123
 ) {
   svd_method <- match.arg(svd_method)
 
@@ -152,6 +153,8 @@ calculer_chd_iramuteq <- function(
   if (!is.finite(k) || is.na(k) || as.integer(k) < 2) stop("CHD IRaMuTeQ-like: k doit être >= 2.")
 
   .charger_scripts_iramuteq_chd(rscripts_dir)
+
+  if (!is.null(seed) && is.finite(seed)) set.seed(as.integer(seed))
 
   mat <- as.matrix(dfm_obj)
   if (nrow(mat) < 2 || ncol(mat) < 2) {
@@ -187,7 +190,9 @@ reconstruire_classes_terminales_iramuteq <- function(
   chd_obj,
   mincl = 0,
   mincl_mode = c("auto", "manuel"),
-  classif_mode = c("simple", "double")
+  classif_mode = c("simple", "double"),
+  nb_classes_cible = NULL,
+  respecter_nb_classes = TRUE
 ) {
   mincl_mode <- match.arg(mincl_mode)
   classif_mode <- match.arg(classif_mode)
@@ -220,6 +225,15 @@ reconstruire_classes_terminales_iramuteq <- function(
   }
 
   feuilles <- unique(as.integer(n1[, ncol(n1)]))
+
+  if (isTRUE(respecter_nb_classes) && !is.null(nb_classes_cible) && is.finite(nb_classes_cible)) {
+    nb_classes_cible <- as.integer(nb_classes_cible)
+    if (nb_classes_cible >= 2 && length(feuilles) == nb_classes_cible && length(unique(terminales)) != nb_classes_cible) {
+      terminales <- sort(feuilles)
+      mincl_use <- 1L
+    }
+  }
+
   classes_finales <- rep(0L, nrow(n1))
 
   for (i in seq_along(terminales)) {
@@ -335,13 +349,36 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   }
 
   list_fille <- chd_obj$list_fille
-  meres <- suppressWarnings(as.integer(names(list_fille)))
+  if (!is.list(list_fille) || length(list_fille) == 0) {
+    plot.new()
+    text(0.5, 0.5, "Dendrogramme CHD indisponible (list_fille vide).", cex = 1.1)
+    return(invisible(NULL))
+  }
+
+  noms <- names(list_fille)
+  if (is.null(noms) || any(!nzchar(noms))) {
+    noms <- as.character(seq_along(list_fille))
+  }
+
+  map_filles <- stats::setNames(lapply(list_fille, function(x) as.integer(x)), noms)
+
+  meres <- suppressWarnings(as.integer(names(map_filles)))
   meres <- meres[is.finite(meres)]
-  enfants <- unique(as.integer(unlist(list_fille)))
+  enfants <- unique(as.integer(unlist(map_filles, use.names = FALSE)))
   enfants <- enfants[is.finite(enfants)]
 
   racines <- setdiff(meres, enfants)
   racine <- if (length(racines)) racines[[1]] else if (length(meres)) meres[[1]] else NA_integer_
+
+  # Fallback robuste: racine via colonne finale n1 si la structure mère/fille est ambiguë.
+  if (!is.finite(racine)) {
+    feuilles_n1 <- suppressWarnings(as.integer(chd_obj$n1[, ncol(chd_obj$n1)]))
+    feuilles_n1 <- feuilles_n1[is.finite(feuilles_n1)]
+    if (length(feuilles_n1)) {
+      racine <- min(feuilles_n1, na.rm = TRUE)
+    }
+  }
+
   if (!is.finite(racine)) {
     plot.new()
     text(0.5, 0.5, "Structure CHD invalide.", cex = 1.1)
@@ -350,25 +387,39 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
 
   get_filles <- function(node) {
     key <- as.character(node)
-    x <- list_fille[[key]]
+    x <- map_filles[[key]]
     if (is.null(x)) integer(0) else as.integer(x)
   }
 
-  # Feuilles ordonnées par identifiant pour stabiliser l'affichage.
   feuilles <- setdiff(enfants, meres)
   feuilles <- sort(unique(feuilles))
   if (!length(feuilles)) {
-    feuilles <- sort(unique(as.integer(chd_obj$n1[, ncol(chd_obj$n1)])))
+    feuilles <- sort(unique(suppressWarnings(as.integer(chd_obj$n1[, ncol(chd_obj$n1)]))))
+    feuilles <- feuilles[is.finite(feuilles)]
+  }
+  if (!length(feuilles)) {
+    plot.new()
+    text(0.5, 0.5, "Aucune feuille exploitable pour le dendrogramme.", cex = 1.1)
+    return(invisible(NULL))
   }
 
-  x_map <- setNames(seq_along(feuilles), as.character(feuilles))
+  x_map <- stats::setNames(seq_along(feuilles), as.character(feuilles))
   positions <- list()
+  visited <- integer(0)
 
   compute_pos <- function(node, depth = 0L) {
+    if (node %in% visited) {
+      x <- unname(x_map[[as.character(node)]])
+      if (is.null(x) || !is.finite(x)) x <- mean(unname(x_map))
+      positions[[as.character(node)]] <<- c(x = x, y = -depth)
+      return(c(x = x, y = -depth))
+    }
+    visited <<- c(visited, node)
+
     filles <- get_filles(node)
     if (!length(filles)) {
       x <- unname(x_map[[as.character(node)]])
-      if (is.null(x) || !is.finite(x)) x <- length(x_map) + 1
+      if (is.null(x) || !is.finite(x)) x <- max(unname(x_map)) + 1
       positions[[as.character(node)]] <<- c(x = x, y = -depth)
       return(c(x = x, y = -depth))
     }
@@ -382,6 +433,12 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
 
   compute_pos(racine, 0L)
 
+  if (!length(positions)) {
+    plot.new()
+    text(0.5, 0.5, "Dendrogramme CHD indisponible (positions vides).", cex = 1.1)
+    return(invisible(NULL))
+  }
+
   all_pos <- do.call(rbind, positions)
   plot(
     NA,
@@ -393,24 +450,25 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
     main = "Dendrogramme CHD IRaMuTeQ-like"
   )
 
-  for (mere_name in names(list_fille)) {
+  for (mere_name in names(map_filles)) {
     mere <- suppressWarnings(as.integer(mere_name))
     if (!is.finite(mere)) next
     p_m <- positions[[as.character(mere)]]
     if (is.null(p_m)) next
 
-    for (f in as.integer(list_fille[[mere_name]])) {
+    for (f in as.integer(map_filles[[mere_name]])) {
       p_f <- positions[[as.character(f)]]
       if (is.null(p_f)) next
       segments(p_m[["x"]], p_m[["y"]], p_f[["x"]], p_f[["y"]], col = "#2f4f4f", lwd = 1.5)
     }
   }
 
-  noeuds <- as.integer(names(positions))
-  col_points <- rep("#5B8FF9", length(noeuds))
+  noeuds <- suppressWarnings(as.integer(names(positions)))
+  noeuds[!is.finite(noeuds)] <- NA_integer_
+  col_points <- rep("#5B8FF9", nrow(all_pos))
   if (!is.null(terminales)) {
     terminales <- as.integer(terminales)
-    col_points[noeuds %in% terminales] <- "#d62728"
+    col_points[which(noeuds %in% terminales)] <- "#d62728"
   }
 
   points(all_pos[, "x"], all_pos[, "y"], pch = 19, col = col_points, cex = 1)

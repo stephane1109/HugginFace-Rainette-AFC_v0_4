@@ -582,7 +582,14 @@ server <- function(input, output, session) {
     req(rv$res)
     chd_obj <- rv$res$chd
     terminales <- rv$res$terminales
-    tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales)
+
+    tryCatch({
+      tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales)
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5, paste0("Erreur dendrogramme IRaMuTeQ-like: ", conditionMessage(e)), cex = 0.95)
+      invisible(NULL)
+    })
   })
 
   output$plot_chd_iramuteq <- renderPlot({
@@ -608,14 +615,35 @@ server <- function(input, output, session) {
     )
   })
 
-  output$table_stats_classe_iramuteq <- renderTable({
+  output$ui_tables_stats_chd_iramuteq <- renderUI({
     if (!identical(rv$res_type, "iramuteq")) {
-      return(data.frame(Message = "Résultats CHD IRaMuTeQ-like indisponibles (mode Rainette actif).", stringsAsFactors = FALSE))
+      return(tags$p("Résultats CHD IRaMuTeQ-like indisponibles (mode Rainette actif)."))
     }
 
     req(rv$res_stats_df)
-    extraire_stats_chd_classe(rv$res_stats_df, classe = input$classe_viz_iramuteq, n_max = 50)
-  }, rownames = FALSE)
+    req("Classe" %in% names(rv$res_stats_df))
+
+    classes <- sort(unique(suppressWarnings(as.numeric(rv$res_stats_df$Classe))))
+    classes <- classes[is.finite(classes)]
+    if (length(classes) == 0) {
+      return(tags$p("Aucune classe disponible pour les statistiques CHD."))
+    }
+
+    panneaux <- lapply(classes, function(cl) {
+      output_id <- paste0("table_stats_chd_iramuteq_cl_", cl)
+
+      output[[output_id]] <- renderTable({
+        extraire_stats_chd_classe(rv$res_stats_df, classe = cl, n_max = 100)
+      }, rownames = FALSE)
+
+      tabPanel(
+        title = paste0("Classe ", cl),
+        tableOutput(output_id)
+      )
+    })
+
+    do.call(tabsetPanel, c(id = "tabs_stats_chd_iramuteq", panneaux))
+  })
 
   output$plot_chd <- renderPlot({
     req(!is.null(input$measure_plot), !is.null(input$type_plot), !is.null(input$n_terms_plot))
