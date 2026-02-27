@@ -386,13 +386,40 @@ register_events_lancer <- function(input, output, session, rv) {
           avancer(0.52, "Classification (rainette / rainette2)")
           rv$statut <- "Classification en cours..."
 
+          modele_chd <- as.character(input$modele_chd)
+          if (!modele_chd %in% c("rainette", "iramuteq")) modele_chd <- "rainette"
+
           type_classif <- as.character(input$type_classification)
           if (!type_classif %in% c("simple", "double")) type_classif <- "simple"
 
           groupes <- NULL
           res_final <- NULL
 
-          if (type_classif == "simple") {
+          if (identical(modele_chd, "iramuteq")) {
+
+            rv$res_type <- "iramuteq"
+            ajouter_log(rv, "Mode : classification IRaMuTeQ-like.")
+
+            res_ira <- lancer_moteur_chd_iramuteq(
+              dfm_obj = dfm_obj,
+              k = input$k,
+              mincl_mode = "auto",
+              classif_mode = "simple",
+              svd_method = "svdR"
+            )
+
+            groupes <- as.integer(res_ira$classes)
+            if (all(is.na(groupes)) || length(unique(groupes[groupes > 0])) < 2) {
+              stop("IRaMuTeQ-like n'a pas pu produire au moins 2 classes exploitables.")
+            }
+
+            res_final <- res_ira
+            rv$res_chd <- NULL
+            rv$dfm_chd <- NULL
+            rv$max_n_groups <- length(unique(groupes[groupes > 0]))
+            rv$max_n_groups_chd <- rv$max_n_groups
+
+          } else if (type_classif == "simple") {
 
             rv$res_type <- "simple"
             ajouter_log(rv, "Mode : classification simple (rainette).")

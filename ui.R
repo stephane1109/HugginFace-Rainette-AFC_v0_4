@@ -118,18 +118,32 @@ ui <- fluidPage(
       uiOutput("ui_spacy_langue_detection"),
 
       radioButtons(
-        "type_classification",
-        "Type de classification",
+        "modele_chd",
+        "Modèle CHD",
         choices = c(
-          "Classification simple (rainette)" = "simple",
-          "Classification double (rainette2)" = "double"
+          "Rainette" = "rainette",
+          "IRaMuTeQ-like" = "iramuteq"
         ),
-        selected = "simple",
+        selected = "rainette",
         inline = FALSE
       ),
 
       conditionalPanel(
-        condition = "input.type_classification == 'double'",
+        condition = "input.modele_chd == 'rainette'",
+        radioButtons(
+          "type_classification",
+          "Type de classification",
+          choices = c(
+            "Classification simple (rainette)" = "simple",
+            "Classification double (rainette2)" = "double"
+          ),
+          selected = "simple",
+          inline = FALSE
+        )
+      ),
+
+      conditionalPanel(
+        condition = "input.modele_chd == 'rainette' && input.type_classification == 'double'",
         numericInput("min_segment_size2", "min_segment_size (classification 2)", value = 15, min = 1, step = 1),
         numericInput("max_k_double", "max_k (rainette2)", value = 8, min = 2, step = 1)
       ),
