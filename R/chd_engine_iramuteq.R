@@ -18,6 +18,14 @@ lancer_moteur_chd_iramuteq <- function(
   classif_mode <- match.arg(classif_mode)
   svd_method <- match.arg(svd_method)
 
+  if (!exists("calculer_chd_iramuteq", mode = "function", inherits = TRUE) ||
+      !exists("reconstruire_classes_terminales_iramuteq", mode = "function", inherits = TRUE)) {
+    chemin_module <- "iramuteq-like/chd_iramuteq.R"
+    if (file.exists(chemin_module)) {
+      source(chemin_module, encoding = "UTF-8", local = .GlobalEnv)
+    }
+  }
+
   if (!exists("calculer_chd_iramuteq", mode = "function", inherits = TRUE)) {
     stop("Moteur CHD IRaMuTeQ-like indisponible: calculer_chd_iramuteq() introuvable.")
   }
