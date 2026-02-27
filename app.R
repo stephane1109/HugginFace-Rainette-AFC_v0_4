@@ -572,6 +572,19 @@ server <- function(input, output, session) {
     updateSelectInput(session, "classe_viz_iramuteq", choices = choix, selected = selected)
   })
 
+  output$plot_chd_iramuteq_dendro <- renderPlot({
+    if (!identical(rv$res_type, "iramuteq")) {
+      plot.new()
+      text(0.5, 0.5, "Dendrogramme IRaMuTeQ-like indisponible (mode Rainette actif).", cex = 1.05)
+      return(invisible(NULL))
+    }
+
+    req(rv$res)
+    chd_obj <- rv$res$chd
+    terminales <- rv$res$terminales
+    tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales)
+  })
+
   output$plot_chd_iramuteq <- renderPlot({
     if (!identical(rv$res_type, "iramuteq")) {
       plot.new()

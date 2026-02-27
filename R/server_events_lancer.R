@@ -532,43 +532,54 @@ register_events_lancer <- function(input, output, session, rv) {
           segments_file <- file.path(rv$export_dir, "segments_par_classe.txt")
           writeLines(unlist(lapply(names(segments_by_class), function(cl) c(paste0("Classe ", cl, ":"), unname(segments_by_class[[cl]]), ""))), segments_file)
 
-          res_stats_list <- rainette_stats(
-            dtm = dfm_ok,
-            groups = docvars(filtered_corpus_ok)$Classes,
-            measure = c("chi2", "lr", "frequency", "docprop"),
-            n_terms = 9999,
-            # Harmonisation avec le graphe CHD :
-            # - pas de chi2 négatifs dans l'onglet Statistiques
-            # - pas de coupe préalable sur p-value pour conserver le même
-            #   vivier de termes entre les vues (la colonne p_value_filter
-            #   reste disponible pour distinguer les termes significatifs).
-            show_negative = FALSE,
-            max_p = 1
-          )
-
-          labels_stats <- names(res_stats_list)
-          labels_groupes <- as.character(sort(unique(docvars(filtered_corpus_ok)$Classes)))
-
-          if (is.null(labels_stats) || length(labels_stats) != length(res_stats_list) || any(!nzchar(labels_stats))) {
-            labels_stats <- labels_groupes
-          }
-
-          if (length(labels_stats) != length(res_stats_list)) {
-            labels_stats <- as.character(seq_along(res_stats_list))
-          }
-
-          tailles_stats <- vapply(res_stats_list, nrow, integer(1))
-
-          res_stats_df <- bind_rows(res_stats_list) %>%
-            mutate(ClusterID = rep(labels_stats, times = tailles_stats)) %>%
-            rename(Terme = feature, Classe = ClusterID) %>%
-            mutate(
-              p_value = p,
-              Classe_brut = as.character(Classe),
-              Classe = normaliser_id_classe_local(Classe),
-              p_value_filter = ifelse(p <= input$max_p, paste0("≤ ", input$max_p), paste0("> ", input$max_p))
+          if (identical(rv$res_type, "iramuteq")) {
+            ajouter_log(rv, "Statistiques CHD : calcul IRaMuTeQ-like (contingence classe × terme).")
+            res_stats_df <- construire_stats_classes_iramuteq(
+              dfm_obj = dfm_ok,
+              classes = docvars(filtered_corpus_ok)$Classes,
+              max_p = 1
             ) %>%
-            arrange(Classe, desc(chi2))
+              mutate(Classe = normaliser_id_classe_local(Classe)) %>%
+              arrange(Classe, desc(chi2))
+          } else {
+            res_stats_list <- rainette_stats(
+              dtm = dfm_ok,
+              groups = docvars(filtered_corpus_ok)$Classes,
+              measure = c("chi2", "lr", "frequency", "docprop"),
+              n_terms = 9999,
+              # Harmonisation avec le graphe CHD :
+              # - pas de chi2 négatifs dans l'onglet Statistiques
+              # - pas de coupe préalable sur p-value pour conserver le même
+              #   vivier de termes entre les vues (la colonne p_value_filter
+              #   reste disponible pour distinguer les termes significatifs).
+              show_negative = FALSE,
+              max_p = 1
+            )
+
+            labels_stats <- names(res_stats_list)
+            labels_groupes <- as.character(sort(unique(docvars(filtered_corpus_ok)$Classes)))
+
+            if (is.null(labels_stats) || length(labels_stats) != length(res_stats_list) || any(!nzchar(labels_stats))) {
+              labels_stats <- labels_groupes
+            }
+
+            if (length(labels_stats) != length(res_stats_list)) {
+              labels_stats <- as.character(seq_along(res_stats_list))
+            }
+
+            tailles_stats <- vapply(res_stats_list, nrow, integer(1))
+
+            res_stats_df <- bind_rows(res_stats_list) %>%
+              mutate(ClusterID = rep(labels_stats, times = tailles_stats)) %>%
+              rename(Terme = feature, Classe = ClusterID) %>%
+              mutate(
+                p_value = p,
+                Classe_brut = as.character(Classe),
+                Classe = normaliser_id_classe_local(Classe),
+                p_value_filter = ifelse(p <= input$max_p, paste0("≤ ", input$max_p), paste0("> ", input$max_p))
+              ) %>%
+              arrange(Classe, desc(chi2))
+          }
 
           stats_file <- file.path(rv$export_dir, "stats_par_classe.csv")
           ecrire_csv_6_decimales(res_stats_df, stats_file, row.names = FALSE)
