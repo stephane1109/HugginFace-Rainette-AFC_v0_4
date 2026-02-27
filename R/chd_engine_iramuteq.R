@@ -8,15 +8,44 @@
   fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
   if (!is.null(fn)) return(fn)
 
+  # Répertoire du projet (quand l'app est lancée hors du dossier racine).
+  racine_projet <- tryCatch({
+    if (requireNamespace("shiny", quietly = TRUE)) {
+      shiny::getShinyOption("appDir")
+    } else {
+      NULL
+    }
+  }, error = function(...) NULL)
+
+  # Répertoire courant du fichier R/chd_engine_iramuteq.R, si disponible.
+  fichier_courant <- tryCatch({
+    frames <- rev(sys.frames())
+    ofiles <- vapply(
+      frames,
+      function(fr) {
+        of <- get0("ofile", envir = fr, inherits = FALSE)
+        if (is.null(of)) "" else as.character(of)
+      },
+      FUN.VALUE = character(1)
+    )
+    ofiles <- ofiles[nzchar(ofiles)]
+    if (length(ofiles)) ofiles[[1]] else ""
+  }, error = function(...) "")
+  dir_fichier_courant <- if (nzchar(fichier_courant)) dirname(normalizePath(fichier_courant, mustWork = FALSE)) else ""
+  racine_depuis_fichier <- if (nzchar(dir_fichier_courant)) normalizePath(file.path(dir_fichier_courant, ".."), mustWork = FALSE) else ""
+
   candidats <- unique(c(
     chemin_module,
+    if (nzchar(racine_depuis_fichier)) file.path(racine_depuis_fichier, "iramuteq-like", "chd_iramuteq.R") else "",
+    if (!is.null(racine_projet) && nzchar(racine_projet)) file.path(racine_projet, "iramuteq-like", "chd_iramuteq.R") else "",
     file.path(".", "iramuteq-like", "chd_iramuteq.R"),
     file.path(getwd(), "iramuteq-like", "chd_iramuteq.R")
   ))
+  candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
 
   for (cand in candidats) {
-    if (!is.na(cand) && nzchar(cand) && file.exists(cand)) {
-      source(cand, encoding = "UTF-8", local = .GlobalEnv)
+    if (file.exists(cand)) {
+      source(cand, encoding = "UTF-8", local = env)
       fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
       if (!is.null(fn)) return(fn)
     }
