@@ -62,6 +62,8 @@ source("R/utils_text.R", encoding = "UTF-8", local = TRUE)
 source("R/afc_helpers.R", encoding = "UTF-8", local = TRUE)
 
 source("R/chd_afc_pipeline.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/chd_iramuteq.R", encoding = "UTF-8", local = TRUE)
+source("R/chd_engine_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_language.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_spacy.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_lexique.R", encoding = "UTF-8", local = TRUE)
@@ -406,12 +408,17 @@ server <- function(input, output, session) {
       return(tags$p("CHD non disponible. Lance une analyse."))
     }
 
+    nb_classes <- NA_integer_
+    if (!is.null(rv$clusters)) nb_classes <- length(rv$clusters)
+
+    if (identical(rv$res_type, "iramuteq")) {
+      return(tags$p(paste0("CHD disponible (moteur IRaMuTeQ-like) - classes détectées : ", nb_classes, ".")))
+    }
+
     if (identical(rv$res_type, "double")) {
       return(tags$p("CHD disponible (classification double rainette2)."))
     }
 
-    nb_classes <- NA_integer_
-    if (!is.null(rv$clusters)) nb_classes <- length(rv$clusters)
     tags$p(paste0("CHD disponible (classification simple rainette) - classes détectées : ", nb_classes, "."))
   })
 
@@ -549,6 +556,12 @@ server <- function(input, output, session) {
   })
 
   output$plot_chd <- renderPlot({
+    if (identical(rv$res_type, "iramuteq")) {
+      plot.new()
+      text(0.5, 0.5, "Visualisation CHD type rainette_plot indisponible en mode IRaMuTeQ-like.", cex = 1)
+      return(invisible(NULL))
+    }
+
     req(rv$res_chd, rv$dfm_chd)
     req(!is.null(input$k_plot))
     req(!is.null(input$measure_plot))
