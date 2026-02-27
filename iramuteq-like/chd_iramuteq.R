@@ -132,7 +132,7 @@ preparer_entrees_chd_iramuteq <- function(
   for (p in paths) {
     source(p, encoding = "UTF-8", local = .GlobalEnv)
   }
-  invisibly(paths)
+  invisible(paths)
 }
 
 # Calcul CHD IRaMuTeQ-like (algorithme historique via scripts R IRaMuTeQ).
