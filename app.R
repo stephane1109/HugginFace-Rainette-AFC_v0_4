@@ -72,6 +72,7 @@ source("R/nlp_lexique.R", encoding = "UTF-8", local = TRUE)
 source("R/pipeline_spacy_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/pipeline_lexique_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/server_outputs_status.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/chd_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("R/server_events_lancer.R", encoding = "UTF-8", local = TRUE)
 
 server <- function(input, output, session) {
