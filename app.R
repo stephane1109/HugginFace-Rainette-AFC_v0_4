@@ -557,6 +557,53 @@ server <- function(input, output, session) {
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
   })
 
+  observe({
+    req(rv$res_stats_df)
+    req("Classe" %in% names(rv$res_stats_df))
+
+    classes <- sort(unique(suppressWarnings(as.numeric(rv$res_stats_df$Classe))))
+    classes <- classes[is.finite(classes)]
+    if (length(classes) == 0) return(invisible(NULL))
+
+    choix <- as.character(classes)
+    selected <- input$classe_viz_iramuteq
+    if (is.null(selected) || !selected %in% choix) selected <- choix[[1]]
+
+    updateSelectInput(session, "classe_viz_iramuteq", choices = choix, selected = selected)
+  })
+
+  output$plot_chd_iramuteq <- renderPlot({
+    if (!identical(rv$res_type, "iramuteq")) {
+      plot.new()
+      text(0.5, 0.5, "Résultats CHD IRaMuTeQ-like indisponibles (mode Rainette actif).", cex = 1.05)
+      return(invisible(NULL))
+    }
+
+    req(rv$res_stats_df)
+
+    mesure_sel <- if (is.null(input$measure_plot_iramuteq)) "frequency" else as.character(input$measure_plot_iramuteq)
+    type_sel <- if (is.null(input$type_plot_iramuteq)) "bar" else as.character(input$type_plot_iramuteq)
+    n_terms_sel <- if (is.null(input$n_terms_plot_iramuteq)) 20 else as.integer(input$n_terms_plot_iramuteq)
+
+    tracer_chd_iramuteq(
+      res_stats_df = rv$res_stats_df,
+      classe = input$classe_viz_iramuteq,
+      mesure = mesure_sel,
+      type = type_sel,
+      n_terms = n_terms_sel,
+      show_negative = isTRUE(input$show_negative_plot_iramuteq)
+    )
+  })
+
+  output$table_stats_classe_iramuteq <- renderTable({
+    if (!identical(rv$res_type, "iramuteq")) {
+      return(data.frame(Message = "Résultats CHD IRaMuTeQ-like indisponibles (mode Rainette actif).", stringsAsFactors = FALSE))
+    }
+
+    req(rv$res_stats_df)
+    extraire_stats_chd_classe(rv$res_stats_df, classe = input$classe_viz_iramuteq, n_max = 50)
+  }, rownames = FALSE)
+
   output$plot_chd <- renderPlot({
     req(!is.null(input$measure_plot), !is.null(input$type_plot), !is.null(input$n_terms_plot))
 
