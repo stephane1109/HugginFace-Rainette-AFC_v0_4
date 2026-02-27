@@ -2,6 +2,21 @@
 # Ce module sert de point d'entrée dédié pour exécuter la CHD historique et reconstruire
 # les classes terminales avec mincl (auto ou manuel).
 
+.obtenir_fonction_iramuteq <- function(nom_fonction,
+                                       chemin_module = "iramuteq-like/chd_iramuteq.R",
+                                       env = parent.frame()) {
+  fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
+  if (!is.null(fn)) return(fn)
+
+  if (file.exists(chemin_module)) {
+    source(chemin_module, encoding = "UTF-8", local = env)
+    fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
+    if (!is.null(fn)) return(fn)
+  }
+
+  stop("Moteur CHD IRaMuTeQ-like indisponible: ", nom_fonction, "() introuvable.")
+}
+
 lancer_moteur_chd_iramuteq <- function(
   dfm_obj,
   k,
@@ -18,22 +33,10 @@ lancer_moteur_chd_iramuteq <- function(
   classif_mode <- match.arg(classif_mode)
   svd_method <- match.arg(svd_method)
 
-  if (!exists("calculer_chd_iramuteq", mode = "function", inherits = TRUE) ||
-      !exists("reconstruire_classes_terminales_iramuteq", mode = "function", inherits = TRUE)) {
-    chemin_module <- "iramuteq-like/chd_iramuteq.R"
-    if (file.exists(chemin_module)) {
-      source(chemin_module, encoding = "UTF-8", local = .GlobalEnv)
-    }
-  }
+  calculer_chd_iramuteq_fn <- .obtenir_fonction_iramuteq("calculer_chd_iramuteq", env = environment())
+  reconstruire_classes_terminales_iramuteq_fn <- .obtenir_fonction_iramuteq("reconstruire_classes_terminales_iramuteq", env = environment())
 
-  if (!exists("calculer_chd_iramuteq", mode = "function", inherits = TRUE)) {
-    stop("Moteur CHD IRaMuTeQ-like indisponible: calculer_chd_iramuteq() introuvable.")
-  }
-  if (!exists("reconstruire_classes_terminales_iramuteq", mode = "function", inherits = TRUE)) {
-    stop("Moteur CHD IRaMuTeQ-like indisponible: reconstruire_classes_terminales_iramuteq() introuvable.")
-  }
-
-  chd_obj <- calculer_chd_iramuteq(
+  chd_obj <- calculer_chd_iramuteq_fn(
     dfm_obj = dfm_obj,
     k = k,
     mode_patate = mode_patate,
@@ -43,7 +46,7 @@ lancer_moteur_chd_iramuteq <- function(
     rscripts_dir = rscripts_dir
   )
 
-  classes_obj <- reconstruire_classes_terminales_iramuteq(
+  classes_obj <- reconstruire_classes_terminales_iramuteq_fn(
     chd_obj = chd_obj,
     mincl = mincl,
     mincl_mode = mincl_mode,
