@@ -12,7 +12,7 @@ lancer_moteur_chd_iramuteq <- function(
   mode_patate = FALSE,
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = "iramuteq_clone_v3/Rscripts"
+  rscripts_dir = NULL
 ) {
   mincl_mode <- match.arg(mincl_mode)
   classif_mode <- match.arg(classif_mode)

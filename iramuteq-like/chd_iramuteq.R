@@ -92,21 +92,42 @@ preparer_entrees_chd_iramuteq <- function(
   list(textes = textes_prep, tok = tok, dfm = dfm_obj, options = opts)
 }
 
-.trouver_rscripts_iramuteq <- function(base_dir = "iramuteq_clone_v3/Rscripts") {
-  scripts <- c("anacor.R", "CHD.R", "chdtxt.R")
-  paths <- file.path(base_dir, scripts)
-  manquants <- paths[!file.exists(paths)]
-  if (length(manquants) > 0) {
-    stop(
-      "CHD IRaMuTeQ-like: scripts R introuvables: ",
-      paste(manquants, collapse = ", "),
-      "."
-    )
-  }
-  paths
+.trouver_fichier_insensible_casse <- function(dir_path, filename) {
+  if (!dir.exists(dir_path)) return(NA_character_)
+  files <- list.files(dir_path, full.names = TRUE)
+  if (length(files) == 0) return(NA_character_)
+  bn <- basename(files)
+  idx <- which(tolower(bn) == tolower(filename))
+  if (length(idx) == 0) return(NA_character_)
+  files[idx[1]]
 }
 
-.charger_scripts_iramuteq_chd <- function(base_dir = "iramuteq_clone_v3/Rscripts") {
+.trouver_rscripts_iramuteq <- function(base_dir = NULL) {
+  scripts <- c("anacor.R", "CHD.R", "chdtxt.R")
+    candidats <- unique(c(
+    base_dir,
+    "iramuteq-like",
+    "iramuteq-like/Rscripts"
+  ))
+  candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+
+  for (cand in candidats) {
+    paths <- vapply(scripts, function(sc) .trouver_fichier_insensible_casse(cand, sc), FUN.VALUE = character(1))
+    if (all(!is.na(paths))) {
+      return(unname(paths))
+    }
+  }
+
+  stop(
+    "CHD IRaMuTeQ-like: scripts R introuvables. Répertoires testés: ",
+    paste(candidats, collapse = ", "),
+    ". Fichiers attendus: ",
+    paste(scripts, collapse = ", "),
+    "."
+  )
+}
+
+.charger_scripts_iramuteq_chd <- function(base_dir = NULL) {
   paths <- .trouver_rscripts_iramuteq(base_dir)
   for (p in paths) {
     source(p, encoding = "UTF-8", local = .GlobalEnv)
@@ -122,7 +143,7 @@ calculer_chd_iramuteq <- function(
   svd_method = c("svdR", "irlba", "svdlibc"),
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = "iramuteq_clone_v3/Rscripts"
+  rscripts_dir = NULL
 ) {
   svd_method <- match.arg(svd_method)
 
