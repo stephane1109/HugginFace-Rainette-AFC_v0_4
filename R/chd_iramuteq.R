@@ -296,28 +296,40 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
   for (i in seq_along(classes_uniques)) {
     cl <- classes_uniques[[i]]
     in_cl <- classes == cl
-    n_cl <- sum(in_cl)
-    n_non <- sum(!in_cl)
 
-    n11 <- colSums(mat_bin[in_cl, , drop = FALSE])
-    n21 <- colSums(mat_bin[!in_cl, , drop = FALSE])
-    n12 <- n_cl - n11
-    n22 <- n_non - n21
+    # Contingence sur occurrences (spécificités lexicales IRaMuTeQ-like).
+    freq_in <- colSums(mat[in_cl, , drop = FALSE])
+    freq_out <- colSums(mat[!in_cl, , drop = FALSE])
+    total_in <- sum(freq_in)
+    total_out <- sum(freq_out)
 
-    chi2 <- mapply(function(a, b, c, d) {
+    n11 <- as.numeric(freq_in)
+    n21 <- as.numeric(freq_out)
+    n12 <- pmax(0, total_in - n11)
+    n22 <- pmax(0, total_out - n21)
+
+    chi2_abs <- mapply(function(a, b, c, d) {
       tb <- matrix(c(a, b, c, d), nrow = 2, byrow = TRUE)
       suppressWarnings(as.numeric(stats::chisq.test(tb, correct = TRUE)$statistic))
     }, n11, n12, n21, n22)
 
-    pval <- stats::pchisq(chi2, df = 1, lower.tail = FALSE)
+    expected11 <- ((n11 + n12) * (n11 + n21)) / pmax(1, (n11 + n12 + n21 + n22))
+    signe <- ifelse(n11 >= expected11, 1, -1)
+    chi2 <- chi2_abs * signe
+
+    pval <- stats::pchisq(abs(chi2), df = 1, lower.tail = FALSE)
     lr <- mapply(calc_lr, n11, n12, n21, n22)
 
+    # Proportion documentaire (comme l'ancien docprop)
+    docs_in <- sum(in_cl)
+    docfreq_in <- colSums(mat_bin[in_cl, , drop = FALSE])
+
     df <- data.frame(
-      Terme = colnames(mat_bin),
+      Terme = colnames(mat),
       chi2 = as.numeric(chi2),
       lr = as.numeric(lr),
-      frequency = as.numeric(n11),
-      docprop = as.numeric(if (n_cl > 0) n11 / n_cl else 0),
+      frequency = as.numeric(freq_in),
+      docprop = as.numeric(if (docs_in > 0) docfreq_in / docs_in else 0),
       p = as.numeric(pval),
       Classe = as.integer(cl),
       stringsAsFactors = FALSE
@@ -327,7 +339,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
     if (is.finite(max_p) && !is.na(max_p) && max_p < 1) {
       df <- df[df$p <= max_p, , drop = FALSE]
     }
-    df <- df[order(-df$chi2, -df$frequency), , drop = FALSE]
+    df <- df[order(-abs(df$chi2), -df$frequency), , drop = FALSE]
     sorties[[i]] <- df
   }
 
