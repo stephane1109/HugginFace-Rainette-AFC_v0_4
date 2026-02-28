@@ -136,6 +136,17 @@ preparer_entrees_chd_iramuteq <- function(
   invisible(paths)
 }
 
+.normaliser_n1_chd <- function(n1) {
+  if (is.null(n1)) return(NULL)
+  if (is.data.frame(n1)) n1 <- as.matrix(n1)
+  if (is.vector(n1)) {
+    n1 <- matrix(as.integer(n1), ncol = 1)
+  }
+  if (!is.matrix(n1)) return(NULL)
+  if (nrow(n1) < 1 || ncol(n1) < 1) return(NULL)
+  n1
+}
+
 # Calcul CHD IRaMuTeQ-like (algorithme historique via scripts R IRaMuTeQ).
 calculer_chd_iramuteq <- function(
   dfm_obj,
@@ -178,9 +189,12 @@ calculer_chd_iramuteq <- function(
     libsvdc.path = libsvdc_path
   )
 
-  if (is.null(chd$n1) || nrow(chd$n1) != nrow(mat)) {
+  n1 <- .normaliser_n1_chd(chd$n1)
+  if (is.null(n1) || nrow(n1) != nrow(mat)) {
     stop("CHD IRaMuTeQ-like: sortie CHD invalide.")
   }
+
+  chd$n1 <- n1
 
   chd
 }
@@ -197,7 +211,7 @@ reconstruire_classes_terminales_iramuteq <- function(
   mincl_mode <- match.arg(mincl_mode)
   classif_mode <- match.arg(classif_mode)
 
-  n1 <- chd_obj$n1
+  n1 <- .normaliser_n1_chd(chd_obj$n1)
   list_mere <- chd_obj$list_mere
   list_fille <- chd_obj$list_fille
 
@@ -271,66 +285,73 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
   mat <- mat[ok_docs, , drop = FALSE]
   classes <- classes[ok_docs]
 
-  if (nrow(mat) < 2 || ncol(mat) < 1) {
-    return(data.frame())
+  if (nrow(mat) < 2 || ncol(mat) < 1) return(data.frame())
+
+  # Alignement avec l'approche IRaMuTeQ historique (BuildProf):
+  # - contingence documentaire (présence/absence terme)
+  # - chi2 signé (sur/sous-représentation)
+  # - p-value issue de chisq.test(..., correct = FALSE)
+  mat_bin <- ifelse(mat > 0, 1L, 0L)
+  total_docs <- nrow(mat_bin)
+  docs_par_terme <- colSums(mat_bin)
+
+  calc_chi_sign <- function(a, b, c, d) {
+    tb <- matrix(c(a, b, c, d), nrow = 2, byrow = TRUE)
+    chi <- suppressWarnings(stats::chisq.test(tb, correct = FALSE))
+    stat <- suppressWarnings(as.numeric(chi$statistic))
+    pval <- suppressWarnings(as.numeric(chi$p.value))
+    exp11 <- suppressWarnings(as.numeric(chi$expected[1, 1]))
+
+    if (!is.finite(stat) || is.na(stat)) stat <- 0
+    if (!is.finite(pval) || is.na(pval)) pval <- 1
+    if (!is.finite(exp11) || is.na(exp11)) exp11 <- a
+
+    signe <- if (a >= exp11) 1 else -1
+    c(chi2 = stat * signe, p = pval)
   }
 
-  mat_bin <- ifelse(mat > 0, 1, 0)
   classes_uniques <- sort(unique(classes))
-
-  calc_lr <- function(n11, n12, n21, n22) {
-    n <- n11 + n12 + n21 + n22
-    r1 <- n11 + n12
-    r2 <- n21 + n22
-    c1 <- n11 + n21
-    c2 <- n12 + n22
-    expected <- c(r1 * c1 / n, r1 * c2 / n, r2 * c1 / n, r2 * c2 / n)
-    observed <- c(n11, n12, n21, n22)
-    idx <- observed > 0 & expected > 0
-    if (!any(idx)) return(0)
-    2 * sum(observed[idx] * log(observed[idx] / expected[idx]))
-  }
-
   sorties <- vector("list", length(classes_uniques))
 
   for (i in seq_along(classes_uniques)) {
     cl <- classes_uniques[[i]]
     in_cl <- classes == cl
 
-    # Contingence sur occurrences (spécificités lexicales IRaMuTeQ-like).
-    freq_in <- colSums(mat[in_cl, , drop = FALSE])
-    freq_out <- colSums(mat[!in_cl, , drop = FALSE])
-    total_in <- sum(freq_in)
-    total_out <- sum(freq_out)
+    docs_cl <- sum(in_cl)
+    if (docs_cl < 1) next
 
-    n11 <- as.numeric(freq_in)
-    n21 <- as.numeric(freq_out)
-    n12 <- pmax(0, total_in - n11)
-    n22 <- pmax(0, total_out - n21)
+    docs_terme_cl <- colSums(mat_bin[in_cl, , drop = FALSE])
+    docs_terme_hors <- pmax(0, docs_par_terme - docs_terme_cl)
 
-    chi2_abs <- mapply(function(a, b, c, d) {
-      tb <- matrix(c(a, b, c, d), nrow = 2, byrow = TRUE)
-      suppressWarnings(as.numeric(stats::chisq.test(tb, correct = TRUE)$statistic))
+    n11 <- as.numeric(docs_terme_cl)
+    n12 <- as.numeric(docs_terme_hors)
+    n21 <- as.numeric(pmax(0, docs_cl - docs_terme_cl))
+    n22 <- as.numeric(pmax(0, (total_docs - docs_cl) - docs_terme_hors))
+
+    chi_p <- t(mapply(calc_chi_sign, n11, n12, n21, n22))
+
+    freq_cl <- colSums(mat[in_cl, , drop = FALSE])
+    docprop_cl <- if (docs_cl > 0) docs_terme_cl / docs_cl else rep(0, ncol(mat))
+    lr <- mapply(function(a, b, c, d) {
+      n <- a + b + c + d
+      r1 <- a + b
+      r2 <- c + d
+      c1 <- a + c
+      c2 <- b + d
+      expected <- c(r1 * c1 / n, r1 * c2 / n, r2 * c1 / n, r2 * c2 / n)
+      observed <- c(a, b, c, d)
+      idx <- observed > 0 & expected > 0
+      if (!any(idx)) return(0)
+      2 * sum(observed[idx] * log(observed[idx] / expected[idx]))
     }, n11, n12, n21, n22)
-
-    expected11 <- ((n11 + n12) * (n11 + n21)) / pmax(1, (n11 + n12 + n21 + n22))
-    signe <- ifelse(n11 >= expected11, 1, -1)
-    chi2 <- chi2_abs * signe
-
-    pval <- stats::pchisq(abs(chi2), df = 1, lower.tail = FALSE)
-    lr <- mapply(calc_lr, n11, n12, n21, n22)
-
-    # Proportion documentaire (comme l'ancien docprop)
-    docs_in <- sum(in_cl)
-    docfreq_in <- colSums(mat_bin[in_cl, , drop = FALSE])
 
     df <- data.frame(
       Terme = colnames(mat),
-      chi2 = as.numeric(chi2),
+      chi2 = as.numeric(chi_p[, "chi2"]),
       lr = as.numeric(lr),
-      frequency = as.numeric(freq_in),
-      docprop = as.numeric(if (docs_in > 0) docfreq_in / docs_in else 0),
-      p = as.numeric(pval),
+      frequency = as.numeric(freq_cl),
+      docprop = as.numeric(docprop_cl),
+      p = as.numeric(chi_p[, "p"]),
       Classe = as.integer(cl),
       stringsAsFactors = FALSE
     )
@@ -339,7 +360,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
     if (is.finite(max_p) && !is.na(max_p) && max_p < 1) {
       df <- df[df$p <= max_p, , drop = FALSE]
     }
-    df <- df[order(-abs(df$chi2), -df$frequency), , drop = FALSE]
+    df <- df[order(-abs(df$chi2), -df$frequency, -docs_par_terme[df$Terme]), , drop = FALSE]
     sorties[[i]] <- df
   }
 
@@ -354,7 +375,14 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
 
 # Dendrogramme CHD basé sur la structure hiérarchique IRaMuTeQ (list_mere/list_fille).
 tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
-  if (is.null(chd_obj) || is.null(chd_obj$list_fille) || is.null(chd_obj$n1)) {
+  if (is.null(chd_obj)) {
+    plot.new()
+    text(0.5, 0.5, "Dendrogramme CHD indisponible.", cex = 1.1)
+    return(invisible(NULL))
+  }
+
+  n1 <- .normaliser_n1_chd(chd_obj$n1)
+  if (is.null(chd_obj$list_fille) || is.null(n1)) {
     plot.new()
     text(0.5, 0.5, "Dendrogramme CHD indisponible.", cex = 1.1)
     return(invisible(NULL))
@@ -384,7 +412,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
 
   # Fallback robuste: racine via colonne finale n1 si la structure mère/fille est ambiguë.
   if (!is.finite(racine)) {
-    feuilles_n1 <- suppressWarnings(as.integer(chd_obj$n1[, ncol(chd_obj$n1)]))
+    feuilles_n1 <- suppressWarnings(as.integer(n1[, ncol(n1)]))
     feuilles_n1 <- feuilles_n1[is.finite(feuilles_n1)]
     if (length(feuilles_n1)) {
       racine <- min(feuilles_n1, na.rm = TRUE)
@@ -406,7 +434,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   feuilles <- setdiff(enfants, meres)
   feuilles <- sort(unique(feuilles))
   if (!length(feuilles)) {
-    feuilles <- sort(unique(suppressWarnings(as.integer(chd_obj$n1[, ncol(chd_obj$n1)]))))
+    feuilles <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
     feuilles <- feuilles[is.finite(feuilles)]
   }
   if (!length(feuilles)) {
