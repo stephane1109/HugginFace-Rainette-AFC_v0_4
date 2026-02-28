@@ -22,6 +22,17 @@ formatter_6_decimales_chd <- function(x) {
   out
 }
 
+.normaliser_type_terme_iramuteq <- function(type_vals, termes) {
+  types <- tolower(trimws(as.character(type_vals)))
+  types[is.na(types)] <- ""
+  types[types %in% c("", "na", "nan", "null")] <- ""
+
+  types_inf <- .inferer_type_terme_iramuteq(termes)
+  idx_manquant <- !nzchar(types)
+  types[idx_manquant] <- types_inf[idx_manquant]
+  types
+}
+
 extraire_stats_chd_classe <- function(res_stats_df,
                                       classe,
                                       n_max = 50,
@@ -41,7 +52,7 @@ extraire_stats_chd_classe <- function(res_stats_df,
   }
 
   colonnes_possibles <- intersect(
-    c("Terme", "chi2", "lr", "frequency", "docprop", "eff_st", "eff_total", "pourcentage", "p", "p_value_filter"),
+    c("Terme", "chi2", "lr", "frequency", "docprop", "eff_st", "eff_total", "pourcentage", "p", "p_value", "p_value_filter", "Type", "type", "pos", "POS"),
     names(df)
   )
   df <- df[, colonnes_possibles, drop = FALSE]
@@ -65,8 +76,10 @@ extraire_stats_chd_classe <- function(res_stats_df,
     eff_total <- if ("eff_total" %in% names(df)) suppressWarnings(as.numeric(df$eff_total)) else suppressWarnings(as.numeric(df$frequency))
     pourcentage <- if ("pourcentage" %in% names(df)) suppressWarnings(as.numeric(df$pourcentage)) else ifelse(eff_total > 0, 100 * eff_st / eff_total, NA_real_)
     chi2_vals <- if ("chi2" %in% names(df)) suppressWarnings(as.numeric(df$chi2)) else NA_real_
+    p_vals <- if ("p" %in% names(df)) suppressWarnings(as.numeric(df$p)) else if ("p_value" %in% names(df)) suppressWarnings(as.numeric(df$p_value)) else NA_real_
     formes <- if ("Terme" %in% names(df)) as.character(df$Terme) else rep("", nrow(df))
-    types <- .inferer_type_terme_iramuteq(formes)
+    type_source <- if ("Type" %in% names(df)) df$Type else if ("type" %in% names(df)) df$type else if ("pos" %in% names(df)) df$pos else if ("POS" %in% names(df)) df$POS else rep("", nrow(df))
+    types <- .normaliser_type_terme_iramuteq(type_source, formes)
 
     out <- data.frame(
       num = seq_len(nrow(df)) - 1L,
@@ -74,6 +87,7 @@ extraire_stats_chd_classe <- function(res_stats_df,
       `eff. total` = as.integer(round(eff_total)),
       pourcentage = ifelse(is.na(pourcentage), NA_character_, formatC(pourcentage, format = "f", digits = 2)),
       chi2 = ifelse(is.na(chi2_vals), NA_character_, formatC(chi2_vals, format = "f", digits = 3)),
+      `p.value` = ifelse(is.na(p_vals), NA_character_, formatC(p_vals, format = "e", digits = 3)),
       Type = types,
       forme = formes,
       check.names = FALSE,

@@ -124,6 +124,24 @@ register_events_lancer <- function(input, output, session, rv) {
       write.csv(formater_df_csv_6_decimales(df), chemin, row.names = row.names)
     }
 
+    observeEvent(input$modele_chd, {
+      if (identical(as.character(input$modele_chd), "iramuteq")) {
+        updateRadioButtons(
+          session,
+          "source_dictionnaire",
+          choices = c("Lexique (fr)" = "lexique_fr"),
+          selected = "lexique_fr"
+        )
+      } else {
+        updateRadioButtons(
+          session,
+          "source_dictionnaire",
+          choices = c("spaCy" = "spacy", "Lexique (fr)" = "lexique_fr"),
+          selected = if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "lexique_fr" else "spacy"
+        )
+      }
+    }, ignoreInit = FALSE)
+
     normaliser_id_classe_local <- function(x) {
       x_chr <- as.character(x)
       x_chr <- trimws(x_chr)
@@ -291,17 +309,21 @@ register_events_lancer <- function(input, output, session, rv) {
             ajouter_log(rv, paste0("Diagnostic langue: module chargé depuis ", charge_langue$chemin, "."))
           }
 
+          source_dictionnaire <- as.character(input$source_dictionnaire)
+          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
+          if (identical(as.character(input$modele_chd), "iramuteq") && !identical(source_dictionnaire, "lexique_fr")) {
+            source_dictionnaire <- "lexique_fr"
+            ajouter_log(rv, "Workflow IRaMuTeQ-like : source de lemmatisation forcée sur lexique_fr.")
+          }
+
           verifier_coherence_dictionnaire_langue(
             textes_chd,
-            if (identical(as.character(input$source_dictionnaire), "lexique_fr")) "fr" else as.character(input$spacy_langue),
+            if (identical(source_dictionnaire, "lexique_fr")) "fr" else as.character(input$spacy_langue),
             rv = rv
           )
 
           avancer(0.22, "Prétraitement + DFM")
           rv$statut <- "Prétraitement et DFM..."
-
-          source_dictionnaire <- as.character(input$source_dictionnaire)
-          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
 
           ajouter_log(
             rv,
@@ -623,6 +645,15 @@ register_events_lancer <- function(input, output, session, rv) {
                 p_value_filter = ifelse(p <= input$max_p, paste0("≤ ", input$max_p), paste0("> ", input$max_p))
               ) %>%
               arrange(Classe, desc(chi2))
+          }
+
+          if (identical(source_dictionnaire, "lexique_fr") &&
+              !is.null(rv$lexique_fr_df) &&
+              is.data.frame(rv$lexique_fr_df) &&
+              nrow(rv$lexique_fr_df) > 0 &&
+              "Terme" %in% names(res_stats_df) &&
+              exists("construire_type_lexique_fr", mode = "function", inherits = TRUE)) {
+            res_stats_df$Type <- construire_type_lexique_fr(res_stats_df$Terme, rv$lexique_fr_df)
           }
 
           stats_file <- file.path(rv$export_dir, "stats_par_classe.csv")
