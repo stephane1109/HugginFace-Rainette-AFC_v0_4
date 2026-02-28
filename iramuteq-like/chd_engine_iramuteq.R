@@ -3,7 +3,7 @@
 # les classes terminales avec mincl (auto ou manuel).
 
 .obtenir_fonction_iramuteq <- function(nom_fonction,
-                                       chemin_module = "R/chd_iramuteq.R",
+                                       chemin_module = file.path("iramuteq-like", "chd_iramuteq.R"),
                                        env = parent.frame()) {
   fn <- get0(nom_fonction, mode = "function", inherits = TRUE)
   if (!is.null(fn)) return(fn)
@@ -17,7 +17,7 @@
     }
   }, error = function(...) NULL)
 
-  # Répertoire courant du fichier R/chd_engine_iramuteq.R, si disponible.
+  # Répertoire courant du fichier iramuteq-like/chd_engine_iramuteq.R, si disponible.
   fichier_courant <- tryCatch({
     frames <- rev(sys.frames())
     ofiles <- vapply(
@@ -36,6 +36,8 @@
 
   candidats <- unique(c(
     chemin_module,
+    file.path("iramuteq-like", "chd_iramuteq.R"),
+    file.path("iramuteq-like", "chd_iramuteq_compat.R"),
     file.path("R", "chd_iramuteq.R"),
     file.path("R", "chd_iramuteq_like.R"),
     if (nzchar(racine_depuis_fichier)) file.path(racine_depuis_fichier, "iramuteq-like", "chd_iramuteq_compat.R") else "",
