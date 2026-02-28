@@ -155,8 +155,7 @@ calculer_chd_iramuteq <- function(
   svd_method = c("svdR", "irlba", "svdlibc"),
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = NULL,
-  seed = 123
+  rscripts_dir = NULL
 ) {
   svd_method <- match.arg(svd_method)
 
@@ -164,8 +163,6 @@ calculer_chd_iramuteq <- function(
   if (!is.finite(k) || is.na(k) || as.integer(k) < 2) stop("CHD IRaMuTeQ-like: k doit être >= 2.")
 
   .charger_scripts_iramuteq_chd(rscripts_dir)
-
-  if (!is.null(seed) && is.finite(seed)) set.seed(as.integer(seed))
 
   mat <- as.matrix(dfm_obj)
   if (nrow(mat) < 2 || ncol(mat) < 2) {

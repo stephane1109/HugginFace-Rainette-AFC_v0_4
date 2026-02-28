@@ -406,8 +406,7 @@ register_events_lancer <- function(input, output, session, rv) {
               k = 10,
               mincl_mode = "auto",
               classif_mode = "simple",
-              svd_method = "svdR",
-              seed = 123
+              svd_method = "svdR"
             )
 
             groupes <- as.integer(res_ira$classes)
