@@ -1,7 +1,7 @@
 # Rôle du fichier: wrapper de compatibilité pour le moteur CHD IRaMuTeQ-like.
 # La source de vérité est désormais `R/chd_iramuteq.R`.
-# Ce fichier conserve l'ancien chemin `iramuteq-like/chd_iramuteq.R` pour éviter
-# de casser des scripts externes qui le source() encore directement.
+# Ce fichier porte désormais un nom explicite (`chd_iramuteq_compat.R`)
+# pour éviter la confusion avec le module canonique `R/chd_iramuteq.R`.
 
 .chd_iramuteq_compat_paths <- function() {
   c(
