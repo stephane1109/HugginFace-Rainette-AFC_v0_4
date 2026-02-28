@@ -62,7 +62,7 @@ source("R/utils_text.R", encoding = "UTF-8", local = TRUE)
 source("R/afc_helpers.R", encoding = "UTF-8", local = TRUE)
 
 source("R/chd_afc_pipeline.R", encoding = "UTF-8", local = TRUE)
-source("R/chd_iramuteq.R", encoding = "UTF-8", local = TRUE)
+source("R/chd_iramuteq_bridge.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/visualisation_chd.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/stats_chd.R", encoding = "UTF-8", local = TRUE)
 source("R/chd_engine_iramuteq.R", encoding = "UTF-8", local = TRUE)
