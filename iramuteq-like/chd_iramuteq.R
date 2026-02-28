@@ -278,7 +278,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
   }
 
   classes <- as.integer(classes)
-  ok_docs <- !is.na(classes) & classes > 0
+  ok_docs <- !is.na(classes)
   mat <- mat[ok_docs, , drop = FALSE]
   classes <- classes[ok_docs]
 
@@ -307,7 +307,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
     c(chi2 = stat * signe, p = pval)
   }
 
-  classes_uniques <- sort(unique(classes))
+  classes_uniques <- sort(unique(classes[classes > 0]))
   sorties <- vector("list", length(classes_uniques))
 
   for (i in seq_along(classes_uniques)) {

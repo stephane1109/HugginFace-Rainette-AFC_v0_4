@@ -136,6 +136,10 @@ ui <- fluidPage(
         inline = FALSE
       ),
       conditionalPanel(
+        condition = "input.modele_chd == 'iramuteq'",
+        tags$small(style = "color:#8a4f00;", "En mode IRaMuTeQ-like, seul le dictionnaire Lexique (fr) est utilisé automatiquement.")
+      ),
+      conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
         selectInput(
           "spacy_langue",

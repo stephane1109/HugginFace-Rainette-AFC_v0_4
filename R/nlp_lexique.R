@@ -95,6 +95,38 @@ charger_lexique_fr <- function(chemin = "lexique_fr.csv") {
   lexique
 }
 
+construire_type_lexique_fr <- function(termes, lexique) {
+  if (is.null(termes)) return(character(0))
+  x <- tolower(trimws(as.character(termes)))
+  x[is.na(x)] <- ""
+
+  if (is.null(lexique) || !is.data.frame(lexique) || nrow(lexique) < 1) {
+    return(rep("", length(x)))
+  }
+
+  cols_ok <- all(c("c_mot", "c_lemme", "c_morpho") %in% names(lexique))
+  if (!cols_ok) {
+    return(rep("", length(x)))
+  }
+
+  key_mot <- tolower(trimws(as.character(lexique$c_mot)))
+  key_lemme <- tolower(trimws(as.character(lexique$c_lemme)))
+  val_type <- tolower(trimws(as.character(lexique$c_morpho)))
+
+  map_lemme <- tapply(val_type, key_lemme, function(v) unique(v)[1])
+  map_mot <- tapply(val_type, key_mot, function(v) unique(v)[1])
+
+  out <- unname(map_lemme[x])
+  idx_na <- is.na(out) | !nzchar(out)
+  if (any(idx_na)) {
+    out[idx_na] <- unname(map_mot[x[idx_na]])
+  }
+
+  out[is.na(out)] <- ""
+  out
+}
+
+
 lemmatiser_textes_lexique <- function(textes, lexique, rv = NULL) {
   tok <- quanteda::tokens(
     textes,
