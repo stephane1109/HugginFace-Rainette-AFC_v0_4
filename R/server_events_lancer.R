@@ -470,7 +470,20 @@ register_events_lancer <- function(input, output, session, rv) {
 
           docvars(filtered_corpus)$Classes <- groupes
 
-          idx_ok <- !is.na(docvars(filtered_corpus)$Classes)
+          classes_calculees <- suppressWarnings(as.integer(docvars(filtered_corpus)$Classes))
+          idx_ok <- !is.na(classes_calculees) & classes_calculees > 0
+
+          nb_non_assignes <- sum(!idx_ok)
+          if (nb_non_assignes > 0) {
+            ajouter_log(
+              rv,
+              paste0(
+                "Segments non assignés à une classe terminale (Classe 0 / NA) : ",
+                nb_non_assignes,
+                ". Exclusion des calculs CHD/AFC."
+              )
+            )
+          }
           filtered_corpus_ok <- filtered_corpus[idx_ok]
           dfm_ok <- dfm_obj[idx_ok, ]
           tok_ok <- tok[idx_ok]
