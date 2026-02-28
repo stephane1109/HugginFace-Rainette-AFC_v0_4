@@ -633,7 +633,14 @@ server <- function(input, output, session) {
       output_id <- paste0("table_stats_chd_iramuteq_cl_", cl)
 
       output[[output_id]] <- renderTable({
-        extraire_stats_chd_classe(rv$res_stats_df, classe = cl, n_max = 100)
+        extraire_stats_chd_classe(
+          rv$res_stats_df,
+          classe = cl,
+          n_max = 100,
+          show_negative = isTRUE(input$show_negative_plot_iramuteq),
+          max_p = input$max_p,
+          style = "iramuteq_clone"
+        )
       }, rownames = FALSE)
 
       tabPanel(

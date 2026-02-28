@@ -540,7 +540,7 @@ register_events_lancer <- function(input, output, session, rv) {
             res_stats_df <- construire_stats_classes_iramuteq(
               dfm_obj = dfm_ok,
               classes = docvars(filtered_corpus_ok)$Classes,
-              max_p = 1
+              max_p = input$max_p
             ) %>%
               mutate(Classe = normaliser_id_classe_local(Classe)) %>%
               arrange(Classe, desc(chi2))
