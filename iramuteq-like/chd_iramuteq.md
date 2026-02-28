@@ -69,12 +69,12 @@ Dans ce mode IRaMuTeQ-like, l’algorithme suit la logique historique IRaMuTeQ�
 - **Usage**: en général activée pour rester proche des pratiques historiques CHD lexicales.
 
 ### 3.6 Méthode SVD (`svd_method`)
-- **Valeurs**: `svdR`, `irlba`, `svdlibc`.
+- **Valeurs**: `irlba`, `svdR`.
 - **Rôle**: méthode de décomposition utilisée dans l’étape factorielle interne.
-- **Conseil**:
-  - `irlba` est souvent un bon compromis vitesse/stabilité,
-  - `svdR` peut être utile pour des tests de reproductibilité,
-  - `svdlibc` dépend de la disponibilité du binaire/chemin système.
+- **Interprétation des méthodes**:
+  - `irlba` : appelle `irlba::irlba(...)`, une SVD tronquée itérative adaptée aux matrices creuses/volumineuses ; souvent plus rapide et plus robuste en mémoire pour la CHD,
+  - `svdR` : appelle `svd(...)` de base R ; calcul exact complet, utile comme référence de reproductibilité mais potentiellement plus coûteux.
+- **Par défaut**: `irlba`.
 
 ### 3.7 Mode patate (`mode_patate`)
 - **Rôle**: active/désactive l’étape de reclassement itératif des individus selon le moteur historique.

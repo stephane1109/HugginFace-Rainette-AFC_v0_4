@@ -152,7 +152,7 @@ calculer_chd_iramuteq <- function(
   dfm_obj,
   k = 3,
   mode_patate = FALSE,
-  svd_method = c("svdR", "irlba", "svdlibc"),
+  svd_method = c("irlba", "svdR"),
   libsvdc_path = NULL,
   binariser = TRUE,
   rscripts_dir = NULL

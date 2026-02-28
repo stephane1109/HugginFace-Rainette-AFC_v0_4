@@ -90,7 +90,7 @@ boostana<-function (tab, ndim = 2, svd.method = 'svdR', libsvdc.path=NULL)
         print('end svd')
     } else if (svd.method == 'irlba') {
         print('irlba')
-        sv <- irlba(z, qdim, qdim)
+        sv <- irlba::irlba(z, nv = qdim, nu = qdim)
         print('end irlba')
     }
     sigmavec <- (sv$d)[2:qdim]

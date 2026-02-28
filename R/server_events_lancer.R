@@ -434,7 +434,7 @@ register_events_lancer <- function(input, output, session, rv) {
             if (!classif_mode_iramuteq %in% c("simple", "double")) classif_mode_iramuteq <- "simple"
 
             svd_method_iramuteq <- as.character(input$iramuteq_svd_method)
-            if (!svd_method_iramuteq %in% c("svdR", "irlba", "svdlibc")) svd_method_iramuteq <- "svdR"
+            if (!svd_method_iramuteq %in% c("irlba", "svdR")) svd_method_iramuteq <- "irlba"
 
             ajouter_log(
               rv,
