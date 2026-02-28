@@ -37,21 +37,10 @@
   candidats <- unique(c(
     chemin_module,
     file.path("iramuteq-like", "chd_iramuteq.R"),
-    file.path("iramuteq-like", "chd_iramuteq_compat.R"),
-    file.path("R", "chd_iramuteq.R"),
-    file.path("R", "chd_iramuteq_like.R"),
-    if (nzchar(racine_depuis_fichier)) file.path(racine_depuis_fichier, "iramuteq-like", "chd_iramuteq_compat.R") else "",
     if (nzchar(racine_depuis_fichier)) file.path(racine_depuis_fichier, "iramuteq-like", "chd_iramuteq.R") else "",
-    if (nzchar(racine_depuis_fichier)) file.path(racine_depuis_fichier, "R", "chd_iramuteq.R") else "",
-    if (!is.null(racine_projet) && nzchar(racine_projet)) file.path(racine_projet, "iramuteq-like", "chd_iramuteq_compat.R") else "",
     if (!is.null(racine_projet) && nzchar(racine_projet)) file.path(racine_projet, "iramuteq-like", "chd_iramuteq.R") else "",
-    if (!is.null(racine_projet) && nzchar(racine_projet)) file.path(racine_projet, "R", "chd_iramuteq.R") else "",
-    file.path(".", "iramuteq-like", "chd_iramuteq_compat.R"),
     file.path(".", "iramuteq-like", "chd_iramuteq.R"),
-    file.path(".", "R", "chd_iramuteq.R"),
-    file.path(getwd(), "iramuteq-like", "chd_iramuteq_compat.R"),
-    file.path(getwd(), "iramuteq-like", "chd_iramuteq.R"),
-    file.path(getwd(), "R", "chd_iramuteq.R")
+    file.path(getwd(), "iramuteq-like", "chd_iramuteq.R")
   ))
   candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
 
