@@ -51,7 +51,7 @@ source("concordancier_utils.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_spacy.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_lexique.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_ner.R", encoding = "UTF-8", local = TRUE)
-source("afc.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/afc_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("stats.R", encoding = "UTF-8", local = TRUE)
 source("ui.R", encoding = "UTF-8", local = TRUE)
 
@@ -584,7 +584,7 @@ server <- function(input, output, session) {
     terminales <- rv$res$terminales
 
     tryCatch({
-      tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales)
+      tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales, classes = rv$res$classes)
     }, error = function(e) {
       plot.new()
       text(0.5, 0.5, paste0("Erreur dendrogramme IRaMuTeQ-like: ", conditionMessage(e)), cex = 0.95)

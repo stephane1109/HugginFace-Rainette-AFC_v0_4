@@ -374,7 +374,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
 }
 
 # Dendrogramme CHD basé sur la structure hiérarchique IRaMuTeQ (list_mere/list_fille).
-tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
+tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL, classes = NULL) {
   if (is.null(chd_obj)) {
     plot.new()
     text(0.5, 0.5, "Dendrogramme CHD indisponible.", cex = 1.1)
@@ -425,12 +425,25 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
     if (is.null(x)) integer(0) else as.integer(x)
   }
 
+  terminales <- suppressWarnings(as.integer(terminales))
+  terminales <- terminales[is.finite(terminales)]
+  terminales <- unique(terminales)
+  utiliser_terminales <- length(terminales) > 0
+
   # Ordre des feuilles via parcours en profondeur (style phylogramme IRaMuTeQ).
+  # Quand les classes terminales sont connues, on fige l'arrêt du parcours sur ces noeuds
+  # afin d'afficher le nombre réel de classes retenues (et non toutes les feuilles brutes).
   leaves <- integer(0)
   visited <- integer(0)
   walk_leaves <- function(node) {
     if (node %in% visited) return(invisible(NULL))
     visited <<- c(visited, node)
+
+    if (isTRUE(utiliser_terminales) && node %in% terminales) {
+      leaves <<- c(leaves, node)
+      return(invisible(NULL))
+    }
+
     filles <- get_filles(node)
     if (!length(filles)) {
       leaves <<- c(leaves, node)
@@ -459,6 +472,13 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   layout_phylo <- function(node, depth = 0L) {
     if (node %in% seen) return(pos[[as.character(node)]])
     seen <<- c(seen, node)
+
+    if (isTRUE(utiliser_terminales) && node %in% leaves) {
+      y <- unname(y_map[[as.character(node)]])
+      if (is.null(y) || !is.finite(y)) y <- max(unname(y_map)) + 1
+      pos[[as.character(node)]] <<- c(x = depth, y = y)
+      return(pos[[as.character(node)]])
+    }
 
     filles <- get_filles(node)
     if (!length(filles)) {
@@ -529,9 +549,25 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   tip_idx <- which(node_ids %in% leaves)
 
   tip_cols <- rep("#5B8FF9", nrow(all_pos))
-  if (!is.null(terminales)) {
-    terminales <- as.integer(terminales)
-    tip_cols[which(node_ids %in% terminales)] <- "#d62728"
+  if (length(terminales)) tip_cols[which(node_ids %in% terminales)] <- "#d62728"
+
+  tip_labels <- paste0("Classe ", rownames(all_pos)[tip_idx])
+  if (!is.null(classes)) {
+    classes <- suppressWarnings(as.integer(classes))
+    classes <- classes[is.finite(classes) & classes > 0]
+    if (length(classes)) {
+      pct_par_classe <- prop.table(table(classes)) * 100
+      if (length(terminales)) {
+        for (i in seq_along(terminales)) {
+          node <- terminales[[i]]
+          idx_node <- which(rownames(all_pos)[tip_idx] == as.character(node))
+          if (!length(idx_node)) next
+          pct <- unname(pct_par_classe[as.character(i)])
+          if (!is.finite(pct) || is.na(pct)) pct <- 0
+          tip_labels[idx_node] <- paste0("Classe ", i, " (", format(round(pct, 1), nsmall = 1), " %)")
+        }
+      }
+    }
   }
 
   if (length(tip_idx)) {
@@ -539,7 +575,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
     text(
       x = all_pos[tip_idx, "x"] + 0.12,
       y = all_pos[tip_idx, "y"],
-      labels = paste0("Classe ", rownames(all_pos)[tip_idx]),
+      labels = tip_labels,
       adj = c(0, 0.5),
       cex = 0.78
     )
