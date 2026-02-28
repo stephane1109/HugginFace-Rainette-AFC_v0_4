@@ -92,20 +92,17 @@ ui <- fluidPage(
         inline = FALSE
       ),
 
-      tags$div(class = "sidebar-section-title", "Paramètres communs CHD"),
-      numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
-      numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
-      numericInput("max_p", "max_p (p-value)", value = 0.05, min = 0, max = 1, step = 0.01),
+      tags$div(class = "sidebar-section-title", "Paramètres CHD"),
 
+      numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
       conditionalPanel(
         condition = "input.modele_chd == 'rainette'",
-        ui_options_rainette()
+        numericInput("k", "k (nombre de classes)", value = 3, min = 2, step = 1)
       ),
-
-      conditionalPanel(
-        condition = "input.modele_chd == 'iramuteq'",
-        ui_options_iramuteq()
-      ),
+      numericInput("min_segment_size", "Nombre minimal de termes par segment (min_segment_size)", value = 10, min = 1, step = 1),
+      numericInput("min_split_members", "Effectif minimal pour scinder une classe (min_split_members)", value = 10, min = 1, step = 1),
+      numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
+      numericInput("max_p", "max_p (p-value)", value = 0.05, min = 0, max = 1, step = 0.01),
 
       tags$div(class = "sidebar-section-title", "Dictionnaire"),
       radioButtons(
@@ -134,6 +131,25 @@ ui <- fluidPage(
       ),
       uiOutput("ui_spacy_langue_detection"),
 
+      conditionalPanel(
+        condition = "input.modele_chd == 'rainette'",
+        radioButtons(
+          "type_classification",
+          "Type de classification",
+          choices = c(
+            "Classification simple (rainette)" = "simple",
+            "Classification double (rainette2)" = "double"
+          ),
+          selected = "simple",
+          inline = FALSE
+        )
+      ),
+
+      conditionalPanel(
+        condition = "input.modele_chd == 'rainette' && input.type_classification == 'double'",
+        numericInput("min_segment_size2", "min_segment_size (classification 2)", value = 15, min = 1, step = 1),
+        numericInput("max_k_double", "max_k (rainette2)", value = 8, min = 2, step = 1)
+      ),
 
       tags$div(class = "sidebar-section-title", "Nettoyage"),
 
