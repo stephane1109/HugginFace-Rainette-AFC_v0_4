@@ -81,6 +81,17 @@ ui <- fluidPage(
     sidebarPanel(
       fileInput("fichier_corpus", "Uploader un corpus IRaMuTeQ (.txt)", accept = c(".txt")),
 
+      radioButtons(
+        "modele_chd",
+        "Méthode Iramuteq-like ou rainette",
+        choices = c(
+          "Rainette" = "rainette",
+          "IRaMuTeQ-like" = "iramuteq"
+        ),
+        selected = "rainette",
+        inline = FALSE
+      ),
+
       tags$div(class = "sidebar-section-title", "Paramètres CHD"),
 
       numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
@@ -119,17 +130,6 @@ ui <- fluidPage(
         checkboxInput("lexique_utiliser_lemmes", "Lemmatisation via les lemmes de lexique_fr (forme → c_lemme)", value = TRUE)
       ),
       uiOutput("ui_spacy_langue_detection"),
-
-      radioButtons(
-        "modele_chd",
-        "Modèle CHD",
-        choices = c(
-          "Rainette" = "rainette",
-          "IRaMuTeQ-like" = "iramuteq"
-        ),
-        selected = "rainette",
-        inline = FALSE
-      ),
 
       conditionalPanel(
         condition = "input.modele_chd == 'rainette'",
