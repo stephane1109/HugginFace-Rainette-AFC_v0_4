@@ -552,20 +552,33 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL, classes
   if (length(terminales)) tip_cols[which(node_ids %in% terminales)] <- "#d62728"
 
   tip_labels <- paste0("Classe ", rownames(all_pos)[tip_idx])
+
+  # En mode IRaMuTeQ-like, les classes affichées doivent toujours être renumérotées
+  # séquentiellement (1..K), même si les noeuds terminaux portent des identifiants
+  # internes plus élevés (ex: 16, 22, ...).
+  if (length(terminales)) {
+    tip_nodes_chr <- rownames(all_pos)[tip_idx]
+    for (i in seq_along(terminales)) {
+      node <- terminales[[i]]
+      idx_node <- which(tip_nodes_chr == as.character(node))
+      if (!length(idx_node)) next
+      tip_labels[idx_node] <- paste0("Classe ", i)
+    }
+  }
+
   if (!is.null(classes)) {
     classes <- suppressWarnings(as.integer(classes))
     classes <- classes[is.finite(classes) & classes > 0]
-    if (length(classes)) {
+    if (length(classes) && length(terminales)) {
       pct_par_classe <- prop.table(table(classes)) * 100
-      if (length(terminales)) {
-        for (i in seq_along(terminales)) {
-          node <- terminales[[i]]
-          idx_node <- which(rownames(all_pos)[tip_idx] == as.character(node))
-          if (!length(idx_node)) next
-          pct <- unname(pct_par_classe[as.character(i)])
-          if (!is.finite(pct) || is.na(pct)) pct <- 0
-          tip_labels[idx_node] <- paste0("Classe ", i, " (", format(round(pct, 1), nsmall = 1), " %)")
-        }
+      tip_nodes_chr <- rownames(all_pos)[tip_idx]
+      for (i in seq_along(terminales)) {
+        node <- terminales[[i]]
+        idx_node <- which(tip_nodes_chr == as.character(node))
+        if (!length(idx_node)) next
+        pct <- unname(pct_par_classe[as.character(i)])
+        if (!is.finite(pct) || is.na(pct)) pct <- 0
+        tip_labels[idx_node] <- paste0("Classe ", i, " (", format(round(pct, 1), nsmall = 1), " %)")
       }
     }
   }
