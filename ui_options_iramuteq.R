@@ -27,8 +27,8 @@ ui_options_iramuteq <- function() {
     selectInput(
       "iramuteq_svd_method",
       "Méthode SVD",
-      choices = c("svdR" = "svdR", "irlba" = "irlba", "svdlibc" = "svdlibc"),
-      selected = "svdR"
+      choices = c("irlba" = "irlba", "svdR" = "svdR"),
+      selected = "irlba"
     ),
     checkboxInput("iramuteq_mode_patate", "Mode patate (moins précis, plus rapide)", value = FALSE),
     checkboxInput("iramuteq_binariser", "Binariser la matrice termes (présence/absence)", value = TRUE)

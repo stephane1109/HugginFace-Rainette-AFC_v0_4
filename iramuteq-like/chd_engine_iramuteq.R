@@ -75,7 +75,7 @@ lancer_moteur_chd_iramuteq <- function(
   mincl_mode = c("auto", "manuel"),
   mincl = 0,
   classif_mode = c("simple", "double"),
-  svd_method = c("svdR", "irlba", "svdlibc"),
+  svd_method = c("irlba", "svdR"),
   mode_patate = FALSE,
   libsvdc_path = NULL,
   binariser = TRUE,
