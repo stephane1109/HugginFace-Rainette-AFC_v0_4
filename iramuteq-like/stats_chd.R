@@ -4,7 +4,7 @@ formatter_6_decimales_chd <- function(x) {
   ifelse(is.na(x), NA_character_, formatC(as.numeric(x), format = "f", digits = 6))
 }
 
-extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50) {
+extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50, show_negative = FALSE) {
   if (is.null(res_stats_df) || nrow(res_stats_df) == 0) {
     return(data.frame(Message = "Statistiques indisponibles.", stringsAsFactors = FALSE))
   }
@@ -21,7 +21,14 @@ extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50) {
   )
   df <- df[, colonnes_possibles, drop = FALSE]
 
-  if ("chi2" %in% names(df)) df <- df[order(-abs(suppressWarnings(as.numeric(df$chi2))), -suppressWarnings(as.numeric(df$frequency))), , drop = FALSE]
+  if ("chi2" %in% names(df)) {
+    chi2_vals <- suppressWarnings(as.numeric(df$chi2))
+    if (!isTRUE(show_negative)) {
+      df <- df[is.finite(chi2_vals) & chi2_vals > 0, , drop = FALSE]
+      chi2_vals <- suppressWarnings(as.numeric(df$chi2))
+    }
+    df <- df[order(-chi2_vals, -suppressWarnings(as.numeric(df$frequency))), , drop = FALSE]
+  }
   df <- utils::head(df, n_max)
 
   colonnes_num <- intersect(c("chi2", "lr", "docprop", "p", "p_value"), names(df))
