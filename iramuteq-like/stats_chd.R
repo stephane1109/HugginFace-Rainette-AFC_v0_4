@@ -4,7 +4,32 @@ formatter_6_decimales_chd <- function(x) {
   ifelse(is.na(x), NA_character_, formatC(as.numeric(x), format = "f", digits = 6))
 }
 
-extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50, show_negative = FALSE) {
+.inferer_type_terme_iramuteq <- function(termes) {
+  x <- tolower(as.character(termes))
+  out <- rep("", length(x))
+
+  extraire_tag <- function(pattern, value) {
+    idx <- grepl(pattern, x)
+    out[idx] <<- value
+  }
+
+  extraire_tag("(^|[_/])nom$", "nom")
+  extraire_tag("(^|[_/])adj$", "adj")
+  extraire_tag("(^|[_/])ver$", "ver")
+  extraire_tag("(^|[_/])adv$", "adv")
+  extraire_tag("(^|[_/])nr$", "nr")
+
+  out
+}
+
+extraire_stats_chd_classe <- function(res_stats_df,
+                                      classe,
+                                      n_max = 50,
+                                      show_negative = FALSE,
+                                      max_p = 1,
+                                      style = c("iramuteq_clone", "legacy")) {
+  style <- match.arg(style)
+
   if (is.null(res_stats_df) || nrow(res_stats_df) == 0) {
     return(data.frame(Message = "Statistiques indisponibles.", stringsAsFactors = FALSE))
   }
@@ -16,10 +41,14 @@ extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50, show_neg
   }
 
   colonnes_possibles <- intersect(
-    c("Terme", "chi2", "lr", "frequency", "docprop", "p", "p_value_filter"),
+    c("Terme", "chi2", "lr", "frequency", "docprop", "eff_st", "eff_total", "pourcentage", "p", "p_value_filter"),
     names(df)
   )
   df <- df[, colonnes_possibles, drop = FALSE]
+
+  if ("p" %in% names(df) && is.finite(max_p) && !is.na(max_p) && max_p < 1) {
+    df <- df[suppressWarnings(as.numeric(df$p)) <= max_p, , drop = FALSE]
+  }
 
   if ("chi2" %in% names(df)) {
     chi2_vals <- suppressWarnings(as.numeric(df$chi2))
@@ -30,6 +59,29 @@ extraire_stats_chd_classe <- function(res_stats_df, classe, n_max = 50, show_neg
     df <- df[order(-chi2_vals, -suppressWarnings(as.numeric(df$frequency))), , drop = FALSE]
   }
   df <- utils::head(df, n_max)
+
+  if (identical(style, "iramuteq_clone")) {
+    eff_st <- if ("eff_st" %in% names(df)) suppressWarnings(as.numeric(df$eff_st)) else round(suppressWarnings(as.numeric(df$docprop)) * suppressWarnings(as.numeric(df$eff_total)))
+    eff_total <- if ("eff_total" %in% names(df)) suppressWarnings(as.numeric(df$eff_total)) else suppressWarnings(as.numeric(df$frequency))
+    pourcentage <- if ("pourcentage" %in% names(df)) suppressWarnings(as.numeric(df$pourcentage)) else ifelse(eff_total > 0, 100 * eff_st / eff_total, NA_real_)
+    chi2_vals <- if ("chi2" %in% names(df)) suppressWarnings(as.numeric(df$chi2)) else NA_real_
+    formes <- if ("Terme" %in% names(df)) as.character(df$Terme) else rep("", nrow(df))
+    types <- .inferer_type_terme_iramuteq(formes)
+
+    out <- data.frame(
+      num = seq_len(nrow(df)) - 1L,
+      `eff. s.t.` = as.integer(round(eff_st)),
+      `eff. total` = as.integer(round(eff_total)),
+      pourcentage = ifelse(is.na(pourcentage), NA_character_, formatC(pourcentage, format = "f", digits = 2)),
+      chi2 = ifelse(is.na(chi2_vals), NA_character_, formatC(chi2_vals, format = "f", digits = 3)),
+      Type = types,
+      forme = formes,
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+
+    return(out)
+  }
 
   colonnes_num <- intersect(c("chi2", "lr", "docprop", "p", "p_value"), names(df))
   for (col in colonnes_num) {
