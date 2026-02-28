@@ -82,10 +82,6 @@ Dans ce mode IRaMuTeQ-like, l’algorithme suit la logique historique IRaMuTeQ�
   - désactivé (`FALSE`) = reclassement plus complet,
   - activé (`TRUE`) = comportement simplifié/rapide.
 
-### 3.8 Graine aléatoire (`seed`)
-- **Rôle**: reproductibilité des résultats.
-- **Conseil**: fixer une seed constante pour comparer des runs.
-
 ---
 
 ## 4) Sorties et interprétation
@@ -114,7 +110,6 @@ Colonnes principales:
 2. Vérifier l’équilibre des classes (éviter des classes trop petites).
 3. Ajuster `mincl` si beaucoup de classes instables apparaissent.
 4. Utiliser `max_p = 0.05` pour une lecture interprétative, puis `max_p = 1` pour audit complet.
-5. Garder une `seed` fixe pendant les comparaisons.
 
 ---
 
@@ -130,7 +125,6 @@ Colonnes principales:
 - Vérifier que les classes reconstruites ne sont pas nulles.
 
 ### Problème: résultats instables entre exécutions
-- Fixer `seed`.
 - Éviter de changer simultanément plusieurs paramètres (`k`, `mincl`, `svd_method`).
 
 ---
@@ -144,6 +138,5 @@ Colonnes principales:
 - `binariser = TRUE`
 - `svd_method = irlba`
 - `mode_patate = FALSE`
-- `seed = 123`
 
 Ce profil donne généralement un bon compromis entre lisibilité des classes, stabilité et interprétabilité.

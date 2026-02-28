@@ -79,8 +79,7 @@ lancer_moteur_chd_iramuteq <- function(
   mode_patate = FALSE,
   libsvdc_path = NULL,
   binariser = TRUE,
-  rscripts_dir = NULL,
-  seed = 123
+  rscripts_dir = NULL
 ) {
   mincl_mode <- match.arg(mincl_mode)
   classif_mode <- match.arg(classif_mode)
@@ -96,8 +95,7 @@ lancer_moteur_chd_iramuteq <- function(
     svd_method = svd_method,
     libsvdc_path = libsvdc_path,
     binariser = binariser,
-    rscripts_dir = rscripts_dir,
-    seed = seed
+    rscripts_dir = rscripts_dir
   )
 
   classes_obj <- reconstruire_classes_terminales_iramuteq_fn(
