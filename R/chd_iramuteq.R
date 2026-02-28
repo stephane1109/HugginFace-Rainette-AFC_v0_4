@@ -396,10 +396,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   }
 
   noms <- names(list_fille)
-  if (is.null(noms) || any(!nzchar(noms))) {
-    noms <- as.character(seq_along(list_fille))
-  }
-
+  if (is.null(noms) || any(!nzchar(noms))) noms <- as.character(seq_along(list_fille))
   map_filles <- stats::setNames(lapply(list_fille, function(x) as.integer(x)), noms)
 
   meres <- suppressWarnings(as.integer(names(map_filles)))
@@ -409,14 +406,10 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
 
   racines <- setdiff(meres, enfants)
   racine <- if (length(racines)) racines[[1]] else if (length(meres)) meres[[1]] else NA_integer_
-
-  # Fallback robuste: racine via colonne finale n1 si la structure mère/fille est ambiguë.
   if (!is.finite(racine)) {
     feuilles_n1 <- suppressWarnings(as.integer(n1[, ncol(n1)]))
     feuilles_n1 <- feuilles_n1[is.finite(feuilles_n1)]
-    if (length(feuilles_n1)) {
-      racine <- min(feuilles_n1, na.rm = TRUE)
-    }
+    if (length(feuilles_n1)) racine <- min(feuilles_n1, na.rm = TRUE)
   }
 
   if (!is.finite(racine)) {
@@ -428,91 +421,129 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj, terminales = NULL) {
   get_filles <- function(node) {
     key <- as.character(node)
     x <- map_filles[[key]]
+    x <- x[is.finite(x)]
     if (is.null(x)) integer(0) else as.integer(x)
   }
 
-  feuilles <- setdiff(enfants, meres)
-  feuilles <- sort(unique(feuilles))
-  if (!length(feuilles)) {
-    feuilles <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
-    feuilles <- feuilles[is.finite(feuilles)]
+  # Ordre des feuilles via parcours en profondeur (style phylogramme IRaMuTeQ).
+  leaves <- integer(0)
+  visited <- integer(0)
+  walk_leaves <- function(node) {
+    if (node %in% visited) return(invisible(NULL))
+    visited <<- c(visited, node)
+    filles <- get_filles(node)
+    if (!length(filles)) {
+      leaves <<- c(leaves, node)
+      return(invisible(NULL))
+    }
+    for (f in filles) walk_leaves(f)
   }
-  if (!length(feuilles)) {
+  walk_leaves(racine)
+
+  if (!length(leaves)) {
+    leaves <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
+    leaves <- leaves[is.finite(leaves)]
+  }
+  if (!length(leaves)) {
     plot.new()
     text(0.5, 0.5, "Aucune feuille exploitable pour le dendrogramme.", cex = 1.1)
     return(invisible(NULL))
   }
 
-  x_map <- stats::setNames(seq_along(feuilles), as.character(feuilles))
-  positions <- list()
-  visited <- integer(0)
+  leaves <- unique(leaves)
+  y_map <- stats::setNames(seq_along(leaves), as.character(leaves))
+  pos <- list()
+  seen <- integer(0)
 
-  compute_pos <- function(node, depth = 0L) {
-    if (node %in% visited) {
-      x <- unname(x_map[[as.character(node)]])
-      if (is.null(x) || !is.finite(x)) x <- mean(unname(x_map))
-      positions[[as.character(node)]] <<- c(x = x, y = -depth)
-      return(c(x = x, y = -depth))
-    }
-    visited <<- c(visited, node)
+  # Coordonnées de type phylogramme : x=profondeur, y=ordre des feuilles.
+  layout_phylo <- function(node, depth = 0L) {
+    if (node %in% seen) return(pos[[as.character(node)]])
+    seen <<- c(seen, node)
 
     filles <- get_filles(node)
     if (!length(filles)) {
-      x <- unname(x_map[[as.character(node)]])
-      if (is.null(x) || !is.finite(x)) x <- max(unname(x_map)) + 1
-      positions[[as.character(node)]] <<- c(x = x, y = -depth)
-      return(c(x = x, y = -depth))
+      y <- unname(y_map[[as.character(node)]])
+      if (is.null(y) || !is.finite(y)) y <- max(unname(y_map)) + 1
+      pos[[as.character(node)]] <<- c(x = depth, y = y)
+      return(pos[[as.character(node)]])
     }
 
-    child_pos <- lapply(filles, function(f) compute_pos(f, depth + 1L))
-    xs <- vapply(child_pos, function(v) v[["x"]], numeric(1))
-    x <- mean(xs)
-    positions[[as.character(node)]] <<- c(x = x, y = -depth)
-    c(x = x, y = -depth)
+    child_pos <- lapply(filles, function(f) layout_phylo(f, depth + 1L))
+    ys <- vapply(child_pos, function(v) as.numeric(v[["y"]]), numeric(1))
+    pos[[as.character(node)]] <<- c(x = depth, y = mean(ys))
+    return(pos[[as.character(node)]])
   }
 
-  compute_pos(racine, 0L)
+  layout_phylo(racine, 0L)
 
-  if (!length(positions)) {
+  if (!length(pos)) {
     plot.new()
     text(0.5, 0.5, "Dendrogramme CHD indisponible (positions vides).", cex = 1.1)
     return(invisible(NULL))
   }
 
-  all_pos <- do.call(rbind, positions)
+  all_pos <- do.call(rbind, pos)
+  x_max <- max(all_pos[, "x"], na.rm = TRUE)
+  y_max <- max(all_pos[, "y"], na.rm = TRUE)
+
   plot(
     NA,
-    xlim = c(min(all_pos[, "x"]) - 0.5, max(all_pos[, "x"]) + 0.5),
-    ylim = c(min(all_pos[, "y"]) - 0.5, 0.5),
+    xlim = c(-0.2, x_max + 1.4),
+    ylim = c(y_max + 0.6, 0.4),
     axes = FALSE,
     xlab = "",
     ylab = "",
-    main = "Dendrogramme CHD IRaMuTeQ-like"
+    main = "Dendrogramme CHD IRaMuTeQ-like (phylogramme)"
   )
 
   for (mere_name in names(map_filles)) {
     mere <- suppressWarnings(as.integer(mere_name))
     if (!is.finite(mere)) next
-    p_m <- positions[[as.character(mere)]]
+    p_m <- pos[[as.character(mere)]]
     if (is.null(p_m)) next
 
-    for (f in as.integer(map_filles[[mere_name]])) {
-      p_f <- positions[[as.character(f)]]
+    filles <- as.integer(map_filles[[mere_name]])
+    filles <- filles[is.finite(filles)]
+    if (!length(filles)) next
+
+    # Barre verticale au niveau du parent (style phylogramme).
+    y_child <- numeric(0)
+    for (f in filles) {
+      p_f <- pos[[as.character(f)]]
+      if (!is.null(p_f)) y_child <- c(y_child, p_f[["y"]])
+    }
+    if (length(y_child) >= 2) {
+      segments(p_m[["x"]], min(y_child), p_m[["x"]], max(y_child), col = "#2f4f4f", lwd = 1.6)
+    }
+
+    # Branches horizontales parent -> enfant.
+    for (f in filles) {
+      p_f <- pos[[as.character(f)]]
       if (is.null(p_f)) next
-      segments(p_m[["x"]], p_m[["y"]], p_f[["x"]], p_f[["y"]], col = "#2f4f4f", lwd = 1.5)
+      segments(p_m[["x"]], p_f[["y"]], p_f[["x"]], p_f[["y"]], col = "#2f4f4f", lwd = 1.6)
     }
   }
 
-  noeuds <- suppressWarnings(as.integer(names(positions)))
-  noeuds[!is.finite(noeuds)] <- NA_integer_
-  col_points <- rep("#5B8FF9", nrow(all_pos))
+  node_ids <- suppressWarnings(as.integer(rownames(all_pos)))
+  node_ids[!is.finite(node_ids)] <- NA_integer_
+  tip_idx <- which(node_ids %in% leaves)
+
+  tip_cols <- rep("#5B8FF9", nrow(all_pos))
   if (!is.null(terminales)) {
     terminales <- as.integer(terminales)
-    col_points[which(noeuds %in% terminales)] <- "#d62728"
+    tip_cols[which(node_ids %in% terminales)] <- "#d62728"
   }
 
-  points(all_pos[, "x"], all_pos[, "y"], pch = 19, col = col_points, cex = 1)
-  text(all_pos[, "x"], all_pos[, "y"] - 0.12, labels = rownames(all_pos), cex = 0.7)
+  if (length(tip_idx)) {
+    points(all_pos[tip_idx, "x"], all_pos[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
+    text(
+      x = all_pos[tip_idx, "x"] + 0.12,
+      y = all_pos[tip_idx, "y"],
+      labels = paste0("Classe ", rownames(all_pos)[tip_idx]),
+      adj = c(0, 0.5),
+      cex = 0.78
+    )
+  }
 
   invisible(NULL)
 }
