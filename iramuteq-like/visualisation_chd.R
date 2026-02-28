@@ -45,12 +45,18 @@ tracer_chd_iramuteq <- function(res_stats_df,
   vals <- vals[ok]
   termes <- termes[ok]
 
+  if (!isTRUE(show_negative)) {
+    keep <- vals > 0
+    vals <- vals[keep]
+    termes <- termes[keep]
+  }
+
   if (length(vals) == 0) {
     plot.new(); text(0.5, 0.5, "Aucune valeur traçable.", cex = 1)
     return(invisible(NULL))
   }
 
-  ord <- if (isTRUE(show_negative)) order(vals, decreasing = TRUE) else order(abs(vals), decreasing = TRUE)
+  ord <- order(vals, decreasing = TRUE)
   vals <- vals[ord]
   termes <- termes[ord]
 
