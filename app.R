@@ -586,7 +586,14 @@ server <- function(input, output, session) {
     terminales <- rv$res$terminales
 
     tryCatch({
-      tracer_dendrogramme_chd_iramuteq(chd_obj = chd_obj, terminales = terminales, classes = rv$res$classes)
+      tracer_dendrogramme_chd_iramuteq(
+        chd_obj = chd_obj,
+        terminales = terminales,
+        classes = rv$res$classes,
+        res_stats_df = rv$res_stats_df,
+        top_n_terms = 4,
+        orientation = "vertical"
+      )
     }, error = function(e) {
       plot.new()
       text(0.5, 0.5, paste0("Erreur dendrogramme IRaMuTeQ-like: ", conditionMessage(e)), cex = 0.95)
