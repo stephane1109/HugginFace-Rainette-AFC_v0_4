@@ -399,14 +399,43 @@ register_events_lancer <- function(input, output, session, rv) {
             rv$res_type <- "iramuteq"
             ajouter_log(rv, "Mode : classification IRaMuTeQ-like.")
 
-            # Mode fidèle IRaMuTeQ: nbt=9 dans les scripts historiques, soit k théorique = 10.
-            # On n'utilise pas le k UI (réservé à Rainette).
+            k_iramuteq <- suppressWarnings(as.integer(input$k_iramuteq))
+            if (is.na(k_iramuteq) || k_iramuteq < 2L) k_iramuteq <- 10L
+
+            mincl_mode_iramuteq <- as.character(input$iramuteq_mincl_mode)
+            if (!mincl_mode_iramuteq %in% c("auto", "manuel")) mincl_mode_iramuteq <- "auto"
+
+            mincl_iramuteq <- suppressWarnings(as.integer(input$iramuteq_mincl))
+            if (is.na(mincl_iramuteq) || mincl_iramuteq < 1L) mincl_iramuteq <- 1L
+
+            classif_mode_iramuteq <- as.character(input$iramuteq_classif_mode)
+            if (!classif_mode_iramuteq %in% c("simple", "double")) classif_mode_iramuteq <- "simple"
+
+            svd_method_iramuteq <- as.character(input$iramuteq_svd_method)
+            if (!svd_method_iramuteq %in% c("svdR", "irlba", "svdlibc")) svd_method_iramuteq <- "svdR"
+
+            ajouter_log(
+              rv,
+              paste0(
+                "Paramètres IRaMuTeQ-like : k=", k_iramuteq,
+                " | mincl_mode=", mincl_mode_iramuteq,
+                if (identical(mincl_mode_iramuteq, "manuel")) paste0(" | mincl=", mincl_iramuteq) else "",
+                " | classif_mode=", classif_mode_iramuteq,
+                " | svd_method=", svd_method_iramuteq,
+                " | mode_patate=", ifelse(isTRUE(input$iramuteq_mode_patate), "1", "0"),
+                " | binariser=", ifelse(isTRUE(input$iramuteq_binariser), "1", "0")
+              )
+            )
+
             res_ira <- lancer_moteur_chd_iramuteq(
               dfm_obj = dfm_obj,
-              k = 10,
-              mincl_mode = "auto",
-              classif_mode = "simple",
-              svd_method = "svdR"
+              k = k_iramuteq,
+              mincl_mode = mincl_mode_iramuteq,
+              mincl = mincl_iramuteq,
+              classif_mode = classif_mode_iramuteq,
+              svd_method = svd_method_iramuteq,
+              mode_patate = isTRUE(input$iramuteq_mode_patate),
+              binariser = isTRUE(input$iramuteq_binariser)
             )
 
             groupes <- as.integer(res_ira$classes)
