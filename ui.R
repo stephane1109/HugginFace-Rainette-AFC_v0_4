@@ -6,6 +6,26 @@
 library(shiny)
 library(htmltools)
 
+if (!exists("ui_options_rainette", mode = "function", inherits = TRUE)) {
+  app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+  if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
+  chemin_options_rainette <- file.path(app_dir, "ui_options_rainette.R")
+
+  if (file.exists(chemin_options_rainette)) {
+    source(chemin_options_rainette, encoding = "UTF-8", local = TRUE)
+  }
+}
+
+if (!exists("ui_options_iramuteq", mode = "function", inherits = TRUE)) {
+  app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+  if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
+  chemin_options_iramuteq <- file.path(app_dir, "ui_options_iramuteq.R")
+
+  if (file.exists(chemin_options_iramuteq)) {
+    source(chemin_options_iramuteq, encoding = "UTF-8", local = TRUE)
+  }
+}
+
 if (!exists("ui_aide_huggingface", mode = "function")) {
   if (file.exists("help.md")) {
     ui_aide_huggingface <- function() {
