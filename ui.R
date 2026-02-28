@@ -84,7 +84,10 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramètres CHD"),
 
       numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
-      numericInput("k", "k (nombre de classes)", value = 3, min = 2, step = 1),
+      conditionalPanel(
+        condition = "input.modele_chd == 'rainette'",
+        numericInput("k", "k (nombre de classes)", value = 3, min = 2, step = 1)
+      ),
       numericInput("min_segment_size", "Nombre minimal de termes par segment (min_segment_size)", value = 10, min = 1, step = 1),
       numericInput("min_split_members", "Effectif minimal pour scinder une classe (min_split_members)", value = 10, min = 1, step = 1),
       numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
@@ -269,6 +272,40 @@ ui <- fluidPage(
           ),
           tags$h3("Répartition des classes"),
           tableOutput("table_classes")
+        ),
+
+
+
+        tabPanel(
+          "Résultats CHD Iramuteq",
+          tags$h3("Dendrogramme CHD (IRaMuTeQ-like)"),
+          plotOutput("plot_chd_iramuteq_dendro", height = "420px"),
+          tags$h3("Termes caractéristiques par classe"),
+          tags$p("Affiche les termes caractéristiques de la classe sélectionnée, à partir des statistiques CHD IRaMuTeQ-like."),
+          fluidRow(
+            column(4,
+              selectInput("classe_viz_iramuteq", "Classe", choices = c()),
+              selectInput(
+                "measure_plot_iramuteq",
+                "Statistiques",
+                choices = c(
+                  "Frequency - Terms" = "frequency",
+                  "Keyness - Chi-squared" = "chi2",
+                  "Keyness - Likelihood ratio" = "lr",
+                  "Frequency - Documents proportion" = "docprop"
+                ),
+                selected = "chi2"
+              ),
+              selectInput("type_plot_iramuteq", "Type", choices = c("bar", "cloud"), selected = "bar"),
+              numericInput("n_terms_plot_iramuteq", "Nombre de termes", value = 20, min = 5, max = 1000, step = 1),
+              checkboxInput("show_negative_plot_iramuteq", "Afficher les valeurs négatives", value = FALSE)
+            ),
+            column(8,
+              plotOutput("plot_chd_iramuteq", height = "70vh")
+            )
+          ),
+          tags$h3("Tableaux statistiques CHD par classe"),
+          uiOutput("ui_tables_stats_chd_iramuteq")
         ),
 
         tabPanel(
