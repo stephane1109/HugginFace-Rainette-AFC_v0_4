@@ -444,8 +444,7 @@ register_events_lancer <- function(input, output, session, rv) {
                 if (identical(mincl_mode_iramuteq, "manuel")) paste0(" | mincl=", mincl_iramuteq) else "",
                 " | classif_mode=", classif_mode_iramuteq,
                 " | svd_method=", svd_method_iramuteq,
-                " | mode_patate=", ifelse(isTRUE(input$iramuteq_mode_patate), "1", "0"),
-                " | binariser=", ifelse(isTRUE(input$iramuteq_binariser), "1", "0")
+                " | mode_patate=", ifelse(isTRUE(input$iramuteq_mode_patate), "1", "0")
               )
             )
 
@@ -457,7 +456,7 @@ register_events_lancer <- function(input, output, session, rv) {
               classif_mode = classif_mode_iramuteq,
               svd_method = svd_method_iramuteq,
               mode_patate = isTRUE(input$iramuteq_mode_patate),
-              binariser = isTRUE(input$iramuteq_binariser)
+              binariser = TRUE
             )
 
             groupes <- as.integer(res_ira$classes)
