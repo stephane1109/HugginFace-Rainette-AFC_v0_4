@@ -31,6 +31,11 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   observeEvent(input$explor, {
     req(rv$export_dir)
 
+    if (identical(rv$res_type, "iramuteq")) {
+      showNotification("Explore rainette est désactivé en mode IRaMuTeQ-like.", type = "message", duration = 6)
+      return(invisible(NULL))
+    }
+
     if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
       showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
       return(invisible(NULL))
@@ -94,15 +99,8 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
     req(!is.null(input$measure_plot), !is.null(input$type_plot), !is.null(input$n_terms_plot))
 
     if (identical(rv$res_type, "iramuteq")) {
-      req(rv$res_stats_df)
-      tracer_chd_iramuteq(
-        res_stats_df = rv$res_stats_df,
-        classe = input$classe_viz,
-        mesure = as.character(input$measure_plot),
-        type = as.character(input$type_plot),
-        n_terms = input$n_terms_plot,
-        show_negative = isTRUE(input$show_negative_plot)
-      )
+      plot.new()
+      text(0.5, 0.5, "Explore rainette indisponible en mode IRaMuTeQ-like.", cex = 1.05)
       return(invisible(NULL))
     }
 
