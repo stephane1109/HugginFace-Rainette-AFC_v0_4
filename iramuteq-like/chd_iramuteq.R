@@ -278,7 +278,10 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
   }
 
   classes <- as.integer(classes)
-  ok_docs <- !is.na(classes)
+  # Alignement IRaMuTeQ clone (BuildProf/chdfunct.R):
+  # les UCE non classées (classe 0) sont exclues du comptage
+  # des effectifs et des tableaux de contingence.
+  ok_docs <- !is.na(classes) & classes > 0L
   mat <- mat[ok_docs, , drop = FALSE]
   classes <- classes[ok_docs]
 
@@ -307,7 +310,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
     c(chi2 = stat * signe, p = pval)
   }
 
-  classes_uniques <- sort(unique(classes[classes > 0]))
+  classes_uniques <- sort(unique(classes))
   sorties <- vector("list", length(classes_uniques))
 
   for (i in seq_along(classes_uniques)) {
