@@ -75,6 +75,7 @@ source("R/pipeline_spacy_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/pipeline_lexique_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/server_outputs_status.R", encoding = "UTF-8", local = TRUE)
 source("R/server_events_lancer.R", encoding = "UTF-8", local = TRUE)
+source("R/rainette_explor_affichage.R", encoding = "UTF-8", local = TRUE)
 
 server <- function(input, output, session) {
 
@@ -427,123 +428,7 @@ server <- function(input, output, session) {
   })
 
   register_events_lancer(input, output, session, rv)
-
-
-
-
-  observeEvent(input$explor, {
-    req(rv$export_dir)
-
-    if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
-      showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
-      return(invisible(NULL))
-    }
-
-    if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-      shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
-    }
-
-    tryCatch({
-      clusters_choices <- as.character(rv$clusters)
-      if (length(clusters_choices) == 0 && !is.null(rv$res_stats_df) && "Classe" %in% names(rv$res_stats_df)) {
-        clusters_choices <- unique(as.character(rv$res_stats_df$Classe))
-      }
-      clusters_choices <- clusters_choices[!is.na(clusters_choices) & nzchar(clusters_choices)]
-      if (length(clusters_choices) == 0) clusters_choices <- "1"
-
-      classe_defaut <- clusters_choices[1]
-      max_k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
-      if (!is.finite(max_k_plot) || is.na(max_k_plot) || max_k_plot < 2) {
-        max_k_plot <- max(2L, length(unique(clusters_choices)))
-      }
-
-      k_plot_defaut <- suppressWarnings(as.integer(input$k))
-      if (!is.finite(k_plot_defaut) || is.na(k_plot_defaut) || k_plot_defaut < 2) {
-        k_plot_defaut <- min(max_k_plot, 3L)
-      }
-      k_plot_defaut <- max(2L, min(max_k_plot, k_plot_defaut))
-
-      n_terms_plot_defaut <- 20L
-
-      concordancier_src <- NULL
-      html_file_ok <- !is.null(rv$html_file) && length(rv$html_file) == 1 && !is.na(rv$html_file) && nzchar(rv$html_file)
-      if (isTRUE(html_file_ok) && isTRUE(file.exists(rv$html_file))) {
-        nom_html <- basename(rv$html_file)
-        src_html <- file.path(rv$export_dir, nom_html)
-        if (!isTRUE(file.exists(src_html))) {
-          ok_copy <- tryCatch(file.copy(rv$html_file, src_html, overwrite = TRUE), error = function(e) FALSE)
-          if (!isTRUE(ok_copy)) src_html <- rv$html_file
-        }
-        concordancier_src <- paste0("/", rv$exports_prefix, "/", basename(src_html))
-      }
-
-      removeModal()
-      showModal(modalDialog(
-        title = "Explore_rainette",
-        size = "l",
-        easyClose = TRUE,
-        footer = modalButton("Fermer"),
-
-        selectInput("classe_viz", "Classe", choices = clusters_choices, selected = classe_defaut),
-
-        tabsetPanel(
-          tabPanel(
-            "CHD",
-            fluidRow(
-              column(
-                4,
-                sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = max_k_plot, value = k_plot_defaut, step = 1),
-                selectInput(
-                  "measure_plot", "Statistiques",
-                  choices = c(
-                    "Frequency - Terms" = "frequency",
-                    "Keyness - Chi-squared" = "chi2",
-                    "Keyness - Likelihood ratio" = "lr",
-                    "Frequency - Documents proportion" = "docprop"
-                  ),
-                  selected = "frequency"
-                ),
-                selectInput("type_plot", "Type", choices = c("bar", "cloud"), selected = "bar"),
-                numericInput("n_terms_plot", "Nombre de termes", value = n_terms_plot_defaut, min = 5, max = 1000, step = 1),
-                conditionalPanel(
-                  "input.measure_plot != 'docprop'",
-                  checkboxInput("same_scales_plot", "Forcer les mêmes échelles", value = TRUE)
-                ),
-                checkboxInput("show_negative_plot", "Afficher les valeurs négatives", value = FALSE),
-                numericInput("text_size_plot", "Taille du texte", value = 12, min = 6, max = 30, step = 1)
-              ),
-              column(
-                8,
-                plotOutput("plot_chd", height = "70vh")
-              )
-            )
-          ),
-          tabPanel(
-            "Concordancier HTML",
-            if (is.null(concordancier_src)) {
-              tags$div(
-                style = "padding: 12px;",
-                tags$p("Le fichier du concordancier HTML n'est pas disponible pour cette analyse."),
-                tags$p("Relance l'analyse puis vérifie les logs si le problème persiste.")
-              )
-            } else {
-              tags$iframe(
-                src = concordancier_src,
-                style = "width: 100%; height: 70vh; border: 1px solid #999;"
-              )
-            }
-          ),
-          tabPanel("Wordcloud", uiOutput("ui_wordcloud")),
-          tabPanel("Cooccurrences", uiOutput("ui_cooc")),
-          tabPanel("Statistiques", tableOutput("table_stats_classe"))
-        )
-      ))
-    }, error = function(e) {
-      removeModal()
-      showNotification(paste0("Impossible d'ouvrir Explore_rainette : ", conditionMessage(e)), type = "error", duration = 10)
-      invisible(NULL)
-    })
-  })
+  register_rainette_explor_affichage(input, output, session, rv)
 
   output$plot_afc_classes <- renderPlot({
     if (!is.null(rv$afc_erreur) && nzchar(rv$afc_erreur)) {
