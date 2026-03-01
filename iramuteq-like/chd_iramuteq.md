@@ -39,6 +39,8 @@ Dans ce mode IRaMuTeQ-like, l’algorithme suit la logique historique IRaMuTeQ�
 > Les noms affichés peuvent légèrement varier selon l’écran, mais la logique fonctionnelle est la suivante.
 
 ### 3.1 Nombre de classes (`k`)
+- **Libellé dans l’interface**: « Nombre de classes terminales de la phase 1 ».
+- **Valeur par défaut**: `10`.
 - **Rôle**: fixe le niveau de découpage attendu.
 - **Effet**: plus `k` est élevé, plus la partition est fine (classes plus nombreuses, parfois moins stables).
 - **Valeurs recommandées**:
