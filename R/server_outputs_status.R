@@ -24,6 +24,13 @@ register_outputs_status <- function(input, output, session, rv) {
     output$table_classes <- renderTable({
       req(rv$filtered_corpus)
       tb <- table(docvars(rv$filtered_corpus)$Classes, useNA = "ifany")
-      data.frame(Classe = names(tb), Effectif = as.integer(tb), stringsAsFactors = FALSE)
+      effectifs <- as.integer(tb)
+      pourcentages <- round((effectifs / sum(effectifs)) * 100, 1)
+      data.frame(
+        Classe = names(tb),
+        Effectif = effectifs,
+        `Pourcentage (%)` = pourcentages,
+        stringsAsFactors = FALSE
+      )
     }, rownames = FALSE)
 }
