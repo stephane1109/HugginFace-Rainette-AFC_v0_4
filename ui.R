@@ -79,6 +79,9 @@ ui <- fluidPage(
         margin-top: 12px;
         margin-bottom: 6px;
       }
+      small {
+        color: #842029 !important;
+      }
     "))
   ),
 
@@ -137,7 +140,8 @@ ui <- fluidPage(
       ),
       conditionalPanel(
         condition = "input.modele_chd == 'iramuteq'",
-        tags$small(style = "color:#8a4f00;", "En mode IRaMuTeQ-like, seul le dictionnaire Lexique (fr) est utilisé automatiquement.")
+        tags$small("En mode IRaMuTeQ-like, seul le dictionnaire Lexique (fr) est utilisé automatiquement."),
+        tags$small("Dans ce mode, le filtrage des stopwords utilise la liste française de quanteda (pas spaCy).")
       ),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
