@@ -79,6 +79,9 @@ ui <- fluidPage(
         margin-top: 12px;
         margin-bottom: 6px;
       }
+      small {
+        color: #842029 !important;
+      }
     "))
   ),
 
@@ -137,7 +140,8 @@ ui <- fluidPage(
       ),
       conditionalPanel(
         condition = "input.modele_chd == 'iramuteq'",
-        tags$small(style = "color:#8a4f00;", "En mode IRaMuTeQ-like, seul le dictionnaire Lexique (fr) est utilisé automatiquement.")
+        tags$small("En mode IRaMuTeQ-like, seul le dictionnaire Lexique (fr) est utilisé automatiquement."),
+        tags$small("Dans ce mode, le filtrage des stopwords utilise la liste française de quanteda (pas spaCy).")
       ),
       conditionalPanel(
         condition = "input.source_dictionnaire == 'spacy'",
@@ -239,14 +243,6 @@ ui <- fluidPage(
         selected = "frequency",
         inline = FALSE
       ),
-
-      tags$hr(),
-
-      tags$div(class = "sidebar-section-title", "Cooccurrences (beta)"),
-
-      numericInput("top_n", "top_n (wordcloud)", value = 20, min = 5, step = 1),
-      numericInput("window_cooc", "window (cooccurrences)", value = 5, min = 1, step = 1),
-      numericInput("top_feat", "top_feat (cooccurrences)", value = 20, min = 5, step = 1),
 
       tags$hr(),
 
