@@ -922,7 +922,9 @@ register_events_lancer <- function(input, output, session, rv) {
             rv = rv
           )
 
-          if (identical(source_dictionnaire, "lexique_fr")) {
+          if (identical(rv$res_type, "iramuteq")) {
+            do.call(generer_concordancier_iramuteq_html, args_concordancier)
+          } else if (identical(source_dictionnaire, "lexique_fr")) {
             do.call(generer_concordancier_lexique_html, args_concordancier)
           } else {
             do.call(generer_concordancier_spacy_html, args_concordancier)
