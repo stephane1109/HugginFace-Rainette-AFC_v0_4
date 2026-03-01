@@ -69,6 +69,12 @@ Ces options agissent surtout sur la **préparation linguistique** (tokenisation,
 - **Traiter les élisions FR** (`supprimer_apostrophes`) : enlève les élisions en début de mot (`c'`, `j'`, `l'`, `m'`, `n'`, `s'`, `t'`, `d'`, `qu'`) pour ramener par ex. `c'est` vers `est`.
 - **Forcer en minuscules avant analyse** (`forcer_minuscules_avant`) : convertit le texte en minuscules avant la construction des tokens/termes.
 
+#### Stopwords en mode IRaMuTeQ-like
+
+- En mode **IRaMuTeQ-like**, la source de lemmatisation est forcée sur **Lexique (fr)**.
+- Donc, quand l'option **Retirer les stopwords** est activée, le filtrage se fait avec les stopwords **français de quanteda** (et non avec spaCy).
+- Le filtrage stopwords via **spaCy** n'est utilisé que lorsque la source de dictionnaire est **spaCy** (mode Rainette).
+
 #### Effet sur le concordancier HTML
 
 - Quand **Supprimer la ponctuation** est cochée, la ponctuation est bien retirée dans les **données d’analyse**.
