@@ -435,6 +435,31 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   terminales <- suppressWarnings(as.integer(terminales))
   terminales <- terminales[is.finite(terminales)]
   terminales <- unique(terminales)
+
+  # Source de vérité pour le nombre de classes à afficher :
+  # 1) résultats statistiques CHD (si disponibles), sinon
+  # 2) vecteur des classes finales documentaires.
+  # Comme dans iramuteq_clone_v3 (cutree(..., k = clnb)), on borne l'affichage
+  # aux classes finales réellement exploitées.
+  classes_utiles <- integer(0)
+  if (!is.null(res_stats_df) && is.data.frame(res_stats_df) && "Classe" %in% names(res_stats_df)) {
+    classes_stats <- suppressWarnings(as.integer(res_stats_df$Classe))
+    classes_stats <- classes_stats[is.finite(classes_stats) & classes_stats > 0]
+    classes_utiles <- sort(unique(classes_stats))
+  }
+
+  if (!length(classes_utiles) && !is.null(classes)) {
+    classes_int <- suppressWarnings(as.integer(classes))
+    classes_int <- classes_int[is.finite(classes_int) & classes_int > 0]
+    classes_utiles <- sort(unique(classes_int))
+  }
+
+  if (length(classes_utiles) && length(terminales)) {
+    idx_valides <- classes_utiles[classes_utiles >= 1L & classes_utiles <= length(terminales)]
+    terminales <- terminales[idx_valides]
+    classes_utiles <- idx_valides
+  }
+
   utiliser_terminales <- length(terminales) > 0
 
   leaves <- integer(0)
@@ -457,7 +482,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
   walk_leaves(racine)
 
-  if (!length(leaves)) {
+  if (!length(leaves) && !length(classes_utiles)) {
     leaves <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
     leaves <- leaves[is.finite(leaves)]
   }
