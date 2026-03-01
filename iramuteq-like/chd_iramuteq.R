@@ -435,6 +435,23 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   terminales <- suppressWarnings(as.integer(terminales))
   terminales <- terminales[is.finite(terminales)]
   terminales <- unique(terminales)
+
+  # On pilote l'affichage à partir du résultat de classification finale.
+  # Les classes finales sont indexées 1..K et correspondent à l'ordre de
+  # `terminales` renvoyé par la reconstruction (classe i -> terminales[i]).
+  classes_utiles <- integer(0)
+  if (!is.null(classes)) {
+    classes_int <- suppressWarnings(as.integer(classes))
+    classes_int <- classes_int[is.finite(classes_int) & classes_int > 0]
+    classes_utiles <- sort(unique(classes_int))
+
+    if (length(classes_utiles) && length(terminales)) {
+      idx_valides <- classes_utiles[classes_utiles >= 1L & classes_utiles <= length(terminales)]
+      terminales <- terminales[idx_valides]
+      classes_utiles <- idx_valides
+    }
+  }
+
   utiliser_terminales <- length(terminales) > 0
 
   leaves <- integer(0)
@@ -457,7 +474,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
   walk_leaves(racine)
 
-  if (!length(leaves)) {
+  if (!length(leaves) && !length(classes_utiles)) {
     leaves <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
     leaves <- leaves[is.finite(leaves)]
   }
