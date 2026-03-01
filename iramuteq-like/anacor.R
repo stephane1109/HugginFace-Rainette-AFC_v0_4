@@ -1,5 +1,5 @@
 #################################################################################
-#http://www.mail-archive.com/rcpp-devel@lists.r-forge.r-project.org/msg01513.html
+
 
 write.sparse <- function (m, to) {
   ## Writes in a format that SVDLIBC can read
