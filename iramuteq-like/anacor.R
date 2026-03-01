@@ -89,9 +89,16 @@ boostana<-function (tab, ndim = 2, svd.method = 'svdR', libsvdc.path=NULL)
         sv <- svd(z, nu = qdim, nv = qdim) 
         print('end svd')
     } else if (svd.method == 'irlba') {
-        print('irlba')
-        sv <- irlba::irlba(z, nv = qdim, nu = qdim)
-        print('end irlba')
+        if (!requireNamespace("irlba", quietly = TRUE)) {
+            warning("Package 'irlba' introuvable, bascule automatique vers 'svdR'.")
+            print('start R svd (fallback)')
+            sv <- svd(z, nu = qdim, nv = qdim)
+            print('end svd (fallback)')
+        } else {
+            print('irlba')
+            sv <- irlba::irlba(z, nv = qdim, nu = qdim)
+            print('end irlba')
+        }
     }
     sigmavec <- (sv$d)[2:qdim]
 	x <- ((sv$u)/sqrt(r))[, -1]
