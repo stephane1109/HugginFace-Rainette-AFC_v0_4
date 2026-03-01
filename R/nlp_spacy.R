@@ -5,6 +5,20 @@
 # Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
 # et `ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
 
+
+filtrer_sortie_python_bruit <- function(sortie) {
+  if (is.null(sortie) || length(sortie) == 0) return(character(0))
+  motifs_bruit <- c(
+    "^Listening on http://",
+    "^Warning in readLines\\(f\\)",
+    "incomplete final line found",
+    "^\\s*Splitting\\.\\.\\.\\s*$",
+    "^\\s*Done\\.\\s*$"
+  )
+  keep <- !Reduce(`|`, lapply(motifs_bruit, function(m) grepl(m, sortie, perl = TRUE)))
+  sortie[keep]
+}
+
 executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv, strip_fr_elisions = FALSE, remove_numbers = FALSE) {
   script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : spacy_preprocess.py (à la racine du projet).")
@@ -43,7 +57,8 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   ajouter_log(rv, paste0("spaCy : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
 
   sortie <- tryCatch(system2(python_cmd, args = args, stdout = TRUE, stderr = TRUE), error = function(e) stop("Erreur exécution spaCy : ", e$message))
-  if (!is.null(sortie) && length(sortie) > 0) ajouter_log(rv, paste(sortie, collapse = "\n"))
+  sortie <- filtrer_sortie_python_bruit(sortie)
+  if (length(sortie) > 0) ajouter_log(rv, paste(sortie, collapse = "\n"))
 
   if (!file.exists(out_tsv)) stop("spaCy n'a pas produit de fichier de sortie.")
 
@@ -103,7 +118,8 @@ executer_spacy_ner <- function(ids, textes, modele_spacy, rv, dictionnaire_json 
   ajouter_log(rv, paste0("NER : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
 
   sortie <- tryCatch(system2(python_cmd, args = args, stdout = TRUE, stderr = TRUE), error = function(e) stop("Erreur exécution NER : ", e$message))
-  if (!is.null(sortie) && length(sortie) > 0) ajouter_log(rv, paste(sortie, collapse = "\n"))
+  sortie <- filtrer_sortie_python_bruit(sortie)
+  if (length(sortie) > 0) ajouter_log(rv, paste(sortie, collapse = "\n"))
 
   if (!file.exists(out_tsv)) stop("NER n'a pas produit de fichier de sortie.")
 
