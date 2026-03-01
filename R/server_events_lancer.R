@@ -834,7 +834,8 @@ register_events_lancer <- function(input, output, session, rv) {
 
           classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
 
-          for (cl in classes_uniques) {
+          if (!identical(rv$res_type, "iramuteq")) {
+            for (cl in classes_uniques) {
             top_n_demande <- suppressWarnings(as.integer(input$top_n))
             if (!is.finite(top_n_demande) || is.na(top_n_demande)) top_n_demande <- 20L
             top_n_demande <- max(5L, top_n_demande)
@@ -897,10 +898,16 @@ register_events_lancer <- function(input, output, session, rv) {
                 dev.off()
               }
             }, silent = TRUE)
+            }
+          } else {
+            ajouter_log(rv, "Mode IRaMuTeQ-like : génération des visuels Explore rainette désactivée.")
           }
 
           explor_assets <- NULL
-          ok_chd_png <- generer_chd_explor_si_absente(rv)
+          ok_chd_png <- FALSE
+          if (!identical(rv$res_type, "iramuteq")) {
+            ok_chd_png <- generer_chd_explor_si_absente(rv)
+          }
 
           chd_png_rel <- NULL
           if (isTRUE(ok_chd_png) && file.exists(file.path(rv$export_dir, "explor", "chd.png"))) {

@@ -289,6 +289,9 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel(
               "CHD",
+              tags$h4("Dendrogramme CHD (Rainette)"),
+              plotOutput("plot_chd_rainette_dendro", height = "360px"),
+              tags$hr(),
               fluidRow(
                 column(
                   4,
