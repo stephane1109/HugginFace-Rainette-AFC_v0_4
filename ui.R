@@ -242,14 +242,6 @@ ui <- fluidPage(
 
       tags$hr(),
 
-      tags$div(class = "sidebar-section-title", "Cooccurrences (beta)"),
-
-      numericInput("top_n", "top_n (wordcloud)", value = 20, min = 5, step = 1),
-      numericInput("window_cooc", "window (cooccurrences)", value = 5, min = 1, step = 1),
-      numericInput("top_feat", "top_feat (cooccurrences)", value = 20, min = 5, step = 1),
-
-      tags$hr(),
-
       tags$div(
         style = "display: flex; gap: 8px; flex-wrap: wrap; align-items: center;",
         actionButton("lancer", "Lancer l'analyse"),
