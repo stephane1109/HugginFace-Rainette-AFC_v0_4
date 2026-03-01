@@ -832,6 +832,7 @@ register_events_lancer <- function(input, output, session, rv) {
           dir.create(cooc_dir, showWarnings = FALSE, recursive = TRUE)
 
           classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
+          classes_uniques <- classes_uniques[is.finite(classes_uniques)]
 
           if (!identical(rv$res_type, "iramuteq")) {
             for (cl in classes_uniques) {
@@ -942,8 +943,17 @@ register_events_lancer <- function(input, output, session, rv) {
           utils::zip(zipfile = rv$zip_file, files = "exports")
           setwd(ancien_wd)
 
-          if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-            shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+          exports_prefix <- as.character(rv$exports_prefix)
+          if (length(exports_prefix) > 1) exports_prefix <- exports_prefix[[1]]
+          if (!length(exports_prefix) || is.na(exports_prefix) || !nzchar(exports_prefix)) {
+            # Fallback robuste: évite une erreur "missing value where TRUE/FALSE needed"
+            # lorsque le token de session est indisponible.
+            exports_prefix <- paste0("exports_", format(Sys.time(), "%Y%m%d%H%M%S"))
+            rv$exports_prefix <- exports_prefix
+          }
+
+          if (!(exports_prefix %in% names(shiny::resourcePaths()))) {
+            shiny::addResourcePath(exports_prefix, rv$export_dir)
           }
 
           rv$statut <- "Analyse terminée."
