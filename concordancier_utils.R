@@ -19,7 +19,7 @@ trans_nfc <- function(x) {
 }
 
 echapper_regex <- function(x) {
-  gsub("([\\^\\$\\*\\+\\?\\(\\)\\[\\]\\{\\}\\.\\|\\\\\\-])", "\\\\\\1", x)
+  gsub("([][{}()+*^$.|?\\\\-])", "\\\\\\1", x, perl = TRUE)
 }
 
 echapper_html <- function(x) {
@@ -95,26 +95,75 @@ construire_regex_terme_nfd <- function(terme) {
   paste0(pieces, collapse = "")
 }
 
+motif_unicode_est_valide <- function(pat) {
+  if (is.na(pat) || !nzchar(pat)) return(FALSE)
+  ok <- tryCatch({
+    grepl(pat, "", perl = TRUE)
+    TRUE
+  }, error = function(e) FALSE)
+  ok
+}
+
+construire_motif_terme_valide <- function(pat_terme) {
+  candidats <- c(
+    paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
+    paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_terme, ")(?![\\p{L}\\p{M}])"),
+    paste0("(?i)(", pat_terme, ")")
+  )
+
+  for (cand in candidats) {
+    if (motif_unicode_est_valide(cand)) return(cand)
+  }
+  ""
+}
+
 preparer_motifs_surlignage_nfd <- function(terms, taille_lot = 80) {
-  terms <- unique(terms)
+  terms <- unique(as.character(terms))
+  terms <- trimws(terms)
   terms <- terms[!is.na(terms) & nzchar(terms)]
   if (length(terms) == 0) return(list())
 
   terms <- terms[order(nchar(terms), decreasing = TRUE)]
   patterns <- vapply(terms, construire_regex_terme_nfd, FUN.VALUE = character(1))
-  patterns <- patterns[nzchar(patterns)]
+  patterns <- unique(patterns[nzchar(patterns)])
   if (length(patterns) == 0) return(list())
 
-  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+  taille_lot <- suppressWarnings(as.integer(taille_lot))
+  if (!is.finite(taille_lot) || is.na(taille_lot) || taille_lot < 1) taille_lot <- 80L
 
-  lapply(lots, function(lot) {
-    paste0(
-      "(?i)(?<![\\p{L}\\p{M}])(",
-      paste0(lot, collapse = "|"),
-      ")(?![\\p{L}\\p{M}])"
+  construire_motif_lot <- function(lot) {
+    pat_lot <- paste0(lot, collapse = "|")
+    if (!nzchar(pat_lot) || nchar(pat_lot) > 4000) return("")
+
+    candidats <- c(
+      paste0("(*UTF)(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])"),
+      paste0("(*UCP)(?i)(?<![\\p{L}\\p{M}])(", pat_lot, ")(?![\\p{L}\\p{M}])")
     )
-  })
+
+    for (cand in candidats) {
+      if (motif_unicode_est_valide(cand)) return(cand)
+    }
+    ""
+  }
+
+  lots <- split(patterns, ceiling(seq_along(patterns) / taille_lot))
+  motifs <- character(0)
+
+  for (lot in lots) {
+    motif_lot <- construire_motif_lot(lot)
+    if (nzchar(motif_lot)) {
+      motifs <- c(motifs, motif_lot)
+      next
+    }
+
+    motifs_unit <- vapply(lot, construire_motif_terme_valide, FUN.VALUE = character(1))
+    motifs_unit <- motifs_unit[nzchar(motifs_unit)]
+    if (length(motifs_unit) > 0) motifs <- c(motifs, motifs_unit)
+  }
+
+  as.list(unique(motifs))
 }
+
 
 surligner_vecteur_html_unicode <- function(segments, motifs, start_tag, end_tag, on_error = NULL) {
   if (length(segments) == 0 || length(motifs) == 0) return(segments)
