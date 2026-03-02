@@ -19,7 +19,7 @@ if (!exists("ui_options_rainette", mode = "function", inherits = TRUE)) {
 if (!exists("ui_options_iramuteq", mode = "function", inherits = TRUE)) {
   app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
   if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
-  chemin_options_iramuteq <- file.path(app_dir, "ui_options_iramuteq.R")
+  chemin_options_iramuteq <- file.path(app_dir, "iramuteq-like", "ui_options_iramuteq.R")
 
   if (file.exists(chemin_options_iramuteq)) {
     source(chemin_options_iramuteq, encoding = "UTF-8", local = TRUE)
@@ -58,7 +58,7 @@ if (!exists("ui_aide_huggingface", mode = "function")) {
 if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
   app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
   if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
-  chemin_nettoyage <- file.path(app_dir, "nettoyage.R")
+  chemin_nettoyage <- file.path(app_dir, "rainette", "nettoyage_rainette.R")
 
   if (file.exists(chemin_nettoyage)) {
     source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
@@ -67,7 +67,7 @@ if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
 
 if (!exists("REGEX_CARACTERES_A_SUPPRIMER", inherits = TRUE)) {
   # Fallback explicite : évite d'afficher un message d'erreur permanent dans l'UI
-  # quand le fichier nettoyage.R n'a pas pu être sourcé dans cet environnement.
+  # quand le fichier rainette/nettoyage_rainette.R n'a pas pu être sourcé dans cet environnement.
   REGEX_CARACTERES_AUTORISES <- "a-zA-Z0-9àÀâÂäÄáÁåÅãéÉèÈêÊëËìÌîÎïÏíÍóÓòÒôÔöÖõÕøØùÙûÛüÜúÚçÇßœŒ’ñÑ\\.:,;!\\?'"
   REGEX_CARACTERES_A_SUPPRIMER <- paste0("[^", REGEX_CARACTERES_AUTORISES, "]")
 }
