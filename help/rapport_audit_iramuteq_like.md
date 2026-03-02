@@ -25,7 +25,7 @@
 - Ensuite, stopwords optionnels puis `dfm` + `dfm_trim(min_docfreq=...)`.
 
 #### Chemin spaCy
-- Le script Python `spacy_preprocess.py` lit `doc_id,text`, puis pour chaque token spaCy:
+- Le script Python `rainette/spacy_preprocess.py` lit `doc_id,text`, puis pour chaque token spaCy:
   - ignore espaces et ponctuation,
   - optionnellement ignore nombres (`tok.like_num`),
   - optionnellement retire préfixes d'élision FR,

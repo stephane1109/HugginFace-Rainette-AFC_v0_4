@@ -8,7 +8,7 @@ executer_pipeline_lexique <- function(input, rv, textes_chd) {
   lexique_source_stopwords <- "quanteda"
 
   if (isTRUE(utiliser_lemmes_lexique) || isTRUE(filtrage_morpho)) {
-    lexique_fr <- charger_lexique_fr("lexique_fr.csv")
+    lexique_fr <- charger_lexique_fr("dictionnaires/lexique_fr.csv")
     ajouter_log(rv, paste0("Lexique (fr) chargé : ", nrow(lexique_fr), " entrées."))
     rv$lexique_fr_df <- lexique_fr
   } else {

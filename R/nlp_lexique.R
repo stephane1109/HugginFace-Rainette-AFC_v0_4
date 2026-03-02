@@ -1,18 +1,18 @@
 # Rôle du fichier: nlp_lexique.R porte une partie du pipeline d'analyse Rainette.
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
 # Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
-# Module NLP - lemmatisation via lexique externe (lexique_fr.csv)
+# Module NLP - lemmatisation via lexique externe (dictionnaires/lexique_fr.csv)
 # Ce module charge un lexique 3 colonnes au format canonique
 # (c_mot, c_lemme, c_morpho).
 # et applique une lemmatisation explicite sans fallback silencieux vers spaCy.
 
-charger_lexique_fr <- function(chemin = "lexique_fr.csv") {
+charger_lexique_fr <- function(chemin = "dictionnaires/lexique_fr.csv") {
   fichier <- tryCatch(normalizePath(chemin, mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(fichier) || !file.exists(fichier)) {
     stop(
       paste0(
         "Lexique (fr) introuvable : fichier '", chemin,
-        "' absent. Ajoute lexique_fr.csv à la racine du projet (format lexique_fr ou IRaMuTeQ)."
+        "' absent. Ajoute dictionnaires/lexique_fr.csv (format lexique_fr ou IRaMuTeQ)."
       )
     )
   }
