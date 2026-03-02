@@ -70,6 +70,7 @@ source("R/afc_helpers.R", encoding = "UTF-8", local = TRUE)
 
 source("R/chd_afc_pipeline.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/chd_iramuteq.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/dendogramme_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/stats_chd.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/chd_engine_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_language.R", encoding = "UTF-8", local = TRUE)
@@ -496,15 +497,10 @@ server <- function(input, output, session) {
     }
 
     req(rv$res)
-    chd_obj <- rv$res$chd
-    terminales <- rv$res$terminales
 
     tryCatch({
-      tracer_dendrogramme_chd_iramuteq(
-        chd_obj = chd_obj,
-        terminales = terminales,
-        classes = rv$res$classes,
-        res_stats_df = rv$res_stats_df,
+      tracer_dendogramme_iramuteq_ui(
+        rv = rv,
         top_n_terms = 4,
         orientation = "vertical"
       )
