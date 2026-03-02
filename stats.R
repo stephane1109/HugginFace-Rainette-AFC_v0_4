@@ -54,6 +54,7 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
   freqs <- freqs[freqs > 0]
 
   nb_mots <- sum(freqs)
+  nb_formes <- length(freqs)
   nb_hapax <- sum(freqs == 1)
   nb_segments <- if (!is.null(corpus_segments)) quanteda::ndoc(corpus_segments) else NA_integer_
 
@@ -81,6 +82,7 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
         "Nom du corpus",
         "Nombre de textes",
         "Nombre de mots dans le corpus",
+        "Nombre de formes",
         "Nombre de segments de texte",
         "Nombre d'Hapax",
         "Loi de Zpif"
@@ -89,6 +91,7 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
         nom_corpus_affiche,
         as.character(length(textes)),
         as.character(nb_mots),
+        as.character(nb_formes),
         as.character(nb_segments),
         as.character(nb_hapax),
         loi_zipf
