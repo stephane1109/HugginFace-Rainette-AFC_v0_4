@@ -724,7 +724,11 @@ register_events_lancer <- function(input, output, session, rv) {
             labels_stats <- names(res_stats_list)
             labels_groupes <- as.character(sort(unique(docvars(filtered_corpus_ok)$Classes)))
 
-            if (is.null(labels_stats) || length(labels_stats) != length(res_stats_list) || any(!nzchar(labels_stats))) {
+            labels_stats_valides <- !is.null(labels_stats) &&
+              length(labels_stats) == length(res_stats_list) &&
+              !any(is.na(labels_stats) | !nzchar(labels_stats))
+
+            if (!isTRUE(labels_stats_valides)) {
               labels_stats <- labels_groupes
             }
 

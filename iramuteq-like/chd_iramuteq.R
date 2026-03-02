@@ -420,7 +420,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
 
   noms <- names(list_fille)
-  if (is.null(noms) || any(!nzchar(noms))) noms <- as.character(seq_along(list_fille))
+  if (is.null(noms) || any(is.na(noms) | !nzchar(noms))) noms <- as.character(seq_along(list_fille))
   map_filles <- stats::setNames(lapply(list_fille, function(x) as.integer(x)), noms)
 
   meres <- suppressWarnings(as.integer(names(map_filles)))
