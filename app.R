@@ -48,7 +48,7 @@ if (file.exists("help.md")) {
 
 source("rainette/nettoyage_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/afc_rainette.R", encoding = "UTF-8", local = TRUE)
-source("concordancier_utils.R", encoding = "UTF-8", local = TRUE)
+source("rainette/concord_utils_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/concord_spacy_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/concord_lexique_rainette.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/concordancier-iramuteq.R", encoding = "UTF-8", local = TRUE)
