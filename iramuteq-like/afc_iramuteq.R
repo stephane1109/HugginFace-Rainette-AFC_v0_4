@@ -449,6 +449,7 @@ calculer_table_classes_modalites <- function(corpus_aligne, groupes, max_modalit
   # Colonnes candidates : on exclut les colonnes techniques
   exclure <- c("segment_source", "Classes")
   cols <- setdiff(colnames(dv2), exclure)
+  cols <- cols[!is.na(cols) & nzchar(cols)]
 
   # Priorité aux variables étoilées importées depuis l'entête IRaMuTeQ.
   # Certains imports exposent les variables avec un nom préfixé "*".
@@ -464,6 +465,7 @@ calculer_table_classes_modalites <- function(corpus_aligne, groupes, max_modalit
     for (i in seq_len(nrow(dv2))) {
       mods <- character(0)
       for (cn in cols) {
+        if (is.na(cn) || !nzchar(cn)) next
         v <- dv2[i, cn]
         v <- as.character(v)
         v <- v[!is.na(v) & nzchar(v)]
@@ -473,7 +475,7 @@ calculer_table_classes_modalites <- function(corpus_aligne, groupes, max_modalit
         # Modalité de type "var=valeur"
         # Si la colonne est déjà une variable étoilée, on garde une modalité
         # compacte de type "*var_valeur" pour rester proche de la syntaxe IRaMuTeQ.
-        if (grepl("^\\*", cn)) {
+        if (isTRUE(grepl("^\\*", cn))) {
           val_norm <- gsub("\\s+", "_", v, perl = TRUE)
           val_norm <- gsub("[^[:alnum:]_\\-]", "_", val_norm, perl = TRUE)
           val_norm <- gsub("_+", "_", val_norm, perl = TRUE)
