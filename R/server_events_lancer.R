@@ -83,25 +83,36 @@ register_events_lancer <- function(input, output, session, rv) {
       list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
     }
 
-    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-      chemin_nettoyage <- file.path(app_dir, "nettoyage.R")
-      if (file.exists(chemin_nettoyage)) {
-        source(chemin_nettoyage, encoding = "UTF-8", local = TRUE)
+    if (!exists("appliquer_nettoyage_rainette", mode = "function", inherits = TRUE)) {
+      chemin_nettoyage_rainette <- file.path(app_dir, "rainette", "nettoyage_rainette.R")
+      if (file.exists(chemin_nettoyage_rainette)) {
+        source(chemin_nettoyage_rainette, encoding = "UTF-8", local = TRUE)
       }
     }
 
-    if (!exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
-      appliquer_nettoyage_et_minuscules <- function(textes,
-                                                     activer_nettoyage = FALSE,
-                                                     forcer_minuscules = FALSE,
-                                                     supprimer_chiffres = FALSE,
-                                                     supprimer_apostrophes = FALSE) {
-        ajouter_log(rv, "Avertissement: appliquer_nettoyage_et_minuscules indisponible; nettoyage contourné pour préserver l'exécution.")
+    if (!exists("appliquer_nettoyage_iramuteq", mode = "function", inherits = TRUE)) {
+      chemin_nettoyage_iramuteq <- file.path(app_dir, "iramuteq-like", "nettoyage_iramuteq.R")
+      if (file.exists(chemin_nettoyage_iramuteq)) {
+        source(chemin_nettoyage_iramuteq, encoding = "UTF-8", local = TRUE)
+      }
+    }
+
+    if (!exists("appliquer_nettoyage_rainette", mode = "function", inherits = TRUE)) {
+      appliquer_nettoyage_rainette <- function(textes,
+                                               activer_nettoyage = FALSE,
+                                               forcer_minuscules = FALSE,
+                                               supprimer_chiffres = FALSE,
+                                               supprimer_apostrophes = FALSE) {
+        ajouter_log(rv, "Avertissement: appliquer_nettoyage_rainette indisponible; nettoyage contourné pour préserver l'exécution.")
         if (is.null(textes)) return(character(0))
         x <- as.character(textes)
         if (isTRUE(forcer_minuscules)) x <- tolower(x)
         x
       }
+    }
+
+    if (!exists("appliquer_nettoyage_iramuteq", mode = "function", inherits = TRUE)) {
+      appliquer_nettoyage_iramuteq <- appliquer_nettoyage_rainette
     }
 
 
@@ -359,14 +370,22 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "Préparation texte..."
 
           if (identical(as.character(input$modele_chd), "iramuteq")) {
+            textes_nettoyes <- appliquer_nettoyage_iramuteq(
+              textes = textes_orig,
+              activer_nettoyage = isTRUE(input$nettoyage_caracteres),
+              forcer_minuscules = isTRUE(input$forcer_minuscules_avant),
+              supprimer_chiffres = isTRUE(input$supprimer_chiffres),
+              supprimer_apostrophes = isTRUE(input$supprimer_apostrophes)
+            )
+
             textes_chd <- executer_textprepa_iramuteq(
               ids = ids_corpus,
-              textes = textes_orig,
+              textes = textes_nettoyes,
               input = input,
               rv = rv
             )
           } else {
-            textes_chd <- appliquer_nettoyage_et_minuscules(
+            textes_chd <- appliquer_nettoyage_rainette(
               textes = textes_orig,
               activer_nettoyage = isTRUE(input$nettoyage_caracteres),
               forcer_minuscules = isTRUE(input$forcer_minuscules_avant),
@@ -414,7 +433,13 @@ register_events_lancer <- function(input, output, session, rv) {
             )
           )
 
-          if (identical(source_dictionnaire, "lexique_fr")) {
+          if (identical(as.character(input$modele_chd), "iramuteq")) {
+            sortie_pipeline <- executer_pipeline_iramuteq(
+              input = input,
+              rv = rv,
+              textes_chd = textes_chd
+            )
+          } else if (identical(source_dictionnaire, "lexique_fr")) {
             sortie_pipeline <- executer_pipeline_lexique(
               input = input,
               rv = rv,
