@@ -25,11 +25,6 @@ ui_resultats_chd_iramuteq <- function() {
         tags$h3("Nuage de mots par classe"),
         selectInput("classe_viz", "Classe", choices = c("1"), selected = "1"),
         uiOutput("ui_wordcloud")
-      ),
-      tabPanel(
-        "Stats classe",
-        tags$h3("Statistiques détaillées par classe"),
-        tableOutput("table_stats_classe")
       )
     )
   )

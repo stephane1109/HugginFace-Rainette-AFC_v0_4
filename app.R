@@ -57,6 +57,7 @@ source("stats.R", encoding = "UTF-8", local = TRUE)
 source("ui_options_rainette.R", encoding = "UTF-8", local = TRUE)
 source("ui_options_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/affichage_iramuteq-like.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/wordcloud_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("ui.R", encoding = "UTF-8", local = TRUE)
 
 source("R/utils_general.R", encoding = "UTF-8", local = TRUE)

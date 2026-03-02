@@ -881,7 +881,15 @@ register_events_lancer <- function(input, output, session, rv) {
               window_cooc = input$window_cooc
             )
           } else {
-            ajouter_log(rv, "Mode IRaMuTeQ-like : génération des visuels Explore rainette désactivée.")
+            generer_wordclouds_iramuteq(
+              res_stats_df = res_stats_df,
+              classes_uniques = classes_uniques,
+              wordcloud_dir = wordcloud_dir,
+              top_n = input$top_n,
+              filtrer_pvalue = isTRUE(input$filtrer_affichage_pvalue),
+              max_p = input$max_p
+            )
+            ajouter_log(rv, "Mode IRaMuTeQ-like : nuages de mots générés via wordcloud_iramuteq.R (cooccurrences Explore rainette désactivées).")
           }
 
           explor_assets <- NULL
