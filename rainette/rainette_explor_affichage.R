@@ -166,6 +166,13 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
 
   output$table_stats_classe <- renderTable({
     req(input$classe_viz, rv$res_stats_df)
-    extraire_stats_chd_classe(rv$res_stats_df, classe = input$classe_viz, n_max = 50)
-  }, rownames = FALSE)
+    extraire_stats_chd_classe(
+      rv$res_stats_df,
+      classe = input$classe_viz,
+      n_max = 50,
+      max_p = if (isTRUE(input$filtrer_affichage_pvalue)) input$max_p else 1,
+      seuil_p_significativite = input$max_p,
+      style = "iramuteq_clone"
+    )
+  }, rownames = FALSE, sanitize.text.function = function(x) x)
 }
