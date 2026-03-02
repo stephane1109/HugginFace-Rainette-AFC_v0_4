@@ -1149,7 +1149,12 @@ register_events_lancer <- function(input, output, session, rv) {
             rv = rv
           )
 
-          html_genere <- if (identical(rv$res_type, "iramuteq")) {
+          # Priorité explicite au concordancier IRaMuTeQ-like lorsque le mode
+          # IRaMuTeQ est sélectionné dans l'UI (même si rv$res_type est désynchronisé).
+          mode_iramuteq_actif <- identical(as.character(input$modele_chd), "iramuteq") ||
+            identical(rv$res_type, "iramuteq")
+
+          html_genere <- if (isTRUE(mode_iramuteq_actif)) {
             do.call(generer_concordancier_iramuteq_html, args_concordancier)
           } else if (identical(source_dictionnaire, "lexique_fr")) {
             do.call(generer_concordancier_lexique_html, args_concordancier)
