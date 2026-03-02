@@ -478,12 +478,19 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
 
     filles <- get_filles(node)
     if (!length(filles)) {
-      leaves <<- c(leaves, node)
+      if (!isTRUE(utiliser_terminales)) {
+        leaves <<- c(leaves, node)
+      }
       return(invisible(NULL))
     }
     for (f in filles) walk_leaves(f)
   }
   walk_leaves(racine)
+
+  if (isTRUE(utiliser_terminales)) {
+    terminales_atteintes <- intersect(unique(terminales), unique(visited))
+    leaves <- unique(c(leaves, terminales_atteintes))
+  }
 
   if (!length(leaves) && !length(classes_utiles)) {
     leaves <- sort(unique(suppressWarnings(as.integer(n1[, ncol(n1)]))))
