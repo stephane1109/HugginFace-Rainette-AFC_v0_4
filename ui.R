@@ -424,18 +424,6 @@ ui <- fluidPage(
               tags$p("Le fichier spacy_ner/ner.md est introuvable.")
             }
           )
-        ),
-
-        tabPanel(
-          "Readme (Rainette.md)",
-          tags$div(
-            style = "padding: 12px;",
-            tags$a(
-              href = "https://github.com/juba/rainette/blob/main/README.md",
-              target = "_blank",
-              "Ouvrir le README Rainette (GitHub) dans un nouvel onglet"
-            )
-          )
         )
       )
     )
