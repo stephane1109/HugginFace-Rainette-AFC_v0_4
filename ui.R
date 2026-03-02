@@ -332,10 +332,35 @@ ui <- fluidPage(
 
         tabPanel(
           "Résultats CHD Iramuteq",
-          tags$h3("Dendrogramme CHD (IRaMuTeQ-like)"),
-          plotOutput("plot_chd_iramuteq_dendro", height = "420px"),
-          tags$h3("Tableaux statistiques CHD par classe"),
-          uiOutput("ui_tables_stats_chd_iramuteq")
+          tabsetPanel(
+            tabPanel(
+              "Dendrogramme",
+              tags$h3("Dendrogramme CHD (IRaMuTeQ-like)"),
+              plotOutput("plot_chd_iramuteq_dendro", height = "420px")
+            ),
+            tabPanel(
+              "Stats CHD",
+              tags$h3("Tableaux statistiques CHD par classe"),
+              uiOutput("ui_tables_stats_chd_iramuteq")
+            ),
+            tabPanel(
+              "Concordancier IRaMuTeQ-like",
+              tags$h3("Concordancier"),
+              uiOutput("ui_concordancier_explore")
+            ),
+            tabPanel(
+              "Nuages de mots",
+              tags$h3("Nuage de mots par classe"),
+              selectInput("classe_viz_iramuteq", "Classe", choices = c("1"), selected = "1"),
+              uiOutput("ui_wordcloud")
+            ),
+            tabPanel(
+              "Stats classe",
+              tags$h3("Statistiques détaillées par classe"),
+              selectInput("classe_stats_iramuteq", "Classe", choices = c("1"), selected = "1"),
+              tableOutput("table_stats_classe")
+            )
+          )
         ),
 
         tabPanel(

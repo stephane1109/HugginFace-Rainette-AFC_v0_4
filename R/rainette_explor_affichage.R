@@ -1,4 +1,15 @@
 register_rainette_explor_affichage <- function(input, output, session, rv) {
+  classe_selectionnee <- reactive({
+    classe_iramuteq_wordcloud <- as.character(input$classe_viz_iramuteq)
+    classe_iramuteq_stats <- as.character(input$classe_stats_iramuteq)
+    classe_explore <- as.character(input$classe_viz)
+
+    candidats <- c(classe_iramuteq_wordcloud, classe_iramuteq_stats, classe_explore)
+    candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+    if (length(candidats) == 0) return(NULL)
+    candidats[[1]]
+  })
+
   update_explore_controls <- function() {
     clusters_choices <- as.character(rv$clusters)
     if (length(clusters_choices) == 0 && !is.null(rv$res_stats_df) && "Classe" %in% names(rv$res_stats_df)) {
@@ -20,6 +31,8 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
     k_plot_defaut <- max(2L, min(max_k_plot, k_plot_defaut))
 
     updateSelectInput(session, "classe_viz", choices = clusters_choices, selected = classe_defaut)
+    updateSelectInput(session, "classe_viz_iramuteq", choices = clusters_choices, selected = classe_defaut)
+    updateSelectInput(session, "classe_stats_iramuteq", choices = clusters_choices, selected = classe_defaut)
     updateSliderInput(session, "k_plot", min = 2, max = max_k_plot, value = k_plot_defaut)
     updateNumericInput(session, "n_terms_plot", value = 20L)
   }
@@ -137,9 +150,10 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   })
 
   output$ui_wordcloud <- renderUI({
-    req(input$classe_viz, rv$exports_prefix, rv$export_dir)
+    classe <- classe_selectionnee()
+    req(classe, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png"))
+    src_rel <- file.path("wordclouds", paste0("cluster_", classe, "_wordcloud.png"))
     if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
@@ -165,7 +179,8 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   })
 
   output$table_stats_classe <- renderTable({
-    req(input$classe_viz, rv$res_stats_df)
-    extraire_stats_chd_classe(rv$res_stats_df, classe = input$classe_viz, n_max = 50)
+    classe <- classe_selectionnee()
+    req(classe, rv$res_stats_df)
+    extraire_stats_chd_classe(rv$res_stats_df, classe = classe, n_max = 50)
   }, rownames = FALSE)
 }
