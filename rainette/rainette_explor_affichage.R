@@ -29,6 +29,7 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
     k_plot_defaut <- max(2L, min(max_k_plot, k_plot_defaut))
 
     updateSelectInput(session, "classe_viz", choices = clusters_choices, selected = classe_defaut)
+    updateSelectInput(session, "classe_viz_iramuteq", choices = clusters_choices, selected = classe_defaut)
     updateSliderInput(session, "k_plot", min = 2, max = max_k_plot, value = k_plot_defaut)
     updateNumericInput(session, "n_terms_plot", value = 20L)
   }
@@ -151,9 +152,13 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   })
 
   output$ui_wordcloud <- renderUI({
-    req(input$classe_viz, rv$exports_prefix, rv$export_dir)
+    classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz_iramuteq else input$classe_viz
+    if (is.null(classe_sel) || !nzchar(as.character(classe_sel))) {
+      classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz else input$classe_viz_iramuteq
+    }
+    req(classe_sel, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png"))
+    src_rel <- file.path("wordclouds", paste0("cluster_", classe_sel, "_wordcloud.png"))
     if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
@@ -168,9 +173,13 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   })
 
   output$ui_cooc <- renderUI({
-    req(input$classe_viz, rv$exports_prefix, rv$export_dir)
+    classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz_iramuteq else input$classe_viz
+    if (is.null(classe_sel) || !nzchar(as.character(classe_sel))) {
+      classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz else input$classe_viz_iramuteq
+    }
+    req(classe_sel, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("cooccurrences", paste0("cluster_", input$classe_viz, "_fcm_network.png"))
+    src_rel <- file.path("cooccurrences", paste0("cluster_", classe_sel, "_fcm_network.png"))
     if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucune cooccurrence disponible pour cette classe."))
     }
@@ -179,10 +188,14 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   })
 
   output$table_stats_classe <- renderTable({
-    req(input$classe_viz, rv$res_stats_df)
+    classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz_iramuteq else input$classe_viz
+    if (is.null(classe_sel) || !nzchar(as.character(classe_sel))) {
+      classe_sel <- if (identical(rv$res_type, "iramuteq")) input$classe_viz else input$classe_viz_iramuteq
+    }
+    req(classe_sel, rv$res_stats_df)
     extraire_stats_chd_classe(
       rv$res_stats_df,
-      classe = input$classe_viz,
+      classe = classe_sel,
       n_max = 50,
       max_p = if (isTRUE(input$filtrer_affichage_pvalue)) input$max_p else 1,
       seuil_p_significativite = input$max_p,
