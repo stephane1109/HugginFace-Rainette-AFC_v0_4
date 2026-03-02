@@ -228,7 +228,7 @@ register_events_lancer <- function(input, output, session, rv) {
 
         avancer <- function(valeur, detail) {
           valeur <- max(0, min(1, valeur))
-          p$set(value = valeur, message = "Analyse Rainette en cours", detail = detail)
+          p$set(value = valeur, message = "Calculs CHD en cours", detail = detail)
           rv$progression <- round(valeur * 100)
         }
 
