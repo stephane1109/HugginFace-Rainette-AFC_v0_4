@@ -290,10 +290,48 @@ server <- function(input, output, session) {
     )
   })
 
-  output$table_stats_corpus <- renderTable({
+  output$ui_table_stats_corpus <- renderUI({
     req(rv$stats_corpus_df)
-    rv$stats_corpus_df
-  }, striped = TRUE, spacing = "s", rownames = FALSE)
+
+    definitions <- c(
+      "Nom du corpus" = "Nom du fichier corpus importé.",
+      "Nombre de textes" = "Nombre d'unités de texte détectées dans le corpus.",
+      "Nombre de mots dans le corpus" = "Total des occurrences de mots (tokens).",
+      "Nombre de formes" = "Nombre de formes lexicales distinctes (types), différent des hapax.",
+      "Nombre de segments de texte" = "Nombre de segments après découpage pour l'analyse.",
+      "Nombre d'Hapax" = "Nombre de formes apparaissant une seule fois dans le corpus.",
+      "Loi de Zpif" = "Indicateur de conformité approximative à la loi de Zipf."
+    )
+
+    lignes <- lapply(seq_len(nrow(rv$stats_corpus_df)), function(i) {
+      metrique <- as.character(rv$stats_corpus_df$Metrique[i])
+      valeur <- as.character(rv$stats_corpus_df$Valeur[i])
+      definition <- unname(definitions[[metrique]])
+      if (is.null(definition) || !nzchar(definition)) definition <- ""
+
+      tags$tr(
+        tags$td(
+          tags$div(metrique),
+          if (nzchar(definition)) tags$div(
+            style = "font-size: 0.85em; color: #c62828; margin-top: 2px;",
+            definition
+          )
+        ),
+        tags$td(valeur)
+      )
+    })
+
+    tags$table(
+      class = "table table-striped table-condensed",
+      tags$thead(
+        tags$tr(
+          tags$th("Metrique"),
+          tags$th("Valeur")
+        )
+      ),
+      tags$tbody(lignes)
+    )
+  })
 
 
   output$plot_stats_zipf <- renderPlot({

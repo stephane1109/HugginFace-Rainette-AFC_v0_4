@@ -285,7 +285,7 @@ ui <- fluidPage(
           tags$h3("Journal"),
           tags$pre(style = "white-space: pre-wrap;", textOutput("logs")),
           tags$h3("Analyse du corpus (mode debug)"),
-          tableOutput("table_stats_corpus"),
+          uiOutput("ui_table_stats_corpus"),
           tags$div(
             style = "width: 600px;",
             plotOutput("plot_stats_zipf", height = "600px", width = "600px")
