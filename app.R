@@ -47,6 +47,7 @@ if (file.exists("help.md")) {
 }
 
 source("rainette/nettoyage_rainette.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/nettoyage_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("rainette/afc_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/concord_utils_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/concord_spacy_rainette.R", encoding = "UTF-8", local = TRUE)
@@ -76,6 +77,7 @@ source("R/nlp_spacy.R", encoding = "UTF-8", local = TRUE)
 source("R/nlp_lexique.R", encoding = "UTF-8", local = TRUE)
 source("R/pipeline_spacy_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/pipeline_lexique_analysis.R", encoding = "UTF-8", local = TRUE)
+source("R/pipeline_iramuteq_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/cooccurrences.R", encoding = "UTF-8", local = TRUE)
 source("R/server_outputs_status.R", encoding = "UTF-8", local = TRUE)
 source("R/server_events_lancer.R", encoding = "UTF-8", local = TRUE)

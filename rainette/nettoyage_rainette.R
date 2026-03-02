@@ -11,11 +11,11 @@
 REGEX_CARACTERES_AUTORISES <- "a-zA-Z0-9àÀâÂäÄáÁåÅãéÉèÈêÊëËìÌîÎïÏíÍóÓòÒôÔöÖõÕøØùÙûÛüÜúÚçÇßœŒ’ñÑ\\.:,;!\\?'"
 REGEX_CARACTERES_A_SUPPRIMER <- paste0("[^", REGEX_CARACTERES_AUTORISES, "]")
 
-appliquer_nettoyage_et_minuscules <- function(textes,
-                                             activer_nettoyage = FALSE,
-                                             forcer_minuscules = FALSE,
-                                             supprimer_chiffres = FALSE,
-                                             supprimer_apostrophes = FALSE) {
+appliquer_nettoyage_rainette <- function(textes,
+                                         activer_nettoyage = FALSE,
+                                         forcer_minuscules = FALSE,
+                                         supprimer_chiffres = FALSE,
+                                         supprimer_apostrophes = FALSE) {
   x <- textes
   if (is.null(x)) return(character(0))
 
@@ -50,3 +50,6 @@ appliquer_nettoyage_et_minuscules <- function(textes,
 
   x
 }
+
+# Compatibilité ascendante avec l'ancien nom (utilisé dans plusieurs scripts historiques).
+appliquer_nettoyage_et_minuscules <- appliquer_nettoyage_rainette
