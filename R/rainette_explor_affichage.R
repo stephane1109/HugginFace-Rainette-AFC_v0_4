@@ -70,14 +70,27 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
     }
 
     concordancier_src <- NULL
-    html_file_ok <- !is.null(rv$html_file) && length(rv$html_file) == 1 && !is.na(rv$html_file) && nzchar(rv$html_file)
-    if (isTRUE(html_file_ok) && isTRUE(file.exists(rv$html_file))) {
-      nom_html <- basename(rv$html_file)
-      src_html <- file.path(rv$export_dir, nom_html)
-      if (!isTRUE(file.exists(src_html))) {
-        ok_copy <- tryCatch(file.copy(rv$html_file, src_html, overwrite = TRUE), error = function(e) FALSE)
-        if (!isTRUE(ok_copy)) src_html <- rv$html_file
+
+    candidats_html <- c(
+      rv$html_file,
+      file.path(rv$export_dir, "segments_par_classe.html"),
+      file.path(rv$export_dir, "concordancier.html")
+    )
+    candidats_html <- unique(candidats_html[!is.na(candidats_html) & nzchar(candidats_html)])
+    html_existant <- candidats_html[file.exists(candidats_html)]
+
+    if (length(html_existant) > 0) {
+      src_html <- html_existant[[1]]
+      nom_html <- basename(src_html)
+      src_dans_exports <- file.path(rv$export_dir, nom_html)
+
+      if (!isTRUE(file.exists(src_dans_exports))) {
+        ok_copy <- tryCatch(file.copy(src_html, src_dans_exports, overwrite = TRUE), error = function(e) FALSE)
+        if (isTRUE(ok_copy)) src_html <- src_dans_exports
+      } else {
+        src_html <- src_dans_exports
       }
+
       concordancier_src <- paste0("/", rv$exports_prefix, "/", basename(src_html))
     }
 
