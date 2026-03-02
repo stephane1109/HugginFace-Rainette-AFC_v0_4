@@ -1,4 +1,4 @@
-# Rôle du fichier: server_events_lancer.R porte une partie du pipeline d'analyse Rainette.
+# Rôle du fichier: server_events_lancer_iramuteq.R porte le pipeline d'analyse IRaMuTeQ-like.
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
 # Module server - événement principal `input$lancer`
 # Ce fichier encapsule le pipeline principal lancé au clic sur "Lancer l'analyse"
@@ -209,6 +209,10 @@ register_events_lancer <- function(input, output, session, rv) {
           choices = c("Lexique (fr)" = "lexique_fr"),
           selected = "lexique_fr"
         )
+        if (isTRUE(input$activer_ner)) {
+          updateCheckboxInput(session, "activer_ner", value = FALSE)
+          ajouter_log(rv, "Mode IRaMuTeQ-like : NER spaCy automatiquement désactivé (mode uniquement Lexique fr).")
+        }
       } else {
         updateRadioButtons(
           session,
@@ -275,6 +279,23 @@ register_events_lancer <- function(input, output, session, rv) {
 
       ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
 
+      modele_chd <- as.character(input$modele_chd)
+      mode_iramuteq <- identical(modele_chd, "iramuteq")
+      source_dictionnaire <- as.character(input$source_dictionnaire)
+      if (!source_dictionnaire %in% c("spacy", "lexique_fr")) {
+        source_dictionnaire <- if (mode_iramuteq) "lexique_fr" else "spacy"
+      }
+      if (mode_iramuteq && !identical(source_dictionnaire, "lexique_fr")) {
+        source_dictionnaire <- "lexique_fr"
+        updateRadioButtons(
+          session,
+          "source_dictionnaire",
+          choices = c("Lexique (fr)" = "lexique_fr"),
+          selected = "lexique_fr"
+        )
+        ajouter_log(rv, "Workflow IRaMuTeQ-like : source de lemmatisation forcée sur lexique_fr.")
+      }
+
       if (is.null(input$fichier_corpus) || is.null(input$fichier_corpus$datapath) || !file.exists(input$fichier_corpus$datapath)) {
         rv$statut <- "Aucun fichier uploadé."
         rv$progression <- 0
@@ -283,12 +304,12 @@ register_events_lancer <- function(input, output, session, rv) {
         return(invisible(NULL))
       }
 
-      if (isTRUE(input$activer_ner) && identical(as.character(input$source_dictionnaire), "lexique_fr")) {
-        rv$statut <- "Configuration invalide : NER incompatible avec Lexique (fr)."
+      if (isTRUE(input$activer_ner) && mode_iramuteq) {
+        rv$statut <- "Configuration invalide : NER indisponible en mode IRaMuTeQ-like."
         rv$progression <- 0
-        ajouter_log(rv, "Blocage de l'analyse : NER activé avec la source Lexique (fr), combinaison non supportée.")
+        ajouter_log(rv, "Blocage de l'analyse : NER activé en mode IRaMuTeQ-like (mode uniquement Lexique fr).")
         showNotification(
-          "Analyse bloquée : le NER n'est pas disponible avec Lexique (fr). Désactive 'Activer NER (spaCy)' ou sélectionne la source spaCy.",
+          "Analyse bloquée : le mode IRaMuTeQ-like fonctionne uniquement avec Lexique (fr) et sans NER spaCy.",
           type = "error",
           duration = 8
         )
@@ -369,7 +390,7 @@ register_events_lancer <- function(input, output, session, rv) {
           avancer(0.18, "Préparation texte (nettoyage / minuscules)")
           rv$statut <- "Préparation texte..."
 
-          if (identical(as.character(input$modele_chd), "iramuteq")) {
+          if (mode_iramuteq) {
             textes_nettoyes <- appliquer_nettoyage_iramuteq(
               textes = textes_orig,
               activer_nettoyage = isTRUE(input$nettoyage_caracteres),
@@ -403,9 +424,8 @@ register_events_lancer <- function(input, output, session, rv) {
             ajouter_log(rv, paste0("Diagnostic langue: module chargé depuis ", charge_langue$chemin, "."))
           }
 
-          source_dictionnaire <- as.character(input$source_dictionnaire)
-          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- "spacy"
-          if (identical(as.character(input$modele_chd), "iramuteq") && !identical(source_dictionnaire, "lexique_fr")) {
+          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- if (mode_iramuteq) "lexique_fr" else "spacy"
+          if (mode_iramuteq && !identical(source_dictionnaire, "lexique_fr")) {
             source_dictionnaire <- "lexique_fr"
             ajouter_log(rv, "Workflow IRaMuTeQ-like : source de lemmatisation forcée sur lexique_fr.")
           }
@@ -433,7 +453,7 @@ register_events_lancer <- function(input, output, session, rv) {
             )
           )
 
-          if (identical(as.character(input$modele_chd), "iramuteq")) {
+          if (mode_iramuteq) {
             sortie_pipeline <- executer_pipeline_iramuteq(
               input = input,
               rv = rv,
