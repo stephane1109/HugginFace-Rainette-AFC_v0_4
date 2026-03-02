@@ -1,5 +1,4 @@
 # Rôle du fichier: concordancier_utils.R porte une partie du pipeline d'analyse Rainette.
-# Ce script centralise une responsabilité métier/technique utilisée par l'application.
 # concordancier_utils.R
 
 horodater <- function() format(Sys.time(), "%Y-%m-%d %H:%M:%S")
