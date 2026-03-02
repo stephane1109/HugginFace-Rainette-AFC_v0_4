@@ -2,7 +2,7 @@
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
 # Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module NLP - exécution spaCy (filtrage POS et NER)
-# Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
+# Ce fichier encapsule les appels aux scripts Python externes (`rainette/spacy_preprocess.py`
 # et `spacy_ner/ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
 
 
@@ -20,8 +20,8 @@ filtrer_sortie_python_bruit <- function(sortie) {
 }
 
 executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv, strip_fr_elisions = FALSE, remove_numbers = FALSE) {
-  script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
-  if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : spacy_preprocess.py (à la racine du projet).")
+  script_spacy <- tryCatch(normalizePath("rainette/spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
+  if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : rainette/spacy_preprocess.py.")
 
   python_cmd <- "python3"
 
