@@ -55,7 +55,7 @@ generer_concordancier_iramuteq_html <- function(
   on.exit(try(close(con), silent = TRUE), add = TRUE)
 
   writeLines("<html><head><meta charset='utf-8'/>", con)
-  writeLines("<style>body{font-family:Arial,sans-serif;} span.highlight{background-color:yellow;}</style>", con)
+  writeLines("<style>body{font-family:Arial,sans-serif;line-height:1.45;} span.highlight{background-color:yellow;} p.segment{margin:0 0 .45rem 0;} .classe-bloc{margin-bottom:1.25rem;padding-bottom:.8rem;border-bottom:1px solid #eee;}</style>", con)
   writeLines("</head><body>", con)
   writeLines("<h1>Concordancier IRaMuTeQ-like</h1>", con)
   writeLines("<h2>Segments par classe</h2>", con)
@@ -69,12 +69,14 @@ generer_concordancier_iramuteq_html <- function(
     cl <- noms_classes[[i]]
     if (!is.null(avancer)) avancer(0.75 + (i / n_classes) * 0.08, paste0("HTML IRaMuTeQ : classe ", cl))
 
+    writeLines("<div class='classe-bloc'>", con)
     writeLines(paste0("<h2>Classe ", cl, "</h2>"), con)
 
     segments <- segments_by_class[[cl]]
     ids_cl <- names(segments)
     if (length(ids_cl) == 0) {
       writeLines("<p><em>Aucun segment.</em></p>", con)
+      writeLines("</div>", con)
       next
     }
 
@@ -119,13 +121,15 @@ generer_concordancier_iramuteq_html <- function(
 
     if (length(segments_keep) == 0) {
       writeLines("<p><em>Aucun segment.</em></p>", con)
+      writeLines("</div>", con)
       next
     }
 
     if (length(termes_cl) == 0) {
       for (seg in echapper_segments_en_preservant_surlignage(unname(segments_keep), "<span class='highlight'>", "</span>")) {
-        writeLines(paste0("<p>", seg, "</p>"), con)
+        writeLines(paste0("<p class='segment'>", seg, "</p>"), con)
       }
+      writeLines("</div>", con)
       next
     }
 
@@ -142,9 +146,33 @@ generer_concordancier_iramuteq_html <- function(
       }
     )
 
-    for (seg in echapper_segments_en_preservant_surlignage(segments_hl, "<span class='highlight'>", "</span>")) {
-      writeLines(paste0("<p>", seg, "</p>"), con)
+    has_hl <- any(grepl("<span class='highlight'>", segments_hl, fixed = TRUE))
+    if (!has_hl) {
+      textes_keep_idx <- textes_filtrage[keep]
+      segments_hl_idx <- surligner_vecteur_html_unicode(
+        unname(textes_keep_idx),
+        motifs,
+        "<span class='highlight'>",
+        "</span>",
+        on_error = function(e, pat) {
+          if (!is.null(rv)) {
+            ajouter_log(rv, paste0("Concordancier IRaMuTeQ-like : erreur regex index [", pat, "] - ", conditionMessage(e)))
+          }
+        }
+      )
+      if (any(grepl("<span class='highlight'>", segments_hl_idx, fixed = TRUE))) {
+        segments_hl <- segments_hl_idx
+      }
     }
+
+    if (length(segments_hl) == 0 && length(segments_keep) > 0) {
+      segments_hl <- unname(segments_keep)
+    }
+
+    for (seg in echapper_segments_en_preservant_surlignage(segments_hl, "<span class='highlight'>", "</span>")) {
+      writeLines(paste0("<p class='segment'>", seg, "</p>"), con)
+    }
+    writeLines("</div>", con)
   }
 
   writeLines("</body></html>", con)
