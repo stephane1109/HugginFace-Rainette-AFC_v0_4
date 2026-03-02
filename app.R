@@ -48,8 +48,8 @@ if (file.exists("help.md")) {
 
 source("nettoyage.R", encoding = "UTF-8", local = TRUE)
 source("concordancier_utils.R", encoding = "UTF-8", local = TRUE)
-source("concordancier_spacy.R", encoding = "UTF-8", local = TRUE)
-source("concordancier_lexique.R", encoding = "UTF-8", local = TRUE)
+source("rainette/concord_spacy_rainette.R", encoding = "UTF-8", local = TRUE)
+source("rainette/concord_lexique_rainette.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/concordancier-iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("spacy_ner/concordancier_ner.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/afc_iramuteq.R", encoding = "UTF-8", local = TRUE)
