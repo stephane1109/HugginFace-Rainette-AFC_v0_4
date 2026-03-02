@@ -26,6 +26,17 @@ if (!exists("ui_options_iramuteq", mode = "function", inherits = TRUE)) {
   }
 }
 
+
+if (!exists("ui_resultats_chd_iramuteq", mode = "function", inherits = TRUE)) {
+  app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
+  if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
+  chemin_affichage_iramuteq <- file.path(app_dir, "iramuteq-like", "affichage_iramuteq-like.R")
+
+  if (file.exists(chemin_affichage_iramuteq)) {
+    source(chemin_affichage_iramuteq, encoding = "UTF-8", local = TRUE)
+  }
+}
+
 if (!exists("ui_aide_huggingface", mode = "function")) {
   if (file.exists("help.md")) {
     ui_aide_huggingface <- function() {
@@ -330,38 +341,7 @@ ui <- fluidPage(
 
 
 
-        tabPanel(
-          "Résultats CHD Iramuteq",
-          tabsetPanel(
-            tabPanel(
-              "Dendrogramme",
-              tags$h3("Dendrogramme CHD (IRaMuTeQ-like)"),
-              plotOutput("plot_chd_iramuteq_dendro", height = "420px")
-            ),
-            tabPanel(
-              "Stats CHD",
-              tags$h3("Tableaux statistiques CHD par classe"),
-              uiOutput("ui_tables_stats_chd_iramuteq")
-            ),
-            tabPanel(
-              "Concordancier IRaMuTeQ-like",
-              tags$h3("Concordancier"),
-              uiOutput("ui_concordancier_explore")
-            ),
-            tabPanel(
-              "Nuages de mots",
-              tags$h3("Nuage de mots par classe"),
-              selectInput("classe_viz_iramuteq", "Classe", choices = c("1"), selected = "1"),
-              uiOutput("ui_wordcloud")
-            ),
-            tabPanel(
-              "Stats classe",
-              tags$h3("Statistiques détaillées par classe"),
-              selectInput("classe_stats_iramuteq", "Classe", choices = c("1"), selected = "1"),
-              tableOutput("table_stats_classe")
-            )
-          )
-        ),
+        ui_resultats_chd_iramuteq(),
 
         tabPanel(
           "Prévisualisation corpus",
