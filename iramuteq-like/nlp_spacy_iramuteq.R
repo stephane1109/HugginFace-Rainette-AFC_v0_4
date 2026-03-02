@@ -1,8 +1,8 @@
-# Rôle du fichier: nlp_spacy.R porte une partie du pipeline d'analyse Rainette.
+# Rôle du fichier: nlp_spacy_iramuteq.R porte le module spaCy optionnel pour l'application IRaMuTeQ-like.
 # Ce script centralise une responsabilité métier/technique utilisée par l'application.
 # Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module NLP - exécution spaCy (filtrage POS et NER)
-# Ce fichier encapsule les appels aux scripts Python externes (`rainette/spacy_preprocess.py`
+# Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
 # et `spacy_ner/ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
 
 
@@ -20,8 +20,19 @@ filtrer_sortie_python_bruit <- function(sortie) {
 }
 
 executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv, strip_fr_elisions = FALSE, remove_numbers = FALSE) {
-  script_spacy <- tryCatch(normalizePath("rainette/spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
-  if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : rainette/spacy_preprocess.py.")
+  candidats_spacy <- unique(c(
+    "iramuteq-like/spacy_preprocess.py",
+    "rainette/spacy_preprocess.py"
+  ))
+  script_spacy <- NA_character_
+  for (cand in candidats_spacy) {
+    script_cand <- tryCatch(normalizePath(cand, mustWork = TRUE), error = function(e) NA_character_)
+    if (!is.na(script_cand) && file.exists(script_cand)) {
+      script_spacy <- script_cand
+      break
+    }
+  }
+  if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : iramuteq-like/spacy_preprocess.py ou rainette/spacy_preprocess.py.")
 
   python_cmd <- "python3"
 

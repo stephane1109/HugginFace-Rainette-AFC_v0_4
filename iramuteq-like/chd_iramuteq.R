@@ -53,6 +53,10 @@ preparer_entrees_chd_iramuteq <- function(
     if (exists("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)) {
       appliquer_nettoyage_fun <- get("appliquer_nettoyage_et_minuscules", mode = "function", inherits = TRUE)
     } else {
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(3.0, 2.6, 3.4, 8.5))
+
       appliquer_nettoyage_fun <- function(textes,
                                           activer_nettoyage = FALSE,
                                           forcer_minuscules = FALSE,
@@ -226,6 +230,10 @@ reconstruire_classes_terminales_iramuteq <- function(
       classif_mode = classif_mode
     )
   } else {
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(3.0, 2.6, 3.4, 8.5))
+
     mincl_use <- as.integer(mincl)
     if (!is.finite(mincl_use) || is.na(mincl_use) || mincl_use < 1) mincl_use <- 1L
   }
@@ -258,6 +266,10 @@ reconstruire_classes_terminales_iramuteq <- function(
     if (cl %in% feuilles) {
       classes_finales[which(feuilles_docs == cl)] <- cl_names[[i]]
     } else {
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(3.0, 2.6, 3.4, 8.5))
+
       filles <- suppressWarnings(as.integer(getfille(list_fille, cl, NULL)))
       tochange <- intersect(filles, feuilles)
       for (cl_fille in tochange) {
@@ -567,6 +579,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
 
   tip_labels <- paste0("Classe ", rownames(all_pos)[tip_idx])
   tip_nodes_chr <- rownames(all_pos)[tip_idx]
+  classe_par_noeud <- stats::setNames(rep(NA_integer_, length(tip_nodes_chr)), tip_nodes_chr)
 
   if (length(terminales)) {
     for (i in seq_along(terminales)) {
@@ -574,6 +587,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
       idx_node <- which(tip_nodes_chr == as.character(node))
       if (!length(idx_node)) next
       tip_labels[idx_node] <- paste0("Classe ", i)
+      classe_par_noeud[as.character(node)] <- i
     }
   }
 
@@ -619,6 +633,10 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
 
   if (identical(orientation, "vertical")) {
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(3.2, 2.8, 3.6, 1.5))
+
     all_pos_plot <- cbind(x = all_pos[, "y"], y = depth_max - all_pos[, "x"])
     x_max <- max(all_pos_plot[, "x"], na.rm = TRUE)
     y_max <- max(all_pos_plot[, "y"], na.rm = TRUE)
@@ -667,7 +685,8 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
 
       if (length(termes_par_classe)) {
         for (j in seq_along(tip_idx)) {
-          class_id <- suppressWarnings(as.integer(strsplit(tip_labels[[j]], " ")[[1]][2]))
+          node_id <- tip_nodes_chr[[j]]
+          class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
           if (!is.finite(class_id)) next
           termes_lbl <- termes_par_classe[[as.character(class_id)]]
           if (is.null(termes_lbl) || !nzchar(termes_lbl)) next
@@ -683,6 +702,10 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
       }
     }
   } else {
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(3.0, 2.6, 3.4, 8.5))
+
     plot(
       NA,
       xlim = c(-0.2, depth_max + 1.4),
@@ -722,6 +745,24 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
     if (length(tip_idx)) {
       points(all_pos[tip_idx, "x"], all_pos[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
       text(x = all_pos[tip_idx, "x"] + 0.12, y = all_pos[tip_idx, "y"], labels = tip_labels, adj = c(0, 0.5), cex = 0.78)
+
+      if (length(termes_par_classe)) {
+        for (j in seq_along(tip_idx)) {
+          node_id <- tip_nodes_chr[[j]]
+          class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
+          if (!is.finite(class_id)) next
+          termes_lbl <- termes_par_classe[[as.character(class_id)]]
+          if (is.null(termes_lbl) || !nzchar(termes_lbl)) next
+          text(
+            x = all_pos[tip_idx[j], "x"] + 0.12,
+            y = all_pos[tip_idx[j], "y"] + 0.28,
+            labels = termes_lbl,
+            adj = c(0, 0.5),
+            cex = 0.66,
+            col = "#333333"
+          )
+        }
+      }
     }
   }
 
