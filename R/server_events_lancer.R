@@ -938,6 +938,10 @@ register_events_lancer <- function(input, output, session, rv) {
 
           classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
           classes_uniques <- classes_uniques[is.finite(classes_uniques)]
+          if (!length(classes_uniques) && !is.null(res_stats_df) && is.data.frame(res_stats_df) && "Classe" %in% names(res_stats_df)) {
+            classes_uniques <- sort(unique(suppressWarnings(as.integer(res_stats_df$Classe))))
+            classes_uniques <- classes_uniques[is.finite(classes_uniques)]
+          }
 
           if (!identical(rv$res_type, "iramuteq")) {
             for (cl in classes_uniques) {

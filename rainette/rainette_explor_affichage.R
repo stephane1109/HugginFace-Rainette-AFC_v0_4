@@ -37,6 +37,11 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
     update_explore_controls()
   }, ignoreInit = TRUE)
 
+  observeEvent(rv$res_stats_df, {
+    req(!is.null(rv$res_stats_df))
+    update_explore_controls()
+  }, ignoreInit = TRUE)
+
   observeEvent(input$explor, {
     req(rv$export_dir)
 
