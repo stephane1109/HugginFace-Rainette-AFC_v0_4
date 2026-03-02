@@ -84,6 +84,7 @@ extraire_stats_chd_classe <- function(res_stats_df,
 
     out <- data.frame(
       num = seq_len(nrow(df)) - 1L,
+      forme = formes,
       `eff. s.t.` = as.integer(round(eff_st)),
       `eff. total` = as.integer(round(eff_total)),
       pourcentage = ifelse(is.na(pourcentage), NA_character_, formatC(pourcentage, format = "f", digits = 2)),
@@ -91,7 +92,6 @@ extraire_stats_chd_classe <- function(res_stats_df,
       `p.value` = ifelse(is.na(p_vals), NA_character_, formatC(p_vals, format = "f", digits = 6)),
       `p.value < 0.01` = ifelse(!is.na(p_vals) & p_vals < 0.01, "Oui", ""),
       Type = types,
-      forme = formes,
       check.names = FALSE,
       stringsAsFactors = FALSE
     )

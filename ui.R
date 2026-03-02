@@ -345,7 +345,7 @@ ui <- fluidPage(
               )
             ),
             tabPanel("Concordancier HTML", uiOutput("ui_concordancier_explore")),
-            tabPanel("Wordcloud", uiOutput("ui_wordcloud")),
+            tabPanel("Nuage de mots", uiOutput("ui_wordcloud")),
             tabPanel("Statistiques", tableOutput("table_stats_classe"))
           )
         ),
