@@ -9,46 +9,6 @@ register_events_lancer <- function(input, output, session, rv) {
     if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
     env_modules <- environment()
 
-    charger_module_spacy <- function() {
-      candidats_spacy <- unique(c(
-        file.path(app_dir, "R", "nlp_spacy.R"),
-        file.path(getwd(), "R", "nlp_spacy.R"),
-        file.path("R", "nlp_spacy.R")
-      ))
-
-      dernier_chemin <- candidats_spacy[[1]]
-      derniere_raison <- "fonctions spaCy absentes après source"
-
-      for (chemin_spacy in candidats_spacy) {
-        dernier_chemin <- chemin_spacy
-        if (!file.exists(chemin_spacy)) next
-
-        source_res <- tryCatch({
-          source(chemin_spacy, encoding = "UTF-8", local = env_modules)
-          NULL
-        }, error = function(e) e)
-
-        if (inherits(source_res, "error")) {
-          derniere_raison <- paste0("échec source: ", conditionMessage(source_res))
-          next
-        }
-
-        ok_filtrage <- exists("executer_spacy_filtrage", mode = "function", envir = env_modules, inherits = TRUE)
-        ok_ner <- exists("executer_spacy_ner", mode = "function", envir = env_modules, inherits = TRUE)
-        if (ok_filtrage && ok_ner) {
-          return(list(ok = TRUE, chemin = chemin_spacy, raison = ""))
-        }
-
-        derniere_raison <- paste0(
-          "fonctions spaCy absentes après source",
-          " (filtrage=", ifelse(ok_filtrage, "OK", "KO"),
-          ", ner=", ifelse(ok_ner, "OK", "KO"), ")"
-        )
-      }
-
-      list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
-    }
-
     charger_module_langue <- function() {
       candidats_langue <- unique(c(
         file.path(app_dir, "R", "nlp_language.R"),
@@ -357,22 +317,20 @@ register_events_lancer <- function(input, output, session, rv) {
 
       ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
 
-      modele_chd <- as.character(input$modele_chd)
-      mode_iramuteq <- identical(modele_chd, "iramuteq")
-      source_dictionnaire <- as.character(input$source_dictionnaire)
-      if (!source_dictionnaire %in% c("spacy", "lexique_fr")) {
-        source_dictionnaire <- if (mode_iramuteq) "lexique_fr" else "spacy"
-      }
-      if (mode_iramuteq && !identical(source_dictionnaire, "lexique_fr")) {
-        source_dictionnaire <- "lexique_fr"
-        updateRadioButtons(
-          session,
-          "source_dictionnaire",
-          choices = c("Lexique (fr)" = "lexique_fr"),
-          selected = "lexique_fr"
-        )
-        ajouter_log(rv, "Workflow IRaMuTeQ-like : source de lemmatisation forcée sur lexique_fr.")
-      }
+      modele_chd <- "iramuteq"
+      mode_iramuteq <- TRUE
+      source_dictionnaire <- "lexique_fr"
+      updateRadioButtons(
+        session,
+        "source_dictionnaire",
+        choices = c("Lexique (fr)" = "lexique_fr"),
+        selected = "lexique_fr"
+      )
+      updateRadioButtons(
+        session,
+        "modele_chd",
+        selected = "iramuteq"
+      )
 
       if (is.null(input$fichier_corpus) || is.null(input$fichier_corpus$datapath) || !file.exists(input$fichier_corpus$datapath)) {
         rv$statut <- "Aucun fichier uploadé."
@@ -502,11 +460,7 @@ register_events_lancer <- function(input, output, session, rv) {
             ajouter_log(rv, paste0("Diagnostic langue: module chargé depuis ", charge_langue$chemin, "."))
           }
 
-          if (!source_dictionnaire %in% c("spacy", "lexique_fr")) source_dictionnaire <- if (mode_iramuteq) "lexique_fr" else "spacy"
-          if (mode_iramuteq && !identical(source_dictionnaire, "lexique_fr")) {
-            source_dictionnaire <- "lexique_fr"
-            ajouter_log(rv, "Workflow IRaMuTeQ-like : source de lemmatisation forcée sur lexique_fr.")
-          }
+          source_dictionnaire <- "lexique_fr"
 
           verifier_coherence_dictionnaire_langue(
             textes_chd,
@@ -531,34 +485,11 @@ register_events_lancer <- function(input, output, session, rv) {
             )
           )
 
-          if (mode_iramuteq) {
-            sortie_pipeline <- executer_pipeline_iramuteq(
-              input = input,
-              rv = rv,
-              textes_chd = textes_chd
-            )
-          } else if (identical(source_dictionnaire, "lexique_fr")) {
-            sortie_pipeline <- executer_pipeline_lexique(
-              input = input,
-              rv = rv,
-              textes_chd = textes_chd
-            )
-          } else {
-            charge_spacy <- charger_module_spacy()
-            if (!isTRUE(charge_spacy$ok)) {
-              stop(paste0("Module spaCy indisponible pour le dictionnaire spaCy (", charge_spacy$raison, ") : ", charge_spacy$chemin))
-            }
-            ajouter_log(rv, paste0("Diagnostic spaCy: module chargé depuis ", charge_spacy$chemin, "."))
-
-            sortie_pipeline <- executer_pipeline_spacy(
-              input = input,
-              rv = rv,
-              ids_corpus = ids_corpus,
-              textes_chd = textes_chd,
-              avancer = avancer,
-              charger_module_spacy = charger_module_spacy
-            )
-          }
+          sortie_pipeline <- executer_pipeline_iramuteq(
+            input = input,
+            rv = rv,
+            textes_chd = textes_chd
+          )
 
           tok <- sortie_pipeline$tok
           dfm_obj <- sortie_pipeline$dfm_obj
@@ -605,8 +536,7 @@ register_events_lancer <- function(input, output, session, rv) {
           avancer(0.52, "Classification (rainette / rainette2)")
           rv$statut <- "Classification en cours..."
 
-          modele_chd <- as.character(input$modele_chd)
-          if (!modele_chd %in% c("rainette", "iramuteq")) modele_chd <- "rainette"
+          modele_chd <- "iramuteq"
 
           type_classif <- as.character(input$type_classification)
           if (!type_classif %in% c("simple", "double")) type_classif <- "simple"
@@ -748,41 +678,7 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$statut <- "NER (si activé)..."
 
           if (isTRUE(input$activer_ner)) {
-            if (!exists("executer_spacy_ner", mode = "function", inherits = TRUE)) {
-              ajouter_log(rv, "Diagnostic NER: fonction executer_spacy_ner absente avant chargement dynamique.")
-              charge_spacy <- charger_module_spacy()
-              if (!isTRUE(charge_spacy$ok)) {
-                stop(paste0("Module spaCy indisponible pour le NER (", charge_spacy$raison, ") : ", charge_spacy$chemin))
-              }
-              ajouter_log(rv, paste0("Diagnostic NER: module spaCy chargé depuis ", charge_spacy$chemin, "."))
-            }
-            config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
-            ids_ner <- docnames(filtered_corpus_ok)
-            textes_ner <- as.character(filtered_corpus_ok)
-            rv$ner_nb_segments <- length(textes_ner)
-            ajouter_log(rv, paste0("NER spaCy : modèle ", config_spacy_ner$modele, " (", config_spacy_ner$libelle, ")."))
-
-            df_ent <- executer_spacy_ner(
-              ids_ner,
-              textes_ner,
-              modele_spacy = config_spacy_ner$modele,
-              rv = rv,
-              dictionnaire_json = rv$ner_file
-            )
-
-            classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)
-            names(classes_vec) <- ids_ner
-
-            df_ent$Classe <- classes_vec[df_ent$doc_id]
-            df_ent$Classe <- as.integer(df_ent$Classe)
-            df_ent <- df_ent[!is.na(df_ent$Classe), , drop = FALSE]
-
-            textes_ner_index <- stats::setNames(as.character(textes_ner), ids_ner)
-            if (exists("construire_colonne_segment_ner", mode = "function", inherits = TRUE)) {
-              df_ent <- construire_colonne_segment_ner(df_ent, textes_ner_index)
-            }
-
-            rv$ner_df <- df_ent
+            ajouter_log(rv, "NER ignoré : cette branche IRaMuTeQ-like est strictement sans spaCy.")
           }
 
           avancer(0.62, "Exports + stats")
