@@ -3,7 +3,7 @@
 # Il facilite la maintenance en explicitant le périmètre et les points d'intégration.
 # Module NLP - exécution spaCy (filtrage POS et NER)
 # Ce fichier encapsule les appels aux scripts Python externes (`spacy_preprocess.py`
-# et `ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
+# et `spacy_ner/ner.py`) pour produire le texte filtré (tokens/POS/lemmes) et les entités nommées.
 
 
 filtrer_sortie_python_bruit <- function(sortie) {
@@ -77,8 +77,8 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
 }
 
 executer_spacy_ner <- function(ids, textes, modele_spacy, rv, dictionnaire_json = NULL) {
-  script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
-  if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : ner.py (à la racine du projet).")
+  script_ner <- tryCatch(normalizePath("spacy_ner/ner.py", mustWork = TRUE), error = function(e) NA_character_)
+  if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : spacy_ner/ner.py.")
 
   python_cmd <- "python3"
 
