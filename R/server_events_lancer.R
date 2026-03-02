@@ -602,7 +602,7 @@ register_events_lancer <- function(input, output, session, rv) {
             res_stats_df <- construire_stats_classes_iramuteq(
               dfm_obj = dfm_ok,
               classes = docvars(filtered_corpus_ok)$Classes,
-              max_p = input$max_p
+              max_p = 1
             ) %>%
               mutate(Classe = normaliser_id_classe_local(Classe)) %>%
               arrange(Classe, desc(chi2))
@@ -672,9 +672,14 @@ register_events_lancer <- function(input, output, session, rv) {
           rv$afc_dir <- file.path(rv$export_dir, "afc")
           dir.create(rv$afc_dir, showWarnings = FALSE, recursive = TRUE)
 
-          termes_signif <- unique(subset(res_stats_df, p <= input$max_p)$Terme)
-          termes_signif <- termes_signif[!is.na(termes_signif) & nzchar(termes_signif)]
-          if (length(termes_signif) < 2) termes_signif <- NULL
+          filtrer_affichage_pvalue <- isTRUE(input$filtrer_affichage_pvalue)
+
+          termes_signif <- NULL
+          if (isTRUE(filtrer_affichage_pvalue)) {
+            termes_signif <- unique(subset(res_stats_df, p <= input$max_p)$Terme)
+            termes_signif <- termes_signif[!is.na(termes_signif) & nzchar(termes_signif)]
+            if (length(termes_signif) < 2) termes_signif <- NULL
+          }
 
           tryCatch({
             groupes_docs <- docvars(filtered_corpus_ok)$Classes
@@ -684,7 +689,7 @@ register_events_lancer <- function(input, output, session, rv) {
               groupes = groupes_docs,
               termes_cibles = termes_signif,
               max_termes = 400,
-              seuil_p = input$max_p,
+              seuil_p = if (isTRUE(filtrer_affichage_pvalue)) input$max_p else 1,
               rv = rv
             )
 
@@ -740,7 +745,7 @@ register_events_lancer <- function(input, output, session, rv) {
                 corpus_aligne = filtered_corpus_ok,
                 groupes = docvars(filtered_corpus_ok)$Classes,
                 max_modalites = 400,
-                seuil_p = input$max_p,
+                seuil_p = if (isTRUE(filtrer_affichage_pvalue)) input$max_p else 1,
                 rv = rv
               )
               rv$afc_vars_obj <- objv
@@ -840,7 +845,11 @@ register_events_lancer <- function(input, output, session, rv) {
             if (!is.finite(top_n_demande) || is.na(top_n_demande)) top_n_demande <- 20L
             top_n_demande <- max(5L, top_n_demande)
 
-            df_stats_cl <- subset(res_stats_df, Classe == cl & p <= input$max_p)
+            if (isTRUE(input$filtrer_affichage_pvalue)) {
+              df_stats_cl <- subset(res_stats_df, Classe == cl & p <= input$max_p)
+            } else {
+              df_stats_cl <- subset(res_stats_df, Classe == cl)
+            }
             if (nrow(df_stats_cl) > 0) {
               df_stats_cl <- df_stats_cl[order(-df_stats_cl$chi2), , drop = FALSE]
               df_stats_cl <- head(df_stats_cl, top_n_demande)
@@ -914,7 +923,8 @@ register_events_lancer <- function(input, output, session, rv) {
             chemin_sortie = html_file,
             segments_by_class = segments_by_class,
             res_stats_df = res_stats_df,
-            max_p = input$max_p,
+            max_p = if (isTRUE(input$filtrer_affichage_pvalue)) input$max_p else 1,
+            filtrer_pvalue = isTRUE(input$filtrer_affichage_pvalue),
             textes_indexation = textes_index_ok,
             spacy_tokens_df = rv$spacy_tokens_df,
             lexique_fr_df = rv$lexique_fr_df,

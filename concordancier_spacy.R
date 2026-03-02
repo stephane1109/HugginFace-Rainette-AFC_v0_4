@@ -233,6 +233,7 @@ generer_concordancier_spacy_html <- function(
   segments_by_class,
   res_stats_df,
   max_p,
+  filtrer_pvalue = TRUE,
   textes_indexation,
   spacy_tokens_df,
   avancer = NULL,
@@ -250,7 +251,7 @@ generer_concordancier_spacy_html <- function(
   writeLines("</head><body>", con)
   writeLines("<h1>Concordancier Rainette</h1>", con)
   writeLines("<h2>Segments par classe</h2>", con)
-  writeLines("<h3>Segments par classe (filtrés sur présence de termes significatifs)</h3>", con)
+  writeLines("<h3>Segments par classe (filtrage p-value optionnel)</h3>", con)
 
   noms_classes <- names(segments_by_class)
   n_classes <- length(noms_classes)
@@ -271,7 +272,11 @@ generer_concordancier_spacy_html <- function(
       next
     }
 
-    idx_sig <- idx_cl & !is.na(res_stats_df$p_value) & res_stats_df$p_value <= max_p
+    if (isTRUE(filtrer_pvalue)) {
+      idx_sig <- idx_cl & !is.na(res_stats_df$p_value) & res_stats_df$p_value <= max_p
+    } else {
+      idx_sig <- idx_cl
+    }
     termes_cl <- unique(res_stats_df$Terme[idx_sig])
     termes_cl <- termes_cl[!is.na(termes_cl) & nzchar(termes_cl)]
 
@@ -285,7 +290,7 @@ generer_concordancier_spacy_html <- function(
         if (!is.null(rv)) {
           ajouter_log_spacy(rv, paste0(
             "Concordancier spaCy : classe ", cl,
-            " sans terme p<=", max_p,
+            if (isTRUE(filtrer_pvalue)) paste0(" sans terme p<=", max_p) else " sans filtrage p-value",
             ", fallback sur top chi2 (", length(termes_cl), " termes)."
           ))
         }
@@ -333,7 +338,7 @@ generer_concordancier_spacy_html <- function(
     if (!is.null(rv)) {
       ajouter_log_spacy(rv, paste0(
         "Concordancier spaCy : classe ", cl,
-        " | termes_significatifs=", length(unique(termes_cl)),
+        if (isTRUE(filtrer_pvalue)) " | termes_significatifs=" else " | termes_selectionnes=", length(unique(termes_cl)),
         " | variantes_surlignage=", length(unique(termes_a_surligner))
       ))
     }

@@ -38,6 +38,7 @@ extraire_stats_chd_classe <- function(res_stats_df,
                                       n_max = 50,
                                       show_negative = FALSE,
                                       max_p = 1,
+                                      seuil_p_significativite = 0.05,
                                       style = c("iramuteq_clone", "legacy")) {
   style <- match.arg(style)
 
@@ -93,6 +94,21 @@ extraire_stats_chd_classe <- function(res_stats_df,
       check.names = FALSE,
       stringsAsFactors = FALSE
     )
+
+    seuil_sig <- suppressWarnings(as.numeric(seuil_p_significativite))
+    if (is.finite(seuil_sig) && !is.na(seuil_sig) && nrow(out) > 0) {
+      idx_non_signif <- !is.na(p_vals) & p_vals > seuil_sig
+      if (any(idx_non_signif)) {
+        colonnes_colorables <- names(out)
+        out[idx_non_signif, colonnes_colorables] <- lapply(out[idx_non_signif, colonnes_colorables, drop = FALSE], function(col_vals) {
+          ifelse(
+            is.na(col_vals),
+            NA_character_,
+            sprintf("<span style='color:#842029;'>%s</span>", as.character(col_vals))
+          )
+        })
+      }
+    }
 
     return(out)
   }
