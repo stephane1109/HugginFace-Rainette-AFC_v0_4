@@ -1,6 +1,4 @@
 # Rôle du fichier: ui.R porte une partie du pipeline d'analyse Rainette.
-# Ce script centralise une responsabilité métier/technique utilisée par l'application.
-
 # ui.R
 
 library(shiny)
@@ -42,7 +40,7 @@ if (!exists("ui_aide_huggingface", mode = "function")) {
     ui_aide_huggingface <- function() {
       tagList(
         tags$h2("Aide"),
-        includeMarkdown("help.md")
+        includeMarkdown("help/help.md")
       )
     }
   } else {
@@ -355,7 +353,7 @@ ui <- fluidPage(
         ui_resultats_chd_iramuteq(),
 
         tabPanel(
-          "Prévisualisation corpus",
+          "Prévisu corpus",
           tags$h3("Corpus importé"),
           uiOutput("ui_corpus_preview")
         ),
