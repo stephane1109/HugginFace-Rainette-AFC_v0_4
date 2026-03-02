@@ -181,7 +181,18 @@ ui <- fluidPage(
 
       tags$div(class = "sidebar-section-title", "Nettoyage"),
 
+      conditionalPanel(
+        condition = "input.modele_chd == 'iramuteq'",
+        tags$div(
+          style = "margin: 0 0 8px 0; padding: 8px; background: #f7fbff; border-left: 3px solid #1e5aa8;",
+          tags$strong("Options IRaMuTeQ-like (iramuteq-like/textprepa_iramuteq.py)"),
+          tags$br(),
+          tags$small("Ces options pilotent la préparation du texte avant la tokenisation en mode IRaMuTeQ-like.")
+        )
+      ),
+
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
+      checkboxInput("forcer_minuscules_avant", "Passage en minuscules avant tokenisation", value = FALSE),
       checkboxInput("supprimer_ponctuation", "Supprimer la ponctuation", value = FALSE),
       tags$small("Supprime la ponctuation à la tokenisation quanteda (remove_punct), pour les deux sources (spaCy et lexique_fr), par ex. . , ; : ! ? ' ’ \" - ( ) [ ] …"),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
