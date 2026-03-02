@@ -1,3 +1,12 @@
+# Description des fonctions du script `rainette_explor_affichage.R`
+# - register_rainette_explor_affichage(input, output, session, rv) :
+#   enregistre les observateurs et sorties Shiny de l'onglet « Explore rainette »
+#   (navigation, chargement du concordancier, graphiques CHD, nuages de mots,
+#   réseaux de cooccurrences et tableau des statistiques par classe).
+# - update_explore_controls() [fonction interne] :
+#   initialise et synchronise les contrôles d'exploration (classe, k du graphe,
+#   nombre de termes) à partir des résultats courants.
+
 register_rainette_explor_affichage <- function(input, output, session, rv) {
   update_explore_controls <- function() {
     clusters_choices <- as.character(rv$clusters)
