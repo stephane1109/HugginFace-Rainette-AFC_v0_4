@@ -2,7 +2,7 @@
 # Le rendu suit le style Rainette (segments par classe + surlignage),
 # avec une sélection des termes alignée sur les filtres statistiques IRaMuTeQ-like.
 
-.generer_concordancier_iramuteq_termes <- function(res_stats_df, classe, max_p = 1) {
+.generer_concordancier_iramuteq_termes <- function(res_stats_df, classe, max_p = 1, filtrer_pvalue = TRUE) {
   if (is.null(res_stats_df) || nrow(res_stats_df) == 0) return(character(0))
   if (!all(c("Classe", "Terme") %in% names(res_stats_df))) return(character(0))
 
@@ -16,12 +16,14 @@
   if (nrow(df) == 0) return(character(0))
 
   # Filtres IRaMuTeQ-like: p <= max_p et, par défaut, uniquement les chi2 positifs.
-  if ("p" %in% names(df) && is.finite(max_p) && !is.na(max_p)) {
-    p_vals <- suppressWarnings(as.numeric(df$p))
-    df <- df[!is.na(p_vals) & p_vals <= max_p, , drop = FALSE]
-  } else if ("p_value" %in% names(df) && is.finite(max_p) && !is.na(max_p)) {
-    p_vals <- suppressWarnings(as.numeric(df$p_value))
-    df <- df[!is.na(p_vals) & p_vals <= max_p, , drop = FALSE]
+  if (isTRUE(filtrer_pvalue)) {
+    if ("p" %in% names(df) && is.finite(max_p) && !is.na(max_p)) {
+      p_vals <- suppressWarnings(as.numeric(df$p))
+      df <- df[!is.na(p_vals) & p_vals <= max_p, , drop = FALSE]
+    } else if ("p_value" %in% names(df) && is.finite(max_p) && !is.na(max_p)) {
+      p_vals <- suppressWarnings(as.numeric(df$p_value))
+      df <- df[!is.na(p_vals) & p_vals <= max_p, , drop = FALSE]
+    }
   }
 
   if ("chi2" %in% names(df)) {
@@ -41,6 +43,7 @@ generer_concordancier_iramuteq_html <- function(
   segments_by_class,
   res_stats_df,
   max_p,
+  filtrer_pvalue = TRUE,
   textes_indexation,
   avancer = NULL,
   rv = NULL,
@@ -56,7 +59,7 @@ generer_concordancier_iramuteq_html <- function(
   writeLines("</head><body>", con)
   writeLines("<h1>Concordancier IRaMuTeQ-like</h1>", con)
   writeLines("<h2>Segments par classe</h2>", con)
-  writeLines("<h3>Filtrage: p ≤ seuil + χ² positif (puis fallback top χ²)</h3>", con)
+  writeLines(if (isTRUE(filtrer_pvalue)) "<h3>Filtrage: p ≤ seuil + χ² positif (puis fallback top χ²)</h3>" else "<h3>Filtrage: χ² positif (sans filtre p-value)</h3>", con)
 
   noms_classes <- names(segments_by_class)
   n_classes <- length(noms_classes)
@@ -82,7 +85,7 @@ generer_concordancier_iramuteq_html <- function(
       if (any(ok_tx)) textes_filtrage[ok_tx] <- tx[ok_tx]
     }
 
-    termes_cl <- .generer_concordancier_iramuteq_termes(res_stats_df, cl, max_p = max_p)
+    termes_cl <- .generer_concordancier_iramuteq_termes(res_stats_df, cl, max_p = max_p, filtrer_pvalue = filtrer_pvalue)
 
     if (length(termes_cl) == 0 && !is.null(res_stats_df) && nrow(res_stats_df) > 0 && "Classe" %in% names(res_stats_df)) {
       df_cl <- res_stats_df[suppressWarnings(as.numeric(res_stats_df$Classe)) == suppressWarnings(as.numeric(cl)), , drop = FALSE]

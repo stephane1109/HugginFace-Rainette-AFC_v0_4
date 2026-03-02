@@ -119,6 +119,11 @@ ui <- fluidPage(
       numericInput("segment_size", "segment_size", value = 40, min = 5, step = 1),
       numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
       numericInput("max_p", "max_p (p-value)", value = 0.05, min = 0, max = 1, step = 0.01),
+      checkboxInput(
+        "filtrer_affichage_pvalue",
+        "Filtrer l'affichage des résultats par p-value (p ≤ max_p)",
+        value = TRUE
+      ),
 
       conditionalPanel(
         condition = "input.modele_chd == 'rainette'",
