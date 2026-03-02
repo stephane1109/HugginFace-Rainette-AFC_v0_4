@@ -23,7 +23,19 @@ register_outputs_status <- function(input, output, session, rv) {
 
     output$table_classes <- renderTable({
       req(rv$filtered_corpus)
-      tb <- table(docvars(rv$filtered_corpus)$Classes, useNA = "ifany")
+      classes_brutes <- docvars(rv$filtered_corpus)$Classes
+
+      # Harmonisation des identifiants de classes (ex. "Classe 3", "3", facteur)
+      # pour éviter des doublons d'affichage artificiels avec IRaMuTeQ-like.
+      classes_norm <- suppressWarnings(as.integer(classes_brutes))
+      if (all(is.na(classes_norm))) {
+        classes_norm <- suppressWarnings(as.integer(gsub("[^0-9-]", "", as.character(classes_brutes))))
+      }
+
+      classes_norm <- classes_norm[!is.na(classes_norm) & classes_norm > 0L]
+      validate(need(length(classes_norm) > 0, "Aucune classe exploitable."))
+
+      tb <- table(factor(classes_norm, levels = sort(unique(classes_norm))), useNA = "no")
       effectifs <- as.integer(tb)
       pourcentages <- round((effectifs / sum(effectifs)) * 100, 1)
       data.frame(

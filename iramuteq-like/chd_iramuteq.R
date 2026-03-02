@@ -246,20 +246,27 @@ reconstruire_classes_terminales_iramuteq <- function(
   }
 
   classes_finales <- rep(0L, nrow(n1))
+  feuilles_docs <- suppressWarnings(as.integer(n1[, ncol(n1)]))
 
+  # Reproduction fidèle de iramuteq_clone_v3/Rscripts/chdtxt.R::make.classes
+  # (sans la partie manipulation du tree, non nécessaire au calcul des classes docs).
+  cl_names <- seq_along(terminales)
   for (i in seq_along(terminales)) {
-    cl <- as.integer(terminales[[i]])
+    cl <- suppressWarnings(as.integer(terminales[[i]]))
+    if (!is.finite(cl)) next
+
     if (cl %in% feuilles) {
-      classes_finales[which(as.integer(n1[, ncol(n1)]) == cl)] <- i
+      classes_finales[which(feuilles_docs == cl)] <- cl_names[[i]]
     } else {
-      filles <- getfille(list_fille, cl, NULL)
-      filles <- intersect(as.integer(filles), feuilles)
-      if (length(filles) > 0) {
-        classes_finales[which(as.integer(n1[, ncol(n1)]) %in% filles)] <- i
+      filles <- suppressWarnings(as.integer(getfille(list_fille, cl, NULL)))
+      tochange <- intersect(filles, feuilles)
+      for (cl_fille in tochange) {
+        classes_finales[which(feuilles_docs == cl_fille)] <- cl_names[[i]]
       }
     }
   }
 
+  classes_finales[which(is.na(classes_finales))] <- 0L
   list(
     classes = classes_finales,
     terminales = as.integer(terminales),
