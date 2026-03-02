@@ -933,7 +933,7 @@ register_events_lancer <- function(input, output, session, rv) {
             rv = rv
           )
 
-          if (identical(rv$res_type, "iramuteq")) {
+          html_genere <- if (identical(rv$res_type, "iramuteq")) {
             do.call(generer_concordancier_iramuteq_html, args_concordancier)
           } else if (identical(source_dictionnaire, "lexique_fr")) {
             do.call(generer_concordancier_lexique_html, args_concordancier)
@@ -941,7 +941,11 @@ register_events_lancer <- function(input, output, session, rv) {
             do.call(generer_concordancier_spacy_html, args_concordancier)
           }
 
-          rv$html_file <- html_file
+          if (is.character(html_genere) && length(html_genere) == 1 && !is.na(html_genere) && nzchar(html_genere)) {
+            rv$html_file <- html_genere
+          } else {
+            rv$html_file <- html_file
+          }
 
           avancer(0.96, "ZIP")
           rv$statut <- "Création ZIP..."
