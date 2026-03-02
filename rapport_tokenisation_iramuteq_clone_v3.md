@@ -131,13 +131,13 @@ Et ajouter un export intermédiaire (tokens par segment) pour expliquer où appa
 ## 6) Corrections concrètes recommandées pour rapprocher les scores
 
 1. **Figer une prépa corpus unique avant `quanteda::tokens`**
-   - Utiliser `textprepa_iramuteq.py` pour générer un texte préparé stable et auditable (mêmes règles à chaque run), puis tokeniser ce texte côté R.
+   - Utiliser `iramuteq-like/textprepa_iramuteq.py` pour générer un texte préparé stable et auditable (mêmes règles à chaque run), puis tokeniser ce texte côté R.
 
 2. **Éviter les doubles effets de nettoyage**
-   - Si `textprepa_iramuteq.py` est activé, neutraliser le nettoyage redondant en amont pour ne pas supprimer deux fois chiffres/élisions.
+   - Si `iramuteq-like/textprepa_iramuteq.py` est activé, neutraliser le nettoyage redondant en amont pour ne pas supprimer deux fois chiffres/élisions.
 
 3. **Comparer les formes à 3 niveaux**
-   - Niveau A: formes post-prépa (sortie `output_tokens` de `textprepa_iramuteq.py`),
+   - Niveau A: formes post-prépa (sortie `output_tokens` de `iramuteq-like/textprepa_iramuteq.py`),
    - Niveau B: formes post-`quanteda::tokens`,
    - Niveau C: formes post-`dfm_trim`.
 
