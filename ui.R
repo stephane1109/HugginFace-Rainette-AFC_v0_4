@@ -9,7 +9,7 @@ library(htmltools)
 if (!exists("ui_options_rainette", mode = "function", inherits = TRUE)) {
   app_dir <- tryCatch(shiny::getShinyOption("appDir"), error = function(e) NULL)
   if (is.null(app_dir) || !nzchar(app_dir)) app_dir <- getwd()
-  chemin_options_rainette <- file.path(app_dir, "ui_options_rainette.R")
+  chemin_options_rainette <- file.path(app_dir, "rainette", "ui_options_rainette.R")
 
   if (file.exists(chemin_options_rainette)) {
     source(chemin_options_rainette, encoding = "UTF-8", local = TRUE)

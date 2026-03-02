@@ -54,7 +54,7 @@ source("iramuteq-like/concordancier-iramuteq.R", encoding = "UTF-8", local = TRU
 source("concordancier_ner.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/afc_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("stats.R", encoding = "UTF-8", local = TRUE)
-source("ui_options_rainette.R", encoding = "UTF-8", local = TRUE)
+source("rainette/ui_options_rainette.R", encoding = "UTF-8", local = TRUE)
 source("ui_options_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/affichage_iramuteq-like.R", encoding = "UTF-8", local = TRUE)
 source("iramuteq-like/wordcloud_iramuteq.R", encoding = "UTF-8", local = TRUE)
@@ -78,7 +78,7 @@ source("R/pipeline_lexique_analysis.R", encoding = "UTF-8", local = TRUE)
 source("R/cooccurrences.R", encoding = "UTF-8", local = TRUE)
 source("R/server_outputs_status.R", encoding = "UTF-8", local = TRUE)
 source("R/server_events_lancer.R", encoding = "UTF-8", local = TRUE)
-source("R/rainette_explor_affichage.R", encoding = "UTF-8", local = TRUE)
+source("rainette/rainette_explor_affichage.R", encoding = "UTF-8", local = TRUE)
 
 server <- function(input, output, session) {
 
