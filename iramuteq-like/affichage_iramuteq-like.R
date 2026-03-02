@@ -18,13 +18,13 @@ ui_resultats_chd_iramuteq <- function() {
       tabPanel(
         "Concordancier IRaMuTeQ-like",
         tags$h3("Concordancier"),
-        uiOutput("ui_concordancier_explore")
+        uiOutput("ui_concordancier_iramuteq")
       ),
       tabPanel(
         "Nuage de mots",
         tags$h3("Nuage de mots par classe"),
-        selectInput("classe_viz", "Classe", choices = c("1"), selected = "1"),
-        uiOutput("ui_wordcloud")
+        selectInput("classe_viz_iramuteq", "Classe", choices = c("1"), selected = "1"),
+        uiOutput("ui_wordcloud_iramuteq")
       )
     )
   )
