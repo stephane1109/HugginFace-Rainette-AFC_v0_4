@@ -1,5 +1,5 @@
-# Rôle du fichier: stats.R porte une partie du pipeline d'analyse Rainette.
-# stats.R
+# Rôle du fichier: stats_rainette.R porte une partie du pipeline d'analyse Rainette.
+# stats_rainette.R
 # Fonctions de calcul de statistiques descriptives du corpus
 
 extraire_textes_iramuteq <- function(textes_bruts) {
