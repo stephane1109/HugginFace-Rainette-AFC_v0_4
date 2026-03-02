@@ -374,10 +374,10 @@ ui <- fluidPage(
           "Aide NER",
           tags$div(
             style = "padding: 12px;",
-            if (file.exists("ner.md")) {
-              includeMarkdown("ner.md")
+            if (file.exists("spacy_ner/ner.md")) {
+              includeMarkdown("spacy_ner/ner.md")
             } else {
-              tags$p("Le fichier ner.md est introuvable à la racine du projet.")
+              tags$p("Le fichier spacy_ner/ner.md est introuvable.")
             }
           )
         ),
