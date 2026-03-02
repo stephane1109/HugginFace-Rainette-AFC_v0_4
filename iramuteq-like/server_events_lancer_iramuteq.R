@@ -223,6 +223,84 @@ register_events_lancer <- function(input, output, session, rv) {
       }
     }, ignoreInit = FALSE)
 
+    output$ui_concordancier_iramuteq <- renderUI({
+      req(rv$export_dir)
+
+      if (!identical(rv$res_type, "iramuteq")) {
+        return(tags$p("Concordancier IRaMuTeQ-like indisponible (mode Rainette actif)."))
+      }
+
+      if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
+        return(tags$div(
+          style = "padding: 12px;",
+          tags$p("Préfixe de ressources invalide."),
+          tags$p("Relance l'analyse pour régénérer les exports.")
+        ))
+      }
+
+      if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+        shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+      }
+
+      candidats_html <- c(
+        rv$html_file,
+        file.path(rv$export_dir, "segments_par_classe.html"),
+        file.path(rv$export_dir, "concordancier.html")
+      )
+      candidats_html <- unique(candidats_html[!is.na(candidats_html) & nzchar(candidats_html)])
+      html_existant <- candidats_html[file.exists(candidats_html)]
+
+      if (length(html_existant) == 0) {
+        return(tags$div(
+          style = "padding: 12px;",
+          tags$p("Le fichier du concordancier HTML n'est pas disponible pour cette analyse."),
+          tags$p("Relance l'analyse puis vérifie les logs si le problème persiste.")
+        ))
+      }
+
+      src_html <- html_existant[[1]]
+      nom_html <- basename(src_html)
+      src_dans_exports <- file.path(rv$export_dir, nom_html)
+
+      if (!isTRUE(file.exists(src_dans_exports))) {
+        ok_copy <- tryCatch(file.copy(src_html, src_dans_exports, overwrite = TRUE), error = function(e) FALSE)
+        if (isTRUE(ok_copy)) src_html <- src_dans_exports
+      } else {
+        src_html <- src_dans_exports
+      }
+
+      tags$iframe(
+        src = paste0("/", rv$exports_prefix, "/", basename(src_html)),
+        style = "width: 100%; height: 70vh; border: 1px solid #999;"
+      )
+    })
+
+    output$ui_wordcloud_iramuteq <- renderUI({
+      req(rv$export_dir, rv$exports_prefix)
+
+      if (!identical(rv$res_type, "iramuteq")) {
+        return(tags$p("Nuage de mots IRaMuTeQ-like indisponible (mode Rainette actif)."))
+      }
+
+      classe_sel <- as.character(input$classe_viz_iramuteq)
+      if (length(classe_sel) != 1 || is.na(classe_sel) || !nzchar(classe_sel)) {
+        return(tags$p("Sélectionne une classe pour afficher le nuage de mots."))
+      }
+
+      src_rel <- file.path("wordclouds", paste0("cluster_", classe_sel, "_wordcloud.png"))
+      if (!file.exists(file.path(rv$export_dir, src_rel))) {
+        return(tags$p("Aucun nuage de mots disponible pour cette classe."))
+      }
+
+      tags$div(
+        style = "text-align: center;",
+        tags$img(
+          src = paste0("/", rv$exports_prefix, "/", src_rel),
+          style = "max-width: 100%; height: auto; border: 1px solid #999; display: inline-block;"
+        )
+      )
+    })
+
     normaliser_id_classe_local <- function(x) {
       x_chr <- as.character(x)
       x_chr <- trimws(x_chr)
@@ -958,6 +1036,16 @@ register_events_lancer <- function(input, output, session, rv) {
 
           classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
           classes_uniques <- classes_uniques[is.finite(classes_uniques)]
+
+          if (length(classes_uniques) > 0) {
+            classes_choices <- as.character(classes_uniques)
+            updateSelectInput(
+              session,
+              "classe_viz_iramuteq",
+              choices = classes_choices,
+              selected = classes_choices[[1]]
+            )
+          }
 
           if (!identical(rv$res_type, "iramuteq")) {
             for (cl in classes_uniques) {
