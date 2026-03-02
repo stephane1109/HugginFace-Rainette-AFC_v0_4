@@ -301,6 +301,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
   mat_bin <- ifelse(mat > 0, 1L, 0L)
   total_docs <- nrow(mat_bin)
   docs_par_terme <- colSums(mat_bin)
+  occ_par_terme <- colSums(mat)
 
   calc_chi_sign <- function(a, b, c, d) {
     tb <- matrix(c(a, b, c, d), nrow = 2, byrow = TRUE)
@@ -358,9 +359,15 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
       lr = as.numeric(lr),
       frequency = as.numeric(freq_cl),
       docprop = as.numeric(docprop_cl),
-      eff_st = as.numeric(docs_terme_cl),
-      eff_total = as.numeric(docs_par_terme),
-      pourcentage = as.numeric(ifelse(docs_par_terme > 0, 100 * docs_terme_cl / docs_par_terme, 0)),
+      # Alignement IRaMuTeQ: les colonnes d'effectifs affichées en table
+      # correspondent aux occurrences (et non au nombre de segments contenant le terme).
+      # Ex.: "23/46" signifie 23 occurrences dans la classe sur 46 occurrences au total.
+      eff_st = as.numeric(freq_cl),
+      eff_total = as.numeric(occ_par_terme),
+      pourcentage = as.numeric(ifelse(occ_par_terme > 0, 100 * freq_cl / occ_par_terme, 0)),
+      # Colonnes documentaires conservées pour diagnostic (chi2 calculé sur présence/absence doc).
+      eff_docs_st = as.numeric(docs_terme_cl),
+      eff_docs_total = as.numeric(docs_par_terme),
       p = as.numeric(chi_p[, "p"]),
       Classe = as.integer(cl),
       stringsAsFactors = FALSE
@@ -370,7 +377,7 @@ construire_stats_classes_iramuteq <- function(dfm_obj, classes, max_p = 1) {
     if (is.finite(max_p) && !is.na(max_p) && max_p < 1) {
       df <- df[df$p <= max_p, , drop = FALSE]
     }
-    df <- df[order(-df$chi2, -df$frequency, -docs_par_terme[df$Terme]), , drop = FALSE]
+    df <- df[order(-df$chi2, -df$frequency, -occ_par_terme[df$Terme]), , drop = FALSE]
     sorties[[i]] <- df
   }
 
