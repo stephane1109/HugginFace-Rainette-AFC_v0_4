@@ -8,6 +8,42 @@
 #   nombre de termes) à partir des résultats courants.
 
 register_rainette_explor_affichage <- function(input, output, session, rv) {
+  normaliser_id_classe_explore <- function(x) {
+    x_chr <- trimws(as.character(x))
+    if (!length(x_chr) || is.na(x_chr) || !nzchar(x_chr)) return(NA_integer_)
+
+    x_num <- suppressWarnings(as.integer(x_chr))
+    if (!is.na(x_num)) return(x_num)
+
+    extrait <- sub("^.*?(\\d+).*$", "\\1", x_chr)
+    if (!grepl("\\d", x_chr)) return(NA_integer_)
+    suppressWarnings(as.integer(extrait))
+  }
+
+  trouver_export_par_classe <- function(export_dir, sous_dossier, suffixe, classe_input = NULL) {
+    dir_path <- file.path(export_dir, sous_dossier)
+    if (!dir.exists(dir_path)) return(NULL)
+
+    motif <- paste0("^cluster_(.+)_", suffixe, "\\.png$")
+    fichiers <- list.files(dir_path, pattern = motif, full.names = FALSE)
+    if (length(fichiers) == 0) return(NULL)
+
+    if (!is.null(classe_input) && nzchar(as.character(classe_input))) {
+      candidats <- unique(c(
+        as.character(classe_input),
+        as.character(normaliser_id_classe_explore(classe_input))
+      ))
+      candidats <- candidats[!is.na(candidats) & nzchar(candidats)]
+
+      for (cl in candidats) {
+        cible <- paste0("cluster_", cl, "_", suffixe, ".png")
+        if (cible %in% fichiers) return(file.path(sous_dossier, cible))
+      }
+    }
+
+    file.path(sous_dossier, sort(fichiers)[[1]])
+  }
+
   update_explore_controls <- function() {
     clusters_choices <- as.character(rv$clusters)
     if (length(clusters_choices) == 0 && !is.null(rv$res_stats_df) && "Classe" %in% names(rv$res_stats_df)) {
@@ -90,6 +126,18 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
       file.path(rv$export_dir, "segments_par_classe.html"),
       file.path(rv$export_dir, "concordancier.html")
     )
+
+    # Fallback robuste : certains pipelines peuvent produire un nom de fichier
+    # légèrement différent. On récupère alors le premier HTML concordancier
+    # détecté dans le répertoire d'export.
+    candidats_dyn <- list.files(
+      rv$export_dir,
+      pattern = "(segments.*classe|concord).*\\.html$",
+      ignore.case = TRUE,
+      full.names = TRUE
+    )
+    candidats_html <- c(candidats_html, candidats_dyn)
+
     candidats_html <- unique(candidats_html[!is.na(candidats_html) & nzchar(candidats_html)])
     html_existant <- candidats_html[file.exists(candidats_html)]
 
@@ -153,8 +201,13 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   output$ui_wordcloud <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png"))
-    if (!file.exists(file.path(rv$export_dir, src_rel))) {
+    src_rel <- trouver_export_par_classe(
+      export_dir = rv$export_dir,
+      sous_dossier = "wordclouds",
+      suffixe = "wordcloud",
+      classe_input = input$classe_viz
+    )
+    if (is.null(src_rel) || !file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
 
@@ -170,8 +223,13 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   output$ui_cooc <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("cooccurrences", paste0("cluster_", input$classe_viz, "_fcm_network.png"))
-    if (!file.exists(file.path(rv$export_dir, src_rel))) {
+    src_rel <- trouver_export_par_classe(
+      export_dir = rv$export_dir,
+      sous_dossier = "cooccurrences",
+      suffixe = "fcm_network",
+      classe_input = input$classe_viz
+    )
+    if (is.null(src_rel) || !file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucune cooccurrence disponible pour cette classe."))
     }
 
