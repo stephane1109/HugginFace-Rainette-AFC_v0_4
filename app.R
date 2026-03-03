@@ -502,7 +502,12 @@ server <- function(input, output, session) {
       tracer_dendogramme_iramuteq_ui(
         rv = rv,
         top_n_terms = 4,
-        orientation = "vertical"
+        orientation = "vertical",
+        display_method = if (!is.null(input$iramuteq_dendro_display_method) && nzchar(input$iramuteq_dendro_display_method)) {
+          input$iramuteq_dendro_display_method
+        } else {
+          "compact"
+        }
       )
     }, error = function(e) {
       plot.new()
