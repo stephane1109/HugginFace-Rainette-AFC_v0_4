@@ -68,7 +68,16 @@ extraire_stats_chd_classe <- function(res_stats_df,
       df <- df[is.finite(chi2_vals) & chi2_vals > 0, , drop = FALSE]
       chi2_vals <- suppressWarnings(as.numeric(df$chi2))
     }
-    df <- df[order(-chi2_vals, -suppressWarnings(as.numeric(df$frequency))), , drop = FALSE]
+
+    frequency_vals <- rep(-Inf, nrow(df))
+    if ("frequency" %in% names(df)) {
+      frequency_vals <- suppressWarnings(as.numeric(df$frequency))
+      frequency_vals[!is.finite(frequency_vals)] <- -Inf
+    }
+
+    chi2_sort <- chi2_vals
+    chi2_sort[!is.finite(chi2_sort)] <- -Inf
+    df <- df[order(-chi2_sort, -frequency_vals), , drop = FALSE]
   }
   df <- utils::head(df, n_max)
 

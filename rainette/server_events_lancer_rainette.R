@@ -951,11 +951,18 @@ register_events_lancer <- function(input, output, session, rv) {
             if (!is.finite(top_n_demande) || is.na(top_n_demande)) top_n_demande <- 20L
             top_n_demande <- max(5L, top_n_demande)
 
+            classe_vals <- suppressWarnings(as.integer(res_stats_df$Classe))
+            idx_classe <- is.finite(classe_vals) & !is.na(classe_vals) & classe_vals == cl
+
             if (isTRUE(input$filtrer_affichage_pvalue)) {
-              df_stats_cl <- subset(res_stats_df, Classe == cl & p <= input$max_p)
-            } else {
-              df_stats_cl <- subset(res_stats_df, Classe == cl)
+              p_col <- if ("p" %in% names(res_stats_df)) "p" else if ("p_value" %in% names(res_stats_df)) "p_value" else NA_character_
+              if (!is.na(p_col)) {
+                p_vals <- suppressWarnings(as.numeric(res_stats_df[[p_col]]))
+                idx_classe <- idx_classe & is.finite(p_vals) & !is.na(p_vals) & p_vals <= input$max_p
+              }
             }
+
+            df_stats_cl <- res_stats_df[idx_classe, , drop = FALSE]
             if (nrow(df_stats_cl) > 0) {
               df_stats_cl <- df_stats_cl[order(-df_stats_cl$chi2), , drop = FALSE]
               df_stats_cl <- head(df_stats_cl, top_n_demande)
