@@ -81,7 +81,7 @@ source("rainette/pipeline_lexique_analysis_rainette.R", encoding = "UTF-8", loca
 source("rainette/pipeline_iramuteq_analysis_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/cooccurrences_rainette.R", encoding = "UTF-8", local = TRUE)
 source("rainette/server_outputs_status_rainette.R", encoding = "UTF-8", local = TRUE)
-source("rainette/server_events_lancer_rainette.R", encoding = "UTF-8", local = TRUE)
+source("iramuteq-like/server_events_lancer_iramuteq.R", encoding = "UTF-8", local = TRUE)
 source("rainette/rainette_explor_affichage.R", encoding = "UTF-8", local = TRUE)
 
 server <- function(input, output, session) {
