@@ -207,6 +207,13 @@ register_events_lancer <- function(input, output, session, rv) {
         file.path(rv$export_dir, "segments_par_classe.html"),
         file.path(rv$export_dir, "concordancier.html")
       )
+      candidats_dyn <- list.files(
+        rv$export_dir,
+        pattern = "(segments.*classe|concord).*\\.html$",
+        ignore.case = TRUE,
+        full.names = TRUE
+      )
+      candidats_html <- c(candidats_html, candidats_dyn)
       candidats_html <- unique(candidats_html[!is.na(candidats_html) & nzchar(candidats_html)])
       html_existant <- candidats_html[file.exists(candidats_html)]
 
