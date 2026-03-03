@@ -110,54 +110,6 @@ register_events_lancer <- function(input, output, session, rv) {
       }
     }
 
-      py_bin <- Sys.which("python3")
-      if (!nzchar(py_bin)) py_bin <- Sys.which("python")
-      if (!nzchar(py_bin)) {
-        stop("IRaMuTeQ-like: Python introuvable (python3/python).")
-      }
-
-      in_tsv <- tempfile(pattern = "iramuteq_prepa_in_", fileext = ".tsv")
-      out_tsv <- tempfile(pattern = "iramuteq_prepa_out_", fileext = ".tsv")
-
-      df_in <- data.frame(
-        doc_id = as.character(ids),
-        text = as.character(textes),
-        stringsAsFactors = FALSE
-      )
-      write.table(df_in, file = in_tsv, sep = "	", row.names = FALSE, col.names = TRUE, quote = TRUE, fileEncoding = "UTF-8")
-
-      args <- c(
-        script_path,
-        "--input", in_tsv,
-        "--output", out_tsv,
-        "--nettoyage_caracteres", ifelse(isTRUE(input$nettoyage_caracteres), "1", "0"),
-        "--forcer_minuscules_avant", ifelse(isTRUE(input$forcer_minuscules_avant), "1", "0"),
-        "--supprimer_chiffres", ifelse(isTRUE(input$supprimer_chiffres), "1", "0"),
-        "--supprimer_apostrophes", ifelse(isTRUE(input$supprimer_apostrophes), "1", "0")
-      )
-
-
-    formater_df_csv_6_decimales <- function(df) {
-      if (is.null(df)) return(df)
-      df_out <- df
-      for (nm in names(df_out)) {
-        col <- df_out[[nm]]
-        if (is.numeric(col)) {
-          df_out[[nm]] <- ifelse(
-            is.na(col),
-            NA_character_,
-            formatC(col, format = "f", digits = 6)
-          )
-        }
-      }
-      df_out
-    }
-
-    ecrire_csv_6_decimales <- function(df, chemin, row.names = FALSE) {
-      write.csv(formater_df_csv_6_decimales(df), chemin, row.names = row.names)
-    }
-
-
     normaliser_stats_chd_rainette <- function(df_stats) {
       if (is.null(df_stats) || !is.data.frame(df_stats)) return(df_stats)
 
