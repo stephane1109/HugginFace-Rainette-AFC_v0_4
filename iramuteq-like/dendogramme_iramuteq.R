@@ -2,7 +2,8 @@
 
 tracer_dendogramme_iramuteq_ui <- function(rv,
                                             top_n_terms = 4,
-                                            orientation = "vertical") {
+                                            orientation = "vertical",
+                                            display_method = "compact") {
   if (is.null(rv$res) && is.null(rv$res_chd)) {
     plot.new()
     text(0.5, 0.5, "Dendrogramme CHD indisponible.", cex = 1.1)
@@ -36,7 +37,8 @@ tracer_dendogramme_iramuteq_ui <- function(rv,
     classes = classes,
     res_stats_df = rv$res_stats_df,
     top_n_terms = top_n_terms,
-    orientation = orientation
+    orientation = orientation,
+    display_method = display_method
   )
 
   invisible(NULL)

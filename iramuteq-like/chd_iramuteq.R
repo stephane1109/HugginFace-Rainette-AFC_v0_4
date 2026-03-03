@@ -408,8 +408,10 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
                                               classes = NULL,
                                               res_stats_df = NULL,
                                               top_n_terms = 4,
-                                              orientation = c("vertical", "horizontal")) {
+                                              orientation = c("vertical", "horizontal"),
+                                              display_method = c("standard", "compact")) {
   orientation <- match.arg(orientation)
+  display_method <- match.arg(display_method)
 
   if (is.null(chd_obj)) {
     plot.new()
@@ -644,11 +646,11 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
     plot(
       NA,
       xlim = c(0.5, x_max + 0.5),
-      ylim = c(if (length(termes_par_classe)) -1.6 else -0.8, y_max + 0.8),
+      ylim = c(if (length(termes_par_classe) && identical(display_method, "standard")) -1.6 else -0.8, y_max + 0.8),
       axes = FALSE,
       xlab = "",
       ylab = "",
-      main = "Dendrogramme CHD IRaMuTeQ-like"
+      main = if (identical(display_method, "compact")) "Dendrogramme CHD IRaMuTeQ-like (compact)" else "Dendrogramme CHD IRaMuTeQ-like"
     )
 
     for (mere_name in names(map_filles)) {
@@ -683,7 +685,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
       points(all_pos_plot[tip_idx, "x"], all_pos_plot[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
       text(x = all_pos_plot[tip_idx, "x"], y = all_pos_plot[tip_idx, "y"] - 0.18, labels = tip_labels, adj = c(0.5, 1), cex = 0.78)
 
-      if (length(termes_par_classe)) {
+      if (length(termes_par_classe) && identical(display_method, "standard")) {
         for (j in seq_along(tip_idx)) {
           node_id <- tip_nodes_chr[[j]]
           class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
@@ -700,6 +702,17 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
           )
         }
       }
+
+      if (length(termes_par_classe) && identical(display_method, "compact")) {
+        legend_lines <- unlist(lapply(sort(names(termes_par_classe)), function(cl_id) {
+          paste0("Classe ", cl_id, " : ", termes_par_classe[[cl_id]])
+        }), use.names = FALSE)
+
+        if (length(legend_lines)) {
+          texte_legend <- paste(legend_lines, collapse = "\n")
+          mtext(texte_legend, side = 1, line = 0.4, adj = 0, cex = 0.62, col = "#333333")
+        }
+      }
     }
   } else {
     op <- par(no.readonly = TRUE)
@@ -713,7 +726,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
       axes = FALSE,
       xlab = "",
       ylab = "",
-      main = "Dendrogramme CHD IRaMuTeQ-like (phylogramme)"
+      main = if (identical(display_method, "compact")) "Dendrogramme CHD IRaMuTeQ-like (phylogramme compact)" else "Dendrogramme CHD IRaMuTeQ-like (phylogramme)"
     )
 
     for (mere_name in names(map_filles)) {
@@ -746,7 +759,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
       points(all_pos[tip_idx, "x"], all_pos[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
       text(x = all_pos[tip_idx, "x"] + 0.12, y = all_pos[tip_idx, "y"], labels = tip_labels, adj = c(0, 0.5), cex = 0.78)
 
-      if (length(termes_par_classe)) {
+      if (length(termes_par_classe) && identical(display_method, "standard")) {
         for (j in seq_along(tip_idx)) {
           node_id <- tip_nodes_chr[[j]]
           class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
@@ -760,6 +773,24 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
             adj = c(0, 0.5),
             cex = 0.66,
             col = "#333333"
+          )
+        }
+      }
+
+      if (length(termes_par_classe) && identical(display_method, "compact")) {
+        legend_lines <- unlist(lapply(sort(names(termes_par_classe)), function(cl_id) {
+          paste0("Classe ", cl_id, " : ", termes_par_classe[[cl_id]])
+        }), use.names = FALSE)
+
+        if (length(legend_lines)) {
+          legend(
+            "bottomright",
+            legend = legend_lines,
+            bty = "n",
+            cex = 0.64,
+            text.col = "#333333",
+            inset = c(-0.02, -0.02),
+            xpd = NA
           )
         }
       }
