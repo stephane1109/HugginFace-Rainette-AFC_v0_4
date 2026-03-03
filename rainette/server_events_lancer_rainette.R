@@ -11,6 +11,9 @@ register_events_lancer <- function(input, output, session, rv) {
 
     charger_module_spacy <- function() {
       candidats_spacy <- unique(c(
+        file.path(app_dir, "rainette", "nlp_spacy_rainette.R"),
+        file.path(getwd(), "rainette", "nlp_spacy_rainette.R"),
+        file.path("rainette", "nlp_spacy_rainette.R"),
         file.path(app_dir, "R", "nlp_spacy.R"),
         file.path(getwd(), "R", "nlp_spacy.R"),
         file.path("R", "nlp_spacy.R")
@@ -51,6 +54,9 @@ register_events_lancer <- function(input, output, session, rv) {
 
     charger_module_langue <- function() {
       candidats_langue <- unique(c(
+        file.path(app_dir, "rainette", "nlp_language_rainette.R"),
+        file.path(getwd(), "rainette", "nlp_language_rainette.R"),
+        file.path("rainette", "nlp_language_rainette.R"),
         file.path(app_dir, "R", "nlp_language.R"),
         file.path(getwd(), "R", "nlp_language.R"),
         file.path("R", "nlp_language.R")
