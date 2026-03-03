@@ -11,12 +11,12 @@ register_events_lancer <- function(input, output, session, rv) {
 
     charger_module_langue <- function() {
       candidats_langue <- unique(c(
-        file.path(app_dir, "rainette", "nlp_language_rainette.R"),
-        file.path(getwd(), "rainette", "nlp_language_rainette.R"),
-        file.path("rainette", "nlp_language_rainette.R"),
-        file.path(app_dir, "R", "nlp_language.R"),
-        file.path(getwd(), "R", "nlp_language.R"),
-        file.path("R", "nlp_language.R")
+        file.path(app_dir, "iramuteq-like", "nlp_lexique_iramuteq.R"),
+        file.path(getwd(), "iramuteq-like", "nlp_lexique_iramuteq.R"),
+        file.path("iramuteq-like", "nlp_lexique_iramuteq.R"),
+        file.path(app_dir, "iramuteq-like", "nlp_lexique_iramuteq.R"),
+        file.path(getwd(), "iramuteq-like", "nlp_lexique_iramuteq.R"),
+        file.path("iramuteq-like", "nlp_lexique_iramuteq.R")
       ))
 
       dernier_chemin <- candidats_langue[[1]]
@@ -44,13 +44,6 @@ register_events_lancer <- function(input, output, session, rv) {
       }
 
       list(ok = FALSE, chemin = dernier_chemin, raison = derniere_raison)
-    }
-
-    if (!exists("appliquer_nettoyage_rainette", mode = "function", inherits = TRUE)) {
-      chemin_nettoyage_rainette <- file.path(app_dir, "rainette", "nettoyage_rainette.R")
-      if (file.exists(chemin_nettoyage_rainette)) {
-        source(chemin_nettoyage_rainette, encoding = "UTF-8", local = TRUE)
-      }
     }
 
     if (!exists("appliquer_nettoyage_iramuteq", mode = "function", inherits = TRUE)) {
