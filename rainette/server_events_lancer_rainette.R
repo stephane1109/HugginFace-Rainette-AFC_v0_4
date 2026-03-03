@@ -207,6 +207,49 @@ register_events_lancer <- function(input, output, session, rv) {
       write.csv(formater_df_csv_6_decimales(df), chemin, row.names = row.names)
     }
 
+
+    normaliser_stats_chd_rainette <- function(df_stats) {
+      if (is.null(df_stats) || !is.data.frame(df_stats)) return(df_stats)
+
+      n <- nrow(df_stats)
+      if (n == 0) return(df_stats)
+
+      normaliser_colonne_numerique <- function(nom_colonne, valeur_defaut = NA_real_) {
+        if (!nom_colonne %in% names(df_stats)) {
+          df_stats[[nom_colonne]] <<- rep(valeur_defaut, n)
+          return(invisible(NULL))
+        }
+
+        vals <- suppressWarnings(as.numeric(df_stats[[nom_colonne]]))
+        if (length(vals) != n) {
+          vals <- if (length(vals) == 1) rep(vals, n) else rep(valeur_defaut, n)
+        }
+        df_stats[[nom_colonne]] <<- vals
+      }
+
+      normaliser_colonne_numerique("frequency")
+      normaliser_colonne_numerique("docprop")
+      normaliser_colonne_numerique("eff_total")
+      normaliser_colonne_numerique("eff_st")
+      normaliser_colonne_numerique("pourcentage")
+      normaliser_colonne_numerique("p")
+      normaliser_colonne_numerique("p_value")
+
+      if (all(is.na(df_stats$eff_total)) && any(!is.na(df_stats$frequency))) {
+        df_stats$eff_total <- df_stats$frequency
+      }
+
+      if (all(is.na(df_stats$eff_st)) && any(!is.na(df_stats$docprop)) && any(!is.na(df_stats$eff_total))) {
+        df_stats$eff_st <- round(df_stats$docprop * df_stats$eff_total)
+      }
+
+      if (all(is.na(df_stats$pourcentage)) && any(!is.na(df_stats$eff_st)) && any(!is.na(df_stats$eff_total))) {
+        df_stats$pourcentage <- ifelse(df_stats$eff_total > 0, 100 * df_stats$eff_st / df_stats$eff_total, NA_real_)
+      }
+
+      df_stats
+    }
+
     observeEvent(input$modele_chd, {
       if (identical(as.character(input$modele_chd), "iramuteq")) {
         updateRadioButtons(
@@ -751,6 +794,8 @@ register_events_lancer <- function(input, output, session, rv) {
               ) %>%
               arrange(Classe, desc(chi2))
           }
+
+          res_stats_df <- normaliser_stats_chd_rainette(res_stats_df)
 
           if (identical(source_dictionnaire, "lexique_fr") &&
               !is.null(rv$lexique_fr_df) &&
