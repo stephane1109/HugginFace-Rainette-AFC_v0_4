@@ -12,10 +12,11 @@ ui_resultats_chd_iramuteq <- function() {
           "iramuteq_dendro_display_method",
           "Méthode d'affichage",
           choices = c(
+            "Style IRaMuTeQ (barres + mots par classe)" = "iramuteq_blocks",
             "Standard (labels près des classes)" = "standard",
             "Compact (légende des termes en bas)" = "compact"
           ),
-          selected = "compact",
+          selected = "iramuteq_blocks",
           inline = FALSE
         ),
         plotOutput("plot_chd_iramuteq_dendro", height = "420px")

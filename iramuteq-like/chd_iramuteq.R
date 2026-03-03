@@ -409,7 +409,7 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
                                               res_stats_df = NULL,
                                               top_n_terms = 4,
                                               orientation = c("vertical", "horizontal"),
-                                              display_method = c("standard", "compact")) {
+                                              display_method = c("standard", "compact", "iramuteq_blocks")) {
   orientation <- match.arg(orientation)
   display_method <- match.arg(display_method)
 
@@ -644,6 +644,87 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
 
   if (identical(orientation, "vertical")) {
+    if (identical(display_method, "iramuteq_blocks")) {
+      op <- par(no.readonly = TRUE)
+      on.exit(par(op), add = TRUE)
+      par(mar = c(1.4, 1.4, 2.6, 1.4), xpd = NA)
+
+      class_ids <- sort(unique(na.omit(as.integer(classe_par_noeud))))
+      if (!length(class_ids) && length(terminales)) class_ids <- seq_along(terminales)
+      if (!length(class_ids)) {
+        plot.new()
+        text(0.5, 0.5, "Aucune classe terminale disponible.", cex = 1.1)
+        return(invisible(NULL))
+      }
+
+      cols_palette <- c("#ff3300", "#00ff00", "#1f3bff", "#ff00a8", "#00d4ff", "#ffaa00")
+      class_cols <- stats::setNames(cols_palette[(seq_along(class_ids) - 1L) %% length(cols_palette) + 1L], as.character(class_ids))
+
+      pct_par_classe <- NULL
+      if (!is.null(classes)) {
+        classes <- suppressWarnings(as.integer(classes))
+        classes <- classes[is.finite(classes) & classes > 0]
+        if (length(classes)) pct_par_classe <- prop.table(table(classes)) * 100
+      }
+
+      order_nodes <- tip_nodes_chr
+      if (!length(order_nodes) && length(terminales)) order_nodes <- as.character(terminales)
+      classes_ord <- suppressWarnings(as.integer(classe_par_noeud[order_nodes]))
+      keep <- is.finite(classes_ord)
+      order_nodes <- order_nodes[keep]
+      classes_ord <- classes_ord[keep]
+      if (!length(classes_ord)) classes_ord <- class_ids
+
+      n <- length(classes_ord)
+      x_pos <- seq(0.12, 0.88, length.out = n)
+
+      plot.new()
+      plot.window(xlim = c(0, 1), ylim = c(0, 1))
+
+      y_top <- 0.90
+      y_box_top <- 0.78
+      y_box_bot <- 0.64
+      box_w <- min(0.28, if (n > 1) 0.72 / (n - 1) else 0.3)
+
+      if (n >= 2) {
+        mid <- mean(x_pos)
+        segments(mid, y_top, min(x_pos), y_box_top + 0.02, lwd = 2.5, col = "#111111")
+        segments(mid, y_top, max(x_pos), y_box_top + 0.02, lwd = 2.5, col = "#111111")
+      }
+
+      for (i in seq_len(n)) {
+        cl <- classes_ord[i]
+        col_cl <- unname(class_cols[as.character(cl)])
+        if (is.na(col_cl) || !nzchar(col_cl)) col_cl <- "#1f3bff"
+        x <- x_pos[i]
+
+        rect(x - box_w / 2, y_box_bot, x + box_w / 2, y_box_top, col = col_cl, border = NA)
+        segments(x, y_box_top + 0.02, x, y_box_top, lwd = 2.5, col = "#111111")
+
+        text(x, y_box_top + 0.05, labels = paste0("classe ", cl), col = col_cl, cex = 1.2, font = 2)
+        pct <- if (!is.null(pct_par_classe)) unname(pct_par_classe[as.character(cl)]) else NA_real_
+        pct_lbl <- if (is.finite(pct)) paste0(format(round(pct, 1), trim = TRUE), " %") else ""
+        if (nzchar(pct_lbl)) text(x, y_box_bot + 0.015, labels = pct_lbl, cex = 0.9, col = "#111111")
+
+        termes <- character(0)
+        if (!is.null(termes_par_classe[[as.character(cl)]])) {
+          termes <- strsplit(termes_par_classe[[as.character(cl)]], "\\s*,\\s*")[[1]]
+          termes <- termes[nzchar(termes)]
+        }
+
+        if (length(termes)) {
+          y0 <- 0.58
+          step <- 0.055
+          for (j in seq_len(min(length(termes), 9L))) {
+            text(x - box_w / 2, y0 - (j - 1) * step, labels = termes[j], adj = c(0, 1), col = col_cl, cex = 1.6, font = 2)
+          }
+        }
+      }
+
+      title(main = "Dendrogramme CHD IRaMuTeQ-like (style IRaMuTeQ)")
+      return(invisible(NULL))
+    }
+
     op <- par(no.readonly = TRUE)
     on.exit(par(op), add = TRUE)
     par(mar = c(3.2, 2.8, 3.6, 1.5))
