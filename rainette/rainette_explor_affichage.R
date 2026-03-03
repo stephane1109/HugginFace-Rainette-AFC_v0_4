@@ -81,11 +81,6 @@ register_rainette_explor_affichage <- function(input, output, session, rv) {
   observeEvent(input$explor, {
     req(rv$export_dir)
 
-    if (identical(rv$res_type, "iramuteq")) {
-      showNotification("Explore rainette est désactivé en mode IRaMuTeQ-like.", type = "message", duration = 6)
-      return(invisible(NULL))
-    }
-
     if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
       showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
       return(invisible(NULL))
