@@ -2,6 +2,15 @@
 # stats_rainette.R
 # Fonctions de calcul de statistiques descriptives du corpus
 
+
+.scalar_chr <- function(x, default = "") {
+  if (is.null(x) || length(x) == 0) return(default)
+  vals <- trimws(as.character(x))
+  vals <- vals[!is.na(vals) & nzchar(vals)]
+  if (length(vals) == 0) return(default)
+  vals[[1]]
+}
+
 extraire_textes_iramuteq <- function(textes_bruts) {
   if (is.null(textes_bruts) || !length(textes_bruts)) return(character(0))
 
@@ -27,7 +36,7 @@ extraire_textes_iramuteq <- function(textes_bruts) {
 calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_corpus = NULL) {
   if (is.null(chemin_fichier) || !file.exists(chemin_fichier)) return(NULL)
 
-  nom_corpus_affiche <- trimws(as.character(if (is.null(nom_corpus)) "" else nom_corpus))
+  nom_corpus_affiche <- .scalar_chr(nom_corpus, default = "")
   if (!nzchar(nom_corpus_affiche)) {
     nom_corpus_affiche <- basename(chemin_fichier)
   }
@@ -76,26 +85,34 @@ calculer_stats_corpus <- function(chemin_fichier, corpus_segments = NULL, nom_co
     )
   }
 
+  metriques <- c(
+    "Nom du corpus",
+    "Nombre de textes",
+    "Nombre de mots dans le corpus",
+    "Nombre de formes",
+    "Nombre de segments de texte",
+    "Nombre d'Hapax",
+    "Loi de Zpif"
+  )
+
+  valeurs <- c(
+    .scalar_chr(nom_corpus_affiche, default = basename(chemin_fichier)),
+    as.character(length(textes)),
+    as.character(nb_mots),
+    as.character(nb_formes),
+    as.character(nb_segments),
+    as.character(nb_hapax),
+    .scalar_chr(loi_zipf, default = "—")
+  )
+
+  if (length(valeurs) != length(metriques)) {
+    valeurs <- utils::head(c(valeurs, rep("", length(metriques))), length(metriques))
+  }
+
   list(
     table = data.frame(
-      Metrique = c(
-        "Nom du corpus",
-        "Nombre de textes",
-        "Nombre de mots dans le corpus",
-        "Nombre de formes",
-        "Nombre de segments de texte",
-        "Nombre d'Hapax",
-        "Loi de Zpif"
-      ),
-      Valeur = c(
-        nom_corpus_affiche,
-        as.character(length(textes)),
-        as.character(nb_mots),
-        as.character(nb_formes),
-        as.character(nb_segments),
-        as.character(nb_hapax),
-        loi_zipf
-      ),
+      Metrique = metriques,
+      Valeur = valeurs,
       stringsAsFactors = FALSE
     ),
     zipf = zipf_df
