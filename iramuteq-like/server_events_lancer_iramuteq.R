@@ -1057,18 +1057,47 @@ register_events_lancer <- function(input, output, session, rv) {
           mode_iramuteq_actif <- identical(as.character(input$modele_chd), "iramuteq") ||
             identical(rv$res_type, "iramuteq")
 
-          html_genere <- if (isTRUE(mode_iramuteq_actif)) {
-            do.call(generer_concordancier_iramuteq_html, args_concordancier)
+          fonction_concordancier <- if (isTRUE(mode_iramuteq_actif)) {
+            generer_concordancier_iramuteq_html
           } else if (identical(source_dictionnaire, "lexique_fr")) {
-            do.call(generer_concordancier_lexique_html, args_concordancier)
+            generer_concordancier_lexique_html
           } else {
-            do.call(generer_concordancier_spacy_html, args_concordancier)
+            generer_concordancier_spacy_html
           }
 
-          if (is.character(html_genere) && length(html_genere) == 1 && !is.na(html_genere) && nzchar(html_genere)) {
-            rv$html_file <- html_genere
+          html_genere <- do.call(fonction_concordancier, args_concordancier)
+
+          candidats_html <- unique(c(
+            html_genere,
+            html_file,
+            file.path(rv$export_dir, "concordancier.html")
+          ))
+          candidats_html <- candidats_html[is.character(candidats_html) & !is.na(candidats_html) & nzchar(candidats_html)]
+          html_existants <- candidats_html[file.exists(candidats_html)]
+
+          if (length(html_existants) == 0) {
+            html_fallback <- file.path(rv$export_dir, "concordancier.html")
+            args_concordancier$chemin_sortie <- html_fallback
+            ajouter_log(rv, "Concordancier HTML introuvable après la première génération. Nouvelle tentative vers exports/concordancier.html.")
+            html_retry <- tryCatch(
+              do.call(fonction_concordancier, args_concordancier),
+              error = function(e) {
+                ajouter_log(rv, paste0("Concordancier HTML : échec de la relance - ", e$message))
+                NA_character_
+              }
+            )
+
+            candidats_retry <- unique(c(html_retry, html_fallback, html_genere, html_file))
+            candidats_retry <- candidats_retry[is.character(candidats_retry) & !is.na(candidats_retry) & nzchar(candidats_retry)]
+            html_existants <- candidats_retry[file.exists(candidats_retry)]
+          }
+
+          if (length(html_existants) > 0) {
+            rv$html_file <- html_existants[[1]]
+            ajouter_log(rv, paste0("Concordancier HTML validé : ", rv$html_file))
           } else {
             rv$html_file <- html_file
+            ajouter_log(rv, "Concordancier HTML introuvable après relance. Vérifier les logs de génération du concordancier.")
           }
 
           avancer(0.96, "ZIP")
