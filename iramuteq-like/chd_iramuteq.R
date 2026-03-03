@@ -569,6 +569,15 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
   }
 
   all_pos <- do.call(rbind, pos)
+  if (is.null(dim(all_pos))) {
+    all_pos <- matrix(all_pos, nrow = 1L, dimnames = list(names(pos)[1], names(all_pos)))
+  }
+  all_pos <- as.matrix(all_pos)
+  if (is.null(colnames(all_pos)) || !all(c("x", "y") %in% colnames(all_pos))) {
+    plot.new()
+    text(0.5, 0.5, "Dendrogramme CHD indisponible (positions invalides).", cex = 1.1)
+    return(invisible(NULL))
+  }
   depth_max <- max(all_pos[, "x"], na.rm = TRUE)
   order_max <- max(all_pos[, "y"], na.rm = TRUE)
 
@@ -639,7 +648,8 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
     on.exit(par(op), add = TRUE)
     par(mar = c(3.2, 2.8, 3.6, 1.5))
 
-    all_pos_plot <- cbind(x = all_pos[, "y"], y = depth_max - all_pos[, "x"])
+    all_pos_plot <- cbind(x = all_pos[, "y", drop = TRUE], y = depth_max - all_pos[, "x", drop = TRUE])
+    all_pos_plot <- as.matrix(all_pos_plot)
     x_max <- max(all_pos_plot[, "x"], na.rm = TRUE)
     y_max <- max(all_pos_plot[, "y"], na.rm = TRUE)
 
@@ -682,19 +692,19 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
     }
 
     if (length(tip_idx)) {
-      points(all_pos_plot[tip_idx, "x"], all_pos_plot[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
-      text(x = all_pos_plot[tip_idx, "x"], y = all_pos_plot[tip_idx, "y"] - 0.18, labels = tip_labels, adj = c(0.5, 1), cex = 0.78)
+      points(all_pos_plot[tip_idx, "x", drop = TRUE], all_pos_plot[tip_idx, "y", drop = TRUE], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
+      text(x = all_pos_plot[tip_idx, "x", drop = TRUE], y = all_pos_plot[tip_idx, "y", drop = TRUE] - 0.18, labels = tip_labels, adj = c(0.5, 1), cex = 0.78)
 
       if (length(termes_par_classe) && identical(display_method, "standard")) {
         for (j in seq_along(tip_idx)) {
-          node_id <- tip_nodes_chr[[j]]
+          node_id <- tip_nodes_chr[j]
           class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
           if (!is.finite(class_id)) next
           termes_lbl <- termes_par_classe[[as.character(class_id)]]
           if (is.null(termes_lbl) || !nzchar(termes_lbl)) next
           text(
-            x = all_pos_plot[tip_idx[j], "x"],
-            y = all_pos_plot[tip_idx[j], "y"] - 0.56,
+            x = all_pos_plot[tip_idx[j], "x", drop = TRUE],
+            y = all_pos_plot[tip_idx[j], "y", drop = TRUE] - 0.56,
             labels = termes_lbl,
             adj = c(0.5, 1),
             cex = 0.66,
@@ -756,19 +766,19 @@ tracer_dendrogramme_chd_iramuteq <- function(chd_obj,
     }
 
     if (length(tip_idx)) {
-      points(all_pos[tip_idx, "x"], all_pos[tip_idx, "y"], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
-      text(x = all_pos[tip_idx, "x"] + 0.12, y = all_pos[tip_idx, "y"], labels = tip_labels, adj = c(0, 0.5), cex = 0.78)
+      points(all_pos[tip_idx, "x", drop = TRUE], all_pos[tip_idx, "y", drop = TRUE], pch = 19, col = tip_cols[tip_idx], cex = 0.95)
+      text(x = all_pos[tip_idx, "x", drop = TRUE] + 0.12, y = all_pos[tip_idx, "y", drop = TRUE], labels = tip_labels, adj = c(0, 0.5), cex = 0.78)
 
       if (length(termes_par_classe) && identical(display_method, "standard")) {
         for (j in seq_along(tip_idx)) {
-          node_id <- tip_nodes_chr[[j]]
+          node_id <- tip_nodes_chr[j]
           class_id <- suppressWarnings(as.integer(classe_par_noeud[[node_id]]))
           if (!is.finite(class_id)) next
           termes_lbl <- termes_par_classe[[as.character(class_id)]]
           if (is.null(termes_lbl) || !nzchar(termes_lbl)) next
           text(
-            x = all_pos[tip_idx[j], "x"] + 0.12,
-            y = all_pos[tip_idx[j], "y"] + 0.28,
+            x = all_pos[tip_idx[j], "x", drop = TRUE] + 0.12,
+            y = all_pos[tip_idx[j], "y", drop = TRUE] + 0.28,
             labels = termes_lbl,
             adj = c(0, 0.5),
             cex = 0.66,
