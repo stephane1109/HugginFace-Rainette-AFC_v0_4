@@ -1,0 +1,8 @@
+{
+  "entities": [
+    {
+      "label": "TEST",
+      "patterns": ["112", "regarder"]
+    }
+  ]
+}
